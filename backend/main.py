@@ -34,12 +34,12 @@ def health_check():
 @app.get("/team")
 def team_info():
     return {
-        "team": "cloud-team-XX",
+        "team": "cloud-team-ignite",
         "members": [
             # TODO: Isi dengan data tim Anda
-            {"name": "Nama 1", "nim": "NIM1", "role": "Lead Backend"},
-            {"name": "Nama 2", "nim": "NIM2", "role": "Lead Frontend"},
-            {"name": "Nama 3", "nim": "NIM3", "role": "Lead DevOps"},
-            {"name": "Nama 4", "nim": "NIM4", "role": "Lead QA & Docs"},
+            {"name": "Andini Permata Dewanti", "nim": "10231014", "role": "Lead Backend"},
+            {"name": "Putri Rahmawati", "nim": "10231074", "role": "Lead Frontend"},
+            {"name": "Krishandy Dhanysa Pratama", "nim": "10231050", "role": "Lead DevOps"},
+            {"name": "Desnita Dwi Putri", "nim": "10231030", "role": "Lead QA & Docs"},
         ]
     }
