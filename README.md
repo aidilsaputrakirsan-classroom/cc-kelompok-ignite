@@ -1,11 +1,11 @@
-# 🛒 RAZ'Q App — UMKM E-Commerce Platform
+# ☁️ Cloud App - [RAZ'Q App — UMKM E-Commerce Platform]
 
 ## 📌 Deskripsi Proyek
 
 RAZ'Q App (E-Commerce UMKM RAZ'Q) adalah platform e-commerce berbasis website yang dirancang untuk mendigitalisasikan proses bisnis UMKM RAZ'Q Balikpapan. UMKM ini memproduksi makanan khas Balikpapan seperti Amplang, keripik pisang, abon, dan camilan lainnya. Aplikasi ini mengatasi kendala pemasaran dan visibilitas usaha, serta mempermudah pengelolaan transaksi dan stok produk yang sebelumnya menghadapi tantangan kompleksitas pada aplikasi pihak ketiga.
 
 ## 📖 Daftar Isi
-- [🛒 RAZ'Q App — UMKM E-Commerce Platform](#-razq-app--umkm-e-commerce-platform)
+- [☁️ Cloud App - \[RAZ'Q App — UMKM E-Commerce Platform\]](#️-cloud-app---razq-app--umkm-e-commerce-platform)
   - [📌 Deskripsi Proyek](#-deskripsi-proyek)
   - [📖 Daftar Isi](#-daftar-isi)
   - [Fitur Utama](#fitur-utama)
