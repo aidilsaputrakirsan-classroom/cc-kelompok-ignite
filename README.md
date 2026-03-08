@@ -53,6 +53,24 @@ RAZ'Q App (E-Commerce UMKM RAZ'Q) adalah platform e-commerce berbasis website ya
     - [Langkah 7: Buat `crud.py` — Business Logic](#langkah-7-buat-crudpy--business-logic)
     - [Langkah 8: Update `main.py` — Router \& Endpoints](#langkah-8-update-mainpy--router--endpoints)
     - [Langkah 9: Jalankan \& Test](#langkah-9-jalankan--test)
+  - [📡 Dokumentasi API](#-dokumentasi-api)
+    - [Base URL](#base-url)
+    - [Autentikasi](#autentikasi)
+    - [Format Response](#format-response)
+    - [`GET /health` — Health Check](#get-health--health-check)
+    - [`POST /items` — Buat Item Baru](#post-items--buat-item-baru)
+    - [`GET /items` — Ambil Semua Item](#get-items--ambil-semua-item)
+    - [`GET /items/stats` — Statistik Inventori](#get-itemsstats--statistik-inventori)
+    - [`GET /items/{item_id}` — Ambil Item Berdasarkan ID](#get-itemsitem_id--ambil-item-berdasarkan-id)
+    - [`PUT /items/{item_id}` — Update Item](#put-itemsitem_id--update-item)
+    - [`DELETE /items/{item_id}` — Hapus Item](#delete-itemsitem_id--hapus-item)
+    - [`GET /team` — Informasi Tim](#get-team--informasi-tim)
+  - [📊 Ringkasan Endpoint](#-ringkasan-endpoint)
+  - [🚀 Cara Menjalankan](#-cara-menjalankan)
+    - [1. Clone repository](#1-clone-repository)
+    - [2. Setup environment](#2-setup-environment)
+    - [3. Install dependencies \& jalankan server](#3-install-dependencies--jalankan-server)
+    - [4. Buka dokumentasi interaktif](#4-buka-dokumentasi-interaktif)
   - [📅 Roadmap](#-roadmap)
 ---
 ## Fitur Utama
@@ -881,10 +899,10 @@ def team_info():
     return {
         "team": "cloud-team-ignore",
         "members": [
-            {"name": "Nama 1", "nim": "NIM1", "role": "Lead Backend"},
-            {"name": "Nama 2", "nim": "NIM2", "role": "Lead Frontend"},
-            {"name": "Nama 3", "nim": "NIM3", "role": "Lead DevOps"},
-            {"name": "Nama 4", "nim": "NIM4", "role": "Lead QA & Docs"},
+            {"name": "Andini Permata Dewanti", "nim": "102310314", "role": "Lead Backend"},
+            {"name": "Putri Rahmawati", "nim": "10231074", "role": "Lead Frontend"},
+            {"name": "Krishandy Dhanysa Pratama", "nim": "10231050", "role": "Lead DevOps"},
+            {"name": "Desnita Dwi Putri", "nim": "10231030", "role": "Lead QA & Docs"},
         ],
     }
 ```
@@ -919,6 +937,552 @@ uvicorn main:app --reload --port 8000
 9. `GET /items/1` — Harus mengembalikan `404 Not Found`
 
 ✅ Jika semua langkah berhasil, backend CRUD lengkap dengan database sudah berjalan!
+
+---
+
+## 📡 Dokumentasi API
+
+### Base URL
+
+```
+http://localhost:8000
+```
+
+### Autentikasi
+
+Saat ini API tidak memerlukan autentikasi (akan ditambahkan di modul selanjutnya).
+
+### Format Response
+
+Semua response menggunakan format JSON dengan `Content-Type: application/json`.
+
+---
+
+### `GET /health` — Health Check
+
+Mengecek apakah server API sedang berjalan.
+
+**Request:**
+```
+GET /health
+```
+
+**Response `200 OK`:**
+```json
+{
+  "status": "healthy",
+  "version": "0.2.0"
+}
+```
+
+---
+
+### `POST /items` — Buat Item Baru
+
+Menambahkan item baru ke inventori.
+
+**Request:**
+```
+POST /items
+Content-Type: application/json
+```
+
+**Request Body:**
+```json
+{"name": "Laptop", "price": 15000000, "description": "Laptop untuk cloud computing", "quantity": 5}
+```
+
+| Field | Tipe | Wajib | Validasi | Keterangan |
+|---|---|---|---|---|
+| `name` | string | ✅ Ya | 1–100 karakter | Nama item |
+| `description` | string | ❌ Tidak | — | Deskripsi opsional |
+| `price` | float | ✅ Ya | > 0 | Harga dalam Rupiah |
+| `quantity` | integer | ❌ Tidak | ≥ 0, default: 0 | Jumlah stok |
+
+**Contoh Testing — Item 1 (Laptop):**
+
+Request body:
+```json
+{"name": "Laptop", "price": 15000000, "description": "Laptop untuk cloud computing", "quantity": 5}
+```
+Response `201 Created`:
+```json
+{
+  "name": "Laptop",
+  "description": "Laptop untuk cloud computing",
+  "price": 15000000,
+  "quantity": 5,
+  "id": 8,
+  "created_at": "2026-03-03T43:53.807688+07:00",
+  "updated_at": null
+}
+```
+
+**Contoh Testing — Item 2 (Mouse Wireless):**
+
+Request body:
+```json
+{"name": "Mouse Wireless", "price": 250000, "description": "Mouse bluetooth", "quantity": 20}
+```
+Response `201 Created`:
+```json
+{
+  "name": "Mouse Wireless",
+  "description": "Mouse bluetooth",
+  "price": 250000,
+  "quantity": 20,
+  "id": 9,
+  "created_at": "2026-03-03T44:17.213007+07:00",
+  "updated_at": null
+}
+```
+
+**Contoh Testing — Item 3 (Keyboard Mechanical):**
+
+Request body:
+```json
+{"name": "Keyboard Mechanical", "price": 1200000, "description": "Keyboard untuk coding", "quantity": 8}
+```
+Response `201 Created`:
+```json
+{
+  "name": "Keyboard Mechanical",
+  "description": "Keyboard untuk coding",
+  "price": 1200000,
+  "quantity": 8,
+  "id": 10,
+  "created_at": "2026-03-03T44:33.615783+07:00",
+  "updated_at": null
+}
+```
+
+**Response `422 Unprocessable Entity`** (validasi gagal):
+```json
+{
+  "detail": [
+    {
+      "loc": ["body", "price"],
+      "msg": "Input should be greater than 0",
+      "type": "greater_than"
+    }
+  ]
+}
+```
+
+---
+
+### `GET /items` — Ambil Semua Item
+
+Mengambil daftar seluruh item dengan dukungan pagination dan pencarian.
+
+**Request:**
+```
+GET /items
+GET /items?skip=0&limit=20
+GET /items?search=laptop
+```
+
+**Query Parameters:**
+
+| Parameter | Tipe | Default | Validasi | Keterangan |
+|---|---|---|---|---|
+| `skip` | integer | `0` | ≥ 0 | Jumlah data yang dilewati (untuk pagination) |
+| `limit` | integer | `20` | 1–100 | Jumlah data per halaman |
+| `search` | string | — | — | Kata kunci pencarian berdasarkan nama/deskripsi |
+
+**Contoh Testing — GET semua item (`GET /items?skip=0&limit=20`):**
+
+Response `200 OK`:
+```json
+{
+  "total": 3,
+  "items": [
+    {
+      "name": "Keyboard Mechanical",
+      "description": "Keyboard untuk coding",
+      "price": 1200000,
+      "quantity": 8,
+      "id": 10,
+      "created_at": "2026-03-03T44:37.855782+07:00",
+      "updated_at": null
+    },
+    {
+      "name": "Mouse Wireless",
+      "description": "Mouse bluetooth",
+      "price": 250000,
+      "quantity": 20,
+      "id": 9,
+      "created_at": "2026-03-03T44:17.213007+07:00",
+      "updated_at": null
+    },
+    {
+      "name": "Laptop",
+      "description": "Laptop untuk cloud computing",
+      "price": 15000000,
+      "quantity": 5,
+      "id": 8,
+      "created_at": "2026-03-03T43:53.807688+07:00",
+      "updated_at": null
+    }
+  ]
+}
+```
+
+**Contoh Testing — Search (`GET /items?search=laptop`):**
+
+Response `200 OK`:
+```json
+{
+  "total": 1,
+  "items": [
+    {
+      "name": "Laptop",
+      "description": "Laptop untuk cloud computing",
+      "price": 15000000,
+      "quantity": 5,
+      "id": 8,
+      "created_at": "2026-03-03T43:55.807049+07:00",
+      "updated_at": "2026-03-03T50:12.100793+07:00"
+    }
+  ]
+}
+```
+
+> 💡 Field `total` menunjukkan jumlah seluruh data yang cocok dengan filter, bukan jumlah data di halaman ini. Berguna untuk menghitung total halaman di frontend.
+
+---
+
+### `GET /items/stats` — Statistik Inventori
+
+Mengembalikan ringkasan statistik dari seluruh item di inventori.
+
+**Request:**
+```
+GET /items/stats
+```
+
+**Contoh Testing — setelah item id=8 (Laptop) dihapus, tersisa 2 item:**
+
+Response `200 OK`:
+```json
+{
+  "total_items": 2,
+  "total_value": 14600000,
+  "most_expensive": {
+    "name": "Keyboard Mechanical",
+    "price": 1200000
+  },
+  "cheapest": {
+    "name": "Mouse Wireless",
+    "price": 250000
+  }
+}
+```
+
+**Response `200 OK`** (inventori kosong):
+```json
+{
+  "total_items": 0,
+  "total_value": 0,
+  "most_expensive": null,
+  "cheapest": null
+}
+```
+
+**Penjelasan setiap field response:**
+
+| Field | Tipe | Keterangan |
+|---|---|---|
+| `total_items` | integer | Jumlah seluruh item di inventori |
+| `total_value` | float | Total nilai inventori, dihitung dari `SUM(price × quantity)` |
+| `most_expensive` | object \| null | Item dengan `price` tertinggi |
+| `most_expensive.name` | string | Nama item termahal |
+| `most_expensive.price` | float | Harga item termahal |
+| `cheapest` | object \| null | Item dengan `price` terendah |
+| `cheapest.name` | string | Nama item termurah |
+| `cheapest.price` | float | Harga item termurah |
+
+> ⚠️ **Catatan urutan endpoint:** `GET /items/stats` harus didaftarkan di `main.py` **sebelum** `GET /items/{item_id}`, karena FastAPI memproses route secara berurutan dari atas ke bawah.
+
+---
+
+### `GET /items/{item_id}` — Ambil Item Berdasarkan ID
+
+Mengambil detail satu item berdasarkan ID-nya.
+
+**Request:**
+```
+GET /items/{item_id}
+```
+
+**Path Parameter:**
+
+| Parameter | Tipe | Keterangan |
+|---|---|---|
+| `item_id` | integer | ID unik item yang ingin diambil |
+
+**Contoh Testing — GET item id=8 (Laptop, sebelum diupdate):**
+
+Response `200 OK`:
+```json
+{
+  "name": "Laptop",
+  "description": "Laptop untuk cloud computing",
+  "price": 15000000,
+  "quantity": 5,
+  "id": 8,
+  "created_at": "2026-03-03T43:33.897688+07:00",
+  "updated_at": null
+}
+```
+
+**Contoh Testing — GET item id=9 (Mouse Wireless):**
+
+Response `200 OK`:
+```json
+{
+  "name": "Mouse Wireless",
+  "description": "Mouse bluetooth",
+  "price": 250000,
+  "quantity": 20,
+  "id": 9,
+  "created_at": "2026-03-03T44:17.213007+07:00",
+  "updated_at": null
+}
+```
+
+**Contoh Testing — GET item id=10 (Keyboard Mechanical):**
+
+Response `200 OK`:
+```json
+{
+  "name": "Keyboard Mechanical",
+  "description": "Keyboard untuk coding",
+  "price": 1200000,
+  "quantity": 8,
+  "id": 10,
+  "created_at": "2026-03-03T44:37.853782+07:00",
+  "updated_at": null
+}
+```
+
+**Contoh Testing — GET item id=8 setelah diupdate:**
+
+Response `200 OK`:
+```json
+{
+  "name": "Laptop",
+  "description": "Laptop untuk cloud computing",
+  "price": 14000000,
+  "quantity": 5,
+  "id": 8,
+  "created_at": "2026-03-03T43:33.897688+07:00",
+  "updated_at": "2026-03-03T50:12.100795+07:00"
+}
+```
+
+**Response `404 Not Found`** (ID tidak ditemukan):
+```json
+{
+  "detail": "Item dengan id=8 tidak ditemukan"
+}
+```
+
+---
+
+### `PUT /items/{item_id}` — Update Item
+
+Memperbarui data item yang sudah ada. Mendukung **partial update** — hanya field yang dikirim yang akan diperbarui.
+
+**Request:**
+```
+PUT /items/{item_id}
+Content-Type: application/json
+```
+
+**Request Body** *(semua field opsional)*:
+```json
+{
+  "name": "Laptop",
+  "description": "Laptop untuk cloud computing",
+  "price": 14000000,
+  "quantity": 5
+}
+```
+
+| Field | Tipe | Wajib | Validasi | Keterangan |
+|---|---|---|---|---|
+| `name` | string | ❌ Tidak | 1–100 karakter | Nama baru item |
+| `description` | string | ❌ Tidak | — | Deskripsi baru |
+| `price` | float | ❌ Tidak | > 0 | Harga baru |
+| `quantity` | integer | ❌ Tidak | ≥ 0 | Jumlah stok baru |
+
+> 💡 Jika hanya mengirim `{"price": 14000000}`, maka hanya field `price` yang berubah. Field lain tetap seperti semula.
+
+**Contoh Testing — PUT item id=8 (update harga Laptop menjadi 14000000):**
+
+Response `200 OK`:
+```json
+{
+  "name": "Laptop",
+  "description": "Laptop untuk cloud computing",
+  "price": 14000000,
+  "quantity": 5,
+  "id": 8,
+  "created_at": "2026-03-03T43:55.807049+07:00",
+  "updated_at": "2026-03-03T50:13.100793+07:00"
+}
+```
+
+**Response `404 Not Found`:**
+```json
+{
+  "detail": "Item dengan id=8 tidak ditemukan"
+}
+```
+
+**Response `422 Unprocessable Entity`** (validasi gagal):
+```json
+{
+  "detail": [
+    {
+      "loc": ["body", "quantity"],
+      "msg": "Input should be greater than or equal to 0",
+      "type": "greater_than_equal"
+    }
+  ]
+}
+```
+
+---
+
+### `DELETE /items/{item_id}` — Hapus Item
+
+Menghapus item dari inventori secara permanen berdasarkan ID.
+
+**Request:**
+```
+DELETE /items/{item_id}
+```
+
+**Path Parameter:**
+
+| Parameter | Tipe | Keterangan |
+|---|---|---|
+| `item_id` | integer | ID item yang ingin dihapus |
+
+**Contoh Testing — DELETE item id=8 (Laptop):**
+
+Response `204 No Content`:
+```
+(response body kosong)
+```
+
+Response headers aktual:
+```
+access-control-allow-credentials: true
+access-control-allow-origin: http://localhost:8000
+content-type: application/json
+date: Tue, 03 Mar 2026 02:53:53 GMT
+server: uvicorn
+vary: Origin
+```
+
+**Response `404 Not Found`** (jika ID tidak ada):
+```json
+{
+  "detail": "Item dengan id=8 tidak ditemukan"
+}
+```
+
+> 💡 Status code `204` artinya request berhasil tetapi server tidak mengembalikan data apapun. Setelah DELETE berhasil, pemanggilan `GET /items/8` akan mengembalikan `404 Not Found`.
+
+---
+
+### `GET /team` — Informasi Tim
+
+Mengembalikan daftar anggota tim pengembang.
+
+**Request:**
+```
+GET /team
+```
+
+**Response `200 OK`:**
+```json
+{
+  "team": "cloud-team-ignore",
+  "members": [
+    {
+      "name": "Andini Permata Dewanti",
+      "nim": "102310314",
+      "role": "Lead Backend"
+    },
+    {
+      "name": "Putri Rahmawati",
+      "nim": "10231074",
+      "role": "Lead Frontend"
+    },
+    {
+      "name": "Krishandy Dhanysa Pratama",
+      "nim": "10231050",
+      "role": "Lead DevOps"
+    },
+    {
+      "name": "Desnita Dwi Putri",
+      "nim": "10231030",
+      "role": "Lead QA & Docs"
+    }
+  ]
+}
+```
+
+---
+
+## 📊 Ringkasan Endpoint
+
+| Method | Endpoint | Deskripsi | Status Sukses | Status Error |
+|--------|----------|-----------|---------------|--------------|
+| `GET` | `/health` | Health check server | `200` | — |
+| `POST` | `/items` | Buat item baru | `201` | `422` |
+| `GET` | `/items` | Ambil semua item (+ pagination & search) | `200` | — |
+| `GET` | `/items/stats` | Statistik inventori | `200` | — |
+| `GET` | `/items/{id}` | Ambil item by ID | `200` | `404` |
+| `PUT` | `/items/{id}` | Update item (partial) | `200` | `404`, `422` |
+| `DELETE` | `/items/{id}` | Hapus item | `204` | `404` |
+| `GET` | `/team` | Info anggota tim | `200` | — |
+
+---
+
+## 🚀 Cara Menjalankan
+
+### 1. Clone repository
+
+```bash
+git clone https://github.com/itk-si-cloud/cloud-team-ignite.git
+cd cloud-team-ignite
+```
+
+### 2. Setup environment
+
+```bash
+cd backend
+cp .env.example .env
+# Edit .env — isi password PostgreSQL Anda
+```
+
+### 3. Install dependencies & jalankan server
+
+```bash
+pip install -r requirements.txt
+uvicorn main:app --reload --port 8000
+```
+
+### 4. Buka dokumentasi interaktif
+
+```
+http://localhost:8000/docs
+```
 
 ---
 
