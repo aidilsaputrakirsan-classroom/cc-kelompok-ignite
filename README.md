@@ -33,7 +33,17 @@ RAZ'Q App (E-Commerce UMKM RAZ'Q) adalah platform e-commerce berbasis website ya
     - [8. FastAPI](#8-fastapi)
     - [9. Arsitektur Aplikasi](#9-arsitektur-aplikasi)
   - [📁 Struktur Proyek](#-struktur-proyek-1)
-  - [🏗️ Panduan Membangun REST API dari Nol](#️-panduan-membangun-rest-api-dari-nol)
+  - [🏗️ Panduan Membangun REST API](#️-panduan-membangun-rest-api)
+  - [📚 Dasar Teori](#-dasar-teori-1)
+    - [1. API (Application Programming Interface)](#1-api-application-programming-interface-1)
+    - [2. REST (Representational State Transfer)](#2-rest-representational-state-transfer-1)
+    - [3. HTTP Methods \& CRUD](#3-http-methods--crud-1)
+    - [4. HTTP Status Codes](#4-http-status-codes-1)
+    - [5. Database Relasional \& PostgreSQL](#5-database-relasional--postgresql-1)
+    - [6. ORM — SQLAlchemy](#6-orm--sqlalchemy-1)
+    - [7. Pydantic — Validasi Data](#7-pydantic--validasi-data-1)
+    - [8. FastAPI](#8-fastapi-1)
+    - [9. Arsitektur Aplikasi](#9-arsitektur-aplikasi-1)
     - [Langkah 1: Siapkan Database PostgreSQL](#langkah-1-siapkan-database-postgresql)
     - [Langkah 2: Buat File Konfigurasi `.env`](#langkah-2-buat-file-konfigurasi-env)
     - [Langkah 3: Install Dependencies](#langkah-3-install-dependencies)
@@ -375,9 +385,157 @@ cloud-team-ignite/
 
 ---
 
-## 🏗️ Panduan Membangun REST API dari Nol
+## 🏗️ Panduan Membangun REST API
 
+## 📚 Dasar Teori
 
+Sebelum memulai implementasi, penting untuk memahami konsep-konsep dasar yang menjadi fondasi dari proyek ini.
+
+---
+
+### 1. API (Application Programming Interface)
+
+**API** adalah "kontrak" atau antarmuka yang mendefinisikan bagaimana dua perangkat lunak berkomunikasi satu sama lain. Dalam konteks web, API memungkinkan frontend (browser/aplikasi mobile) berbicara dengan backend (server) melalui protokol HTTP.
+
+> 💡 **Analogi:** API seperti **pelayan di restoran**. Kamu (frontend/client) memesan makanan lewat pelayan (API), pelayan menyampaikan pesanan ke dapur (backend/server), lalu membawa makanan (response) kembali ke mejamu. Kamu tidak perlu tahu cara memasak — cukup tahu cara memesan.
+
+---
+
+### 2. REST (Representational State Transfer)
+
+**REST** adalah gaya arsitektur desain API yang menggunakan HTTP sebagai protokol komunikasi. REST mengorganisasi data sebagai *resources* yang bisa diakses melalui URL yang konsisten dan mudah diprediksi.
+
+**Prinsip utama REST:**
+
+| Prinsip | Penjelasan |
+|---|---|
+| **Client-Server** | Frontend dan backend dipisahkan dan dapat dikembangkan secara independen |
+| **Stateless** | Setiap request berdiri sendiri — server tidak menyimpan informasi tentang request sebelumnya |
+| **Uniform Interface** | URL yang konsisten dan dapat diprediksi untuk setiap resource |
+| **Resource-Based** | Setiap "hal" (item, user, order) adalah sebuah resource dengan URL uniknya sendiri |
+
+---
+
+### 3. HTTP Methods & CRUD
+
+REST API menggunakan **HTTP Methods** untuk mendefinisikan jenis operasi yang dilakukan pada sebuah resource. Setiap method berkorespondensi dengan satu operasi **CRUD**:
+
+| HTTP Method | Operasi CRUD | Contoh Endpoint | Deskripsi |
+|---|---|---|---|
+| `GET` | **R**ead | `GET /items` | Ambil semua items |
+| `GET` | **R**ead | `GET /items/1` | Ambil item dengan id=1 |
+| `POST` | **C**reate | `POST /items` | Buat item baru |
+| `PUT` | **U**pdate | `PUT /items/1` | Update seluruh data item id=1 |
+| `DELETE` | **D**elete | `DELETE /items/1` | Hapus item id=1 |
+
+---
+
+### 4. HTTP Status Codes
+
+Server selalu mengembalikan **status code** di setiap response untuk memberitahu client apakah request berhasil atau gagal dan mengapa.
+
+| Kode | Nama | Kapan Digunakan |
+|---|---|---|
+| `200` | OK | Request berhasil (GET, PUT) |
+| `201` | Created | Resource baru berhasil dibuat (POST) |
+| `204` | No Content | Berhasil tetapi tidak ada data dikembalikan (DELETE) |
+| `400` | Bad Request | Data yang dikirim tidak valid |
+| `404` | Not Found | Resource tidak ditemukan di server |
+| `422` | Unprocessable Entity | Validasi gagal — format data salah (default FastAPI) |
+| `500` | Internal Server Error | Terjadi kesalahan di sisi server |
+
+---
+
+### 5. Database Relasional & PostgreSQL
+
+**Database relasional** menyimpan data dalam bentuk **tabel** yang saling terhubung satu sama lain — mirip seperti spreadsheet Excel, tetapi jauh lebih powerful dan handal.
+
+**PostgreSQL** dipilih dalam proyek ini karena:
+- Open-source dan gratis
+- Sangat *reliable* dan sudah terbukti di lingkungan produksi
+- Mendukung tipe data yang kaya (JSON, Array, UUID, dll.)
+- Didukung oleh hampir semua cloud provider (Railway, Render, AWS RDS, Supabase)
+- Cocok untuk arsitektur microservices di fase selanjutnya
+
+Contoh tabel `items` di PostgreSQL:
+
+| id | name | price | quantity | created_at |
+|---|---|---|---|---|
+| 1 | Laptop | 15000000 | 5 | 2026-02-09 10:30:00 |
+| 2 | Mouse Wireless | 250000 | 20 | 2026-02-09 10:31:00 |
+| 3 | Keyboard Mechanical | 1200000 | 8 | 2026-02-09 10:32:00 |
+
+---
+
+### 6. ORM — SQLAlchemy
+
+**ORM (Object-Relational Mapping)** adalah teknik yang memungkinkan kita berinteraksi dengan database menggunakan objek Python, tanpa harus menulis SQL secara manual.
+
+**Perbandingan tanpa ORM vs dengan ORM:**
+
+| Tanpa ORM (Raw SQL) | Dengan ORM (SQLAlchemy) |
+|---|---|
+| `cursor.execute("INSERT INTO items (name, price) VALUES (%s, %s)", ("Laptop", 15000000))` | `db.add(Item(name="Laptop", price=15000000))` |
+| Harus menulis SQL manual | Menggunakan Python object — lebih intuitif |
+| Rentan SQL Injection jika tidak hati-hati | Aman dari SQL Injection secara default |
+| Tidak portable antar database | Bisa pindah database tanpa mengubah kode |
+
+**Cara kerja SQLAlchemy:**
+```
+Python Object  →  SQLAlchemy ORM  →  SQL Query  →  PostgreSQL
+Item(name="Laptop")  →  translasi otomatis  →  INSERT INTO items...  →  data tersimpan
+```
+
+---
+
+### 7. Pydantic — Validasi Data
+
+**Pydantic** adalah library validasi data Python yang digunakan FastAPI sebagai *schema* untuk:
+- Memvalidasi data yang masuk dari client (request body)
+- Mendefinisikan format data yang dikembalikan ke client (response)
+- Auto-generate dokumentasi API di Swagger UI
+
+Contoh: jika client mengirim `price: -500` atau `price: "lima ratus"`, Pydantic langsung menolak dan mengembalikan `422 Unprocessable Entity` dengan pesan error yang jelas — sebelum request bahkan sampai ke database.
+
+---
+
+### 8. FastAPI
+
+**FastAPI** adalah framework Python modern untuk membangun REST API dengan cepat dan mudah. Keunggulannya:
+
+| Fitur | Keterangan |
+|---|---|
+| **Kecepatan** | Salah satu framework Python tercepat (setara NodeJS & Go) |
+| **Auto-dokumentasi** | Swagger UI (`/docs`) dan ReDoc (`/redoc`) otomatis ter-generate |
+| **Validasi otomatis** | Terintegrasi dengan Pydantic untuk validasi request/response |
+| **Dependency Injection** | Sistem `Depends()` yang elegan untuk koneksi database, auth, dll. |
+| **Type hints** | Memanfaatkan type hints Python untuk validasi dan dokumentasi |
+
+---
+
+### 9. Arsitektur Aplikasi
+
+Proyek ini menggunakan pola **Separation of Concerns** — setiap file punya satu tanggung jawab yang spesifik:
+
+```
+Request dari client
+       ↓
+main.py          ← Menerima request, menentukan endpoint yang dipanggil
+       ↓
+schemas.py       ← Memvalidasi data request (Pydantic)
+       ↓
+crud.py          ← Menjalankan logika bisnis (CRUD operations)
+       ↓
+models.py        ← Mendefinisikan struktur tabel (SQLAlchemy)
+       ↓
+database.py      ← Mengelola koneksi ke PostgreSQL
+       ↓
+PostgreSQL       ← Menyimpan & mengambil data
+       ↑
+(alur balik: data dikembalikan ke client sebagai JSON)
+```
+
+> 💡 **Kenapa dipisah jadi banyak file?** Ketika proyek berkembang menjadi microservices (fase Minggu 12–14), struktur ini membuat kode lebih mudah dibaca, di-test, dan di-maintain oleh seluruh anggota tim.
 
 ---
 
