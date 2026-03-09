@@ -1069,6 +1069,9 @@ Response `201 Created`:
 }
 ```
 
+**📌 Analisis Output:**
+Jika request berhasil, server mengembalikan status `201 Created` beserta data item yang baru saja disimpan ke database. Output mencakup semua field yang dikirim ditambah tiga field yang diisi otomatis oleh server: `id` (nomor urut unik dari database), `created_at` (waktu penyimpanan dengan timezone `+07:00`), dan `updated_at` (bernilai `null` karena item belum pernah diubah). Jika ada field yang tidak memenuhi validasi — misalnya `price` bernilai negatif atau `name` kosong — server langsung menolak dengan `422` tanpa menyentuh database sama sekali.
+
 ---
 
 ### `GET /items` — Ambil Semua Item
@@ -1150,6 +1153,10 @@ Response `200 OK`:
 
 > 💡 Field `total` menunjukkan jumlah seluruh data yang cocok dengan filter, bukan jumlah data di halaman ini. Berguna untuk menghitung total halaman di frontend.
 
+
+**📌 Analisis Output:**
+Server mengembalikan objek JSON dengan dua field utama: `total` (jumlah seluruh item yang cocok dengan filter) dan `items` (array berisi data item sesuai parameter `skip` dan `limit`). Urutan item mengikuti urutan masuk ke database — item yang paling baru ditambahkan muncul di posisi paling atas. Ketika menggunakan parameter `search`, server melakukan pencarian *case-insensitive* di field `name` dan `description` sekaligus, sehingga `search=laptop` akan mencocokkan "Laptop", "laptop", maupun "LAPTOP". Jika tidak ada item yang cocok, `items` akan berupa array kosong `[]` dengan `total: 0`.
+
 ---
 
 ### `GET /items/stats` — Statistik Inventori
@@ -1203,6 +1210,10 @@ Response `200 OK`:
 | `cheapest.price` | float | Harga item termurah |
 
 > ⚠️ **Catatan urutan endpoint:** `GET /items/stats` harus didaftarkan di `main.py` **sebelum** `GET /items/{item_id}`, karena FastAPI memproses route secara berurutan dari atas ke bawah.
+
+
+**📌 Analisis Output:**
+Server menghitung statistik secara real-time dari seluruh data yang ada di tabel `items` saat endpoint dipanggil. `total_items` adalah jumlah baris di tabel, `total_value` dihitung dari `SUM(price × quantity)` untuk setiap item — sehingga item dengan stok banyak berkontribusi lebih besar ke total nilai. `most_expensive` dan `cheapest` hanya membandingkan berdasarkan `price` per satuan, bukan total nilai. Pada contoh testing di atas, setelah Laptop (`id=8`) dihapus, nilai `most_expensive` berubah menjadi Keyboard Mechanical karena Laptop tidak lagi ada di database. Jika inventori kosong, semua field mengembalikan `0` atau `null`.
 
 ---
 
@@ -1288,6 +1299,9 @@ Response `200 OK`:
 }
 ```
 
+**📌 Analisis Output:**
+Jika item ditemukan, server mengembalikan seluruh data item sesuai kondisi terkini di database. Perhatikan bahwa field `updated_at` awalnya bernilai `null` (artinya item belum pernah dimodifikasi sejak dibuat), namun setelah dilakukan `PUT`, field ini terisi dengan timestamp waktu perubahan terakhir. Jika ID yang diminta tidak ada di database, server mengembalikan `404` dengan pesan `"Item dengan id={id} tidak ditemukan"` — bukan array kosong, karena ini bukan kasus "tidak ada hasil", melainkan "resource tidak ditemukan".
+
 ---
 
 ### `PUT /items/{item_id}` — Update Item
@@ -1354,6 +1368,9 @@ Response `200 OK`:
 }
 ```
 
+**📌 Analisis Output:**
+Server menerapkan *partial update* — hanya field yang dikirim dalam request body yang akan berubah di database, field lain tetap seperti semula. Buktinya terlihat pada output: meskipun request hanya mengubah `price` menjadi `14000000`, field `name`, `description`, dan `quantity` tetap sama. Field `updated_at` yang sebelumnya `null` kini terisi timestamp, menandakan ada perubahan yang tersimpan. Jika mengirim field dengan nilai tidak valid (misalnya `quantity: -1`), server menolak seluruh request dengan `422` tanpa mengubah data apapun di database.
+
 ---
 
 ### `DELETE /items/{item_id}` — Hapus Item
@@ -1397,6 +1414,10 @@ vary: Origin
 
 > 💡 Status code `204` artinya request berhasil tetapi server tidak mengembalikan data apapun. Setelah DELETE berhasil, pemanggilan `GET /items/8` akan mengembalikan `404 Not Found`.
 
+
+**📌 Analisis Output:**
+Berbeda dengan endpoint lain, `DELETE` yang berhasil tidak mengembalikan body apapun — hanya status code `204 No Content`. Ini adalah konvensi REST yang benar: tidak ada yang perlu dikembalikan karena datanya sudah tidak ada. Yang perlu diperhatikan dari response headers adalah kehadiran `access-control-allow-credentials: true` dan `vary: Origin` yang menandakan CORS middleware aktif dan berfungsi, memperbolehkan frontend dari origin berbeda mengakses endpoint ini. Penghapusan bersifat permanen — tidak ada fitur *undo* atau *soft delete* pada implementasi ini.
+
 ---
 
 ### `GET /team` — Informasi Tim
@@ -1436,6 +1457,16 @@ GET /team
   ]
 }
 ```
+Response headers aktual:
+```
+content-length: 321
+content-type: application/json
+date: Sun, 08 Mar 2026 03:19:54 GMT
+server: uvicorn
+```
+
+**📌 Analisis Output:**
+Server mengembalikan objek JSON berisi field `team` (nama tim) dan `members` (array anggota tim). Data ini bersifat statis — di-*hardcode* langsung di `main.py` dan tidak terhubung ke database. Endpoint ini berfungsi sebagai identitas proyek, berguna untuk memverifikasi bahwa server yang berjalan adalah milik tim yang benar. `content-length: 321` pada response headers menunjukkan ukuran response body dalam byte.
 
 ---
 
