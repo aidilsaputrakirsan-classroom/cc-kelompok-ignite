@@ -49,7 +49,7 @@ Pengujian dilakukan secara berurutan untuk mensimulasikan alur penggunaan aplika
 
 **Hasil:** ✅ PASS — Header menampilkan badge **"2 items"** dan **"🟢 API Connected"** di pojok kanan atas. Daftar item sudah tampil: **Keyboard Mechanical** (Rp 1.200.000, Stok: 8) dan **Mouse Wireless** (Rp 250.000, Stok: 20)
 
-![Screenshot Test 1 - API Connected](images/ui test 1.jpeg)  
+![Screenshot Test 1 - API Connected](images/ui%20test%201.jpeg)  
 
 ---
 
@@ -64,7 +64,7 @@ Pengujian dilakukan secara berurutan untuk mensimulasikan alur penggunaan aplika
 
 **Hasil:** ✅ PASS — Daftar item tampil dengan 2 card: **Keyboard Mechanical** (Rp 1.200.000) dan **Mouse Wireless** (Rp 250.000). Setiap card menampilkan nama, harga, deskripsi, stok, tanggal dibuat, serta tombol Edit dan Hapus
 
-![Screenshot Test 2 - Daftar Item](images/ui test 2.jpeg)
+![Screenshot Test 2 - Daftar Item](images/ui%20test%202.jpeg)
 
 ---
 
@@ -92,8 +92,7 @@ Pengujian dilakukan secara berurutan untuk mensimulasikan alur penggunaan aplika
 
 **Hasil:** ✅ PASS — Form berhasil dikirim. Header berubah menjadi **"3 items"**. Daftar menampilkan: **Mouse** (Rp 500.000, Stok: 7) dan **Keyboard** (Rp 1.500.000, Stok: 5). Terlihat dropdown sorting **"Urutkan berdasarkan: Terbaru"**
 
-![Screenshot Test 3 - Tambah Item](images/ui test 3.jpeg)
-
+![Screenshot Test 3 - Tambah Item](images/ui%20test%203.jpeg)
 ---
 
 ### Test 4: Verifikasi Item Baru Tampil di Daftar
@@ -107,7 +106,7 @@ Pengujian dilakukan secara berurutan untuk mensimulasikan alur penggunaan aplika
 
 **Hasil:** ✅ PASS — Card **Laptop** langsung muncul di urutan teratas daftar. Header menampilkan **"4 items"**. Form kembali kosong siap menerima input baru
 
-![Screenshot Test 4 - Item Baru Tampil](images/ui test 4.jpeg)
+![Screenshot Test 4 - Item Baru Tampil](images/ui%20test%204.jpeg)
 
 ---
 
@@ -127,7 +126,7 @@ Pengujian dilakukan secara berurutan untuk mensimulasikan alur penggunaan aplika
 
 **Hasil:** ✅ PASS — Judul form berubah menjadi **"✏️ Edit Item"**. Field terisi otomatis: Nama = `Laptop`, Harga = `14000000`, Deskripsi = `Laptop untuk coding Cloud Computir`, Stok = `3`. Tombol **"💾 Update Item"** dan **"✕ Batal Edit"** muncul
 
-![Screenshot Test 5 - Form Edit Terisi](images/ui test 5.jpeg)
+![Screenshot Test 5 - Form Edit Terisi](images/ui%20test%205.jpeg)
 
 ---
 
@@ -153,7 +152,7 @@ Pengujian dilakukan secara berurutan untuk mensimulasikan alur penggunaan aplika
 
 **Hasil:** ✅ PASS — Form Edit Item menampilkan harga yang sudah diubah menjadi `15000000`. Daftar di bawah masih menampilkan harga lama `Rp 14.000.000` karena belum di-submit. Screenshot ini diambil saat pengguna sedang mengedit nilai harga sebelum klik Update
 
-![Screenshot Test 6 - Item Terupdate](images/ui test 6.jpeg)
+![Screenshot Test 6 - Item Terupdate](images/ui%20test%206.jpeg)
 
 ---
 
@@ -169,7 +168,7 @@ Pengujian dilakukan secara berurutan untuk mensimulasikan alur penggunaan aplika
 
 **Hasil:** ✅ PASS — Header menampilkan **"1 items"**. Hanya card **Keyboard Mechanical** (Rp 1.200.000, Stok: 8, 3 Mar 2026, 09.44) yang tampil. Tombol **"✕ Clear"** muncul di sebelah tombol Cari untuk mereset filter
 
-![Screenshot Test 7 - Hasil Pencarian](images/ui test 7.jpeg)
+![Screenshot Test 7 - Hasil Pencarian](images/ui%20test%207.jpeg)
 
 ---
 
@@ -187,7 +186,7 @@ Pengujian dilakukan secara berurutan untuk mensimulasikan alur penggunaan aplika
 
 **Hasil:** ✅ PASS — Dialog konfirmasi browser (`localhost:5173 says`) muncul dengan pesan **"Yakin ingin menghapus 'Laptop'?"** beserta tombol **OK** dan **Cancel**. Di balik dialog, terlihat daftar item dengan Laptop (Rp 21.000.000), Keyboard Mechanical, dan Mouse Wireless
 
-![Screenshot Test 8 - Dialog Konfirmasi Hapus](images/ui test 8.jpeg)
+![Screenshot Test 8 - Dialog Konfirmasi Hapus](images/ui%20test%208.jpeg)
 
 ---
 
@@ -202,7 +201,7 @@ Pengujian dilakukan secara berurutan untuk mensimulasikan alur penggunaan aplika
 
 **Hasil:** ✅ PASS — Card **Laptop** hilang dari daftar secara otomatis. Header menampilkan **"2 items"**. Tersisa **Keyboard Mechanical** dan **Mouse Wireless**. Tidak perlu refresh halaman
 
-![Screenshot Test 9 - Item Terhapus](images/ui test 9.jpeg)
+![Screenshot Test 9 - Item Terhapus](images/ui%20test%209.jpeg)
 
 ---
 
@@ -217,7 +216,7 @@ Pengujian dilakukan secara berurutan untuk mensimulasikan alur penggunaan aplika
 
 **Hasil:** ✅ PASS — Empty state tampil dengan rapi: ikon mailbox, teks **"Belum ada item."**, dan petunjuk **"Gunakan form di atas untuk menambahkan item pertama."** Header menampilkan **"0 items"** dan status **API Connected** tetap hijau
 
-![Screenshot Test 10 - Empty State](images/ui test 10.jpeg)
+![Screenshot Test 10 - Empty State](images/ui%20test%2010.jpeg)
 
 ---
 
