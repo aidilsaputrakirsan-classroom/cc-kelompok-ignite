@@ -14,6 +14,9 @@ function App() {
   const [editingItem, setEditingItem] = useState(null)
   const [searchQuery, setSearchQuery] = useState("")
 
+  // ==================== STATE SORTING ====================
+  const [sortBy, setSortBy] = useState("latest")
+
   // ==================== LOAD DATA ====================
   const loadItems = useCallback(async (search = "") => {
     setLoading(true)
@@ -30,9 +33,7 @@ function App() {
 
   // ==================== ON MOUNT ====================
   useEffect(() => {
-    // Cek koneksi API
     checkHealth().then(setIsConnected)
-    // Load items
     loadItems()
   }, [loadItems])
 
@@ -40,20 +41,16 @@ function App() {
 
   const handleSubmit = async (itemData, editId) => {
     if (editId) {
-      // Mode edit
       await updateItem(editId, itemData)
       setEditingItem(null)
     } else {
-      // Mode create
       await createItem(itemData)
     }
-    // Reload daftar items
     loadItems(searchQuery)
   }
 
   const handleEdit = (item) => {
     setEditingItem(item)
-    // Scroll ke atas ke form
     window.scrollTo({ top: 0, behavior: "smooth" })
   }
 
@@ -78,19 +75,53 @@ function App() {
     setEditingItem(null)
   }
 
+  // ==================== SORTING FUNCTION ====================
+  const sortedItems = [...items].sort((a, b) => {
+    if (sortBy === "name") {
+      return a.name.localeCompare(b.name)
+    }
+
+    if (sortBy === "price") {
+      return a.price - b.price
+    }
+
+    if (sortBy === "latest") {
+      return b.id - a.id
+    }
+
+    return 0
+  })
+
   // ==================== RENDER ====================
   return (
     <div style={styles.app}>
       <div style={styles.container}>
         <Header totalItems={totalItems} isConnected={isConnected} />
+
         <ItemForm
           onSubmit={handleSubmit}
           editingItem={editingItem}
           onCancelEdit={handleCancelEdit}
         />
+
         <SearchBar onSearch={handleSearch} />
+
+        {/* DROPDOWN SORTING */}
+        <div style={styles.sortContainer}>
+          <label style={styles.sortLabel}>Urutkan berdasarkan:</label>
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            style={styles.sortSelect}
+          >
+            <option value="name">Nama</option>
+            <option value="price">Harga</option>
+            <option value="latest">Terbaru</option>
+          </select>
+        </div>
+
         <ItemList
-          items={items}
+          items={sortedItems}
           onEdit={handleEdit}
           onDelete={handleDelete}
           loading={loading}
@@ -110,6 +141,23 @@ const styles = {
   container: {
     maxWidth: "900px",
     margin: "0 auto",
+  },
+
+  sortContainer: {
+    margin: "1rem 0",
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+  },
+
+  sortLabel: {
+    fontWeight: "500",
+  },
+
+  sortSelect: {
+    padding: "6px 10px",
+    borderRadius: "6px",
+    border: "1px solid #ccc",
   },
 }
 
