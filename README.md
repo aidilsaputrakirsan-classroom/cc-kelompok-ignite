@@ -21,6 +21,7 @@ RAZ'Q App (E-Commerce UMKM RAZ'Q) adalah platform e-commerce berbasis website ya
     - [Prasyarat](#prasyarat)
     - [Backend](#backend)
     - [Frontend](#frontend)
+    - [Verifikasi](#verifikasi)
   - [📁 Struktur Proyek](#-struktur-proyek)
   - [📚 Dasar Teori](#-dasar-teori)
     - [1. API (Application Programming Interface)](#1-api-application-programming-interface)
@@ -32,7 +33,6 @@ RAZ'Q App (E-Commerce UMKM RAZ'Q) adalah platform e-commerce berbasis website ya
     - [7. Pydantic — Validasi Data](#7-pydantic--validasi-data)
     - [8. FastAPI](#8-fastapi)
     - [9. Arsitektur Aplikasi](#9-arsitektur-aplikasi)
-  - [📁 Struktur Proyek](#-struktur-proyek-1)
   - [🏗️ Panduan Membangun REST API](#️-panduan-membangun-rest-api)
   - [📚 Dasar Teori](#-dasar-teori-1)
     - [1. API (Application Programming Interface)](#1-api-application-programming-interface-1)
@@ -71,6 +71,27 @@ RAZ'Q App (E-Commerce UMKM RAZ'Q) adalah platform e-commerce berbasis website ya
     - [2. Setup environment](#2-setup-environment)
     - [3. Install dependencies \& jalankan server](#3-install-dependencies--jalankan-server)
     - [4. Buka dokumentasi interaktif](#4-buka-dokumentasi-interaktif)
+  - [🏗️ Panduan Membangun Frontend React](#️-panduan-membangun-frontend-react)
+  - [📚 Dasar Teori](#-dasar-teori-2)
+    - [1. React](#1-react)
+    - [2. Props dan State](#2-props-dan-state)
+    - [3. Fetch API](#3-fetch-api)
+    - [4. Separation of Concerns pada Frontend](#4-separation-of-concerns-pada-frontend)
+  - [🖥️ Panduan Membangun Frontend React](#️-panduan-membangun-frontend-react-1)
+    - [Langkah 1: Membuat Struktur Folder](#langkah-1-membuat-struktur-folder)
+    - [Langkah 2: Membuat API Service Layer — `api.js`](#langkah-2-membuat-api-service-layer--apijs)
+    - [Langkah 3: Membuat Komponen `Header.jsx`](#langkah-3-membuat-komponen-headerjsx)
+    - [Langkah 4: Membuat Komponen `SearchBar.jsx`](#langkah-4-membuat-komponen-searchbarjsx)
+    - [Langkah 5: Membuat Komponen `ItemForm.jsx`](#langkah-5-membuat-komponen-itemformjsx)
+    - [Langkah 6: Membuat Komponen `ItemCard.jsx`](#langkah-6-membuat-komponen-itemcardjsx)
+    - [Langkah 7: Membuat Komponen `ItemList.jsx`](#langkah-7-membuat-komponen-itemlistjsx)
+    - [Langkah 8: Membangun Komponen Utama — `App.jsx`](#langkah-8-membangun-komponen-utama--appjsx)
+    - [Langkah 9: Memperbarui `App.css` dan `main.jsx`](#langkah-9-memperbarui-appcss-dan-mainjsx)
+    - [Langkah 10: Mengatur Environment Variable](#langkah-10-mengatur-environment-variable)
+    - [Langkah 11: Menjalankan Aplikasi](#langkah-11-menjalankan-aplikasi)
+    - [Langkah 12: Pengujian dan Commit](#langkah-12-pengujian-dan-commit)
+  - [✅ Fitur UI yang Dibangun](#-fitur-ui-yang-dibangun)
+  - [🚀 Cara Menjalankan](#-cara-menjalankan-1)
   - [📅 Roadmap](#-roadmap)
 ---
 ## Fitur Utama
@@ -126,7 +147,9 @@ RAZ'Q App (E-Commerce UMKM RAZ'Q) adalah platform e-commerce berbasis website ya
 | Teknologi | Fungsi | Penjelasan |
 |------------|----------|------------|
 | **FastAPI** | Backend REST API | Framework Python berbasis asynchronous yang digunakan untuk membangun REST API dengan performa tinggi dan dokumentasi otomatis (Swagger). |
-| **React** | Frontend SPA | Library JavaScript untuk membangun Single Page Application (SPA) yang responsif dan modular menggunakan component-based architecture. |
+| **React 18** | Frontend SPA | Library JavaScript untuk membangun Single Page Application (SPA) yang responsif dan modular menggunakan component-based architecture. |
+| **Vite** | Build Tool | Development server dan build tool untuk frontend React dengan hot-reload cepat. Berjalan di port 5173. |
+| **Fetch API** | HTTP Client | API bawaan JavaScript untuk melakukan HTTP request (GET/POST/PUT/DELETE) dari frontend ke backend. |
 | **PostgreSQL** | Database | Sistem manajemen basis data relasional (RDBMS) yang digunakan untuk menyimpan data user, produk, pesanan, dan transaksi secara terstruktur. |
 | **Docker** | Containerization | Digunakan untuk mengemas aplikasi beserta dependensinya ke dalam container agar environment konsisten di berbagai sistem. |
 | **GitHub Actions** | CI/CD | Digunakan untuk otomatisasi proses build, testing, dan deployment setiap terjadi perubahan pada repository. |
@@ -152,7 +175,7 @@ Proyek ini menggunakan arsitektur **three-tier** yang memisahkan tampilan, logik
        Browser                                        Server                                    Database
 ```
 
-**Alur data saat client melakukan request:**
+**Alur data saat client melakukan request ke Backend:**
 
 ```
 Browser / Postman
@@ -167,6 +190,30 @@ main.py  ──►  schemas.py  ──►  crud.py  ──►  models.py  ──
 Browser / Postman
 ```
 
+**Alur data di sisi Frontend React (Modul 3):**
+
+```
+User Action (klik tombol / isi form)
+      │
+      ▼
+App.jsx  ──►  services/api.js  ──►  HTTP Request  ──►  FastAPI Backend
+ State          fetch() wrapper       GET/POST/PUT/DELETE    (port 8000)
+      │
+      │  Response JSON
+      ▼
+setItems() / setTotalItems()  ──►  Re-render komponen  ──►  UI terupdate
+```
+
+**Komponen Tree Frontend:**
+```
+App (state: items, editingItem, searchQuery, loading, isConnected)
+ ├── Header        (props: totalItems, isConnected)
+ ├── ItemForm      (props: onSubmit, editingItem, onCancelEdit)
+ ├── SearchBar     (props: onSearch)
+ └── ItemList      (props: items, onEdit, onDelete, loading)
+      └── ItemCard (props: item, onEdit, onDelete)
+```
+
 > 📌 Diagram ini akan berkembang setiap minggu — mulai dari monolith sederhana hingga arsitektur microservices di fase akhir (Minggu 12–14).
 
 ---
@@ -178,25 +225,35 @@ Browser / Postman
 - **Node.js 18+**: Diperlukan untuk kompilasi aset React dan manajemen package (NPM).
 - **Git**: Untuk manajemen versi dan kolaborasi antar anggota tim.
 
+> ⚠️ **Perlu 2 terminal berjalan bersamaan** — satu untuk backend, satu untuk frontend.
+
 ### Backend
 ```bash
 cd backend
+cp .env.example .env
+# Edit .env — isi DATABASE_URL dengan password PostgreSQL Anda
 pip install -r requirements.txt
 uvicorn main:app --reload --port 8000
 ```
-Backend akan berjalan di:
 
-http://localhost:8000
+Backend tersedia di `http://localhost:8000`  
+Dokumentasi API (Swagger UI): `http://localhost:8000/docs`
 
 ### Frontend
 ```bash
 cd frontend
+cp .env.example .env
+# Pastikan VITE_API_URL=http://localhost:8000
 npm install
 npm run dev
 ```
-Frontend akan berjalan di:
 
-http://localhost:5173
+Frontend tersedia di `http://localhost:5173`
+
+### Verifikasi
+Buka `http://localhost:5173` — Header harus menampilkan badge **🟢 API Connected**.
+
+---
 
 ## 📁 Struktur Proyek
 
@@ -213,14 +270,26 @@ cloud-team-ignite/
 │   └── .env.example               ← ✅ Template konfigurasi — ini yang di-commit
 ├── frontend/
 │   ├── src/
-│   │   ├── App.jsx                ← Komponen utama React + integrasi API
-│   │   └── main.jsx               ← Entry point React
+│   │   ├── App.jsx                ← Root component, state management CRUD
+│   │   ├── App.css                ← Global styling & CSS reset
+│   │   ├── main.jsx               ← Entry point React
+│   │   ├── components/
+│   │   │   ├── Header.jsx         ← Judul, badge total item & status koneksi API
+│   │   │   ├── SearchBar.jsx      ← Input pencarian dengan tombol Clear
+│   │   │   ├── ItemForm.jsx       ← Form create/edit item dengan validasi
+│   │   │   ├── ItemList.jsx       ← Grid container daftar item + empty state
+│   │   │   └── ItemCard.jsx       ← Card per item + tombol Edit & Hapus
+│   │   └── services/
+│   │       └── api.js             ← Semua fungsi fetch ke backend API
+│   ├── .env                       ← ⛔ RAHASIA — berisi VITE_API_URL, jangan di-commit!
+│   ├── .env.example               ← ✅ Template konfigurasi frontend — ini yang di-commit
 │   ├── index.html
 │   ├── package.json               ← Dependencies & scripts Node.js
 │   └── vite.config.js             ← Konfigurasi Vite bundler
 ├── docs/
-│   ├── api-test-results.md        ← (Lead Frontend) Dokumentasi hasil testing endpoint
-│   ├── database-schema.md         ← (Lead CI/CD) Schema tabel database
+│   ├── api-test-results.md        ← Dokumentasi hasil testing endpoint API
+│   ├── ui-test-results.md         ← Dokumentasi hasil testing UI React (Modul 3)
+│   ├── database-schema.md         ← Schema tabel database
 │   └── member-[NAMA].md           ← File verifikasi masing-masing anggota
 ├── .gitignore                     ← Daftar file yang tidak di-commit (termasuk .env)
 └── README.md                      ← Dokumentasi proyek
@@ -377,29 +446,6 @@ PostgreSQL       ← Menyimpan & mengambil data
 ```
 
 > 💡 **Kenapa dipisah jadi banyak file?** Ketika proyek berkembang menjadi microservices (fase Minggu 12–14), struktur ini membuat kode lebih mudah dibaca, di-test, dan di-maintain oleh seluruh anggota tim.
-
----
-
-## 📁 Struktur Proyek
-
-```
-cloud-team-ignite/
-├── backend/
-│   ├── main.py              ← Entry point, FastAPI router & endpoints
-│   ├── database.py          ← Koneksi PostgreSQL via SQLAlchemy
-│   ├── models.py            ← SQLAlchemy models (definisi tabel)
-│   ├── schemas.py           ← Pydantic schemas (validasi request/response)
-│   ├── crud.py              ← Fungsi CRUD (business logic)
-│   ├── requirements.txt     ← Daftar dependencies Python
-│   ├── .env                 ← ⛔ RAHASIA — jangan di-commit!
-│   └── .env.example         ← ✅ Template .env — ini yang di-commit
-├── frontend/
-│   └── ...
-├── docs/
-│   └── ...
-├── .gitignore
-└── README.md
-```
 
 ---
 
@@ -1516,6 +1562,1147 @@ http://localhost:8000/docs
 ```
 
 ---
+## 🏗️ Panduan Membangun Frontend React
+## 📚 Dasar Teori
+
+### 1. React
+
+**React** adalah library JavaScript untuk membangun tampilan antarmuka pengguna (UI). React bekerja dengan cara memecah halaman menjadi bagian-bagian kecil yang disebut **komponen**. Setiap komponen memiliki tugas dan tanggung jawabnya masing-masing dan dapat digunakan ulang di berbagai tempat.
+
+> 💡 **Analogi:** Halaman web seperti sebuah bangunan. Komponen adalah bagian-bagian bangunan tersebut terdapat bagian atap, dinding, pintu, dan jendela. Jika pintu perlu diganti, cukup ganti bagian pintu saja tanpa harus merombak seluruh bangunan.
+
+**Konsep utama React yang digunakan dalam proyek ini:**
+
+| Konsep | Penjelasan | Digunakan di |
+|---|---|---|
+| **Component** | Fungsi JavaScript yang menghasilkan tampilan (JSX) | Semua file `.jsx` |
+| **Props** | Data yang dikirim dari komponen induk ke komponen anak — bersifat hanya-baca | Semua komponen |
+| **State** | Data yang dapat berubah di dalam komponen — setiap perubahan memperbarui tampilan | `App.jsx` |
+| **JSX** | Sintaks penulisan HTML di dalam file JavaScript | Semua komponen |
+| **useState** | Hook untuk menyimpan dan mengubah data di dalam komponen | `App.jsx`, `ItemForm.jsx`, `SearchBar.jsx` |
+| **useEffect** | Hook untuk menjalankan kode tertentu saat komponen pertama dimuat atau saat data tertentu berubah | `App.jsx`, `ItemForm.jsx` |
+| **useCallback** | Hook untuk mencegah sebuah fungsi dibuat ulang setiap kali komponen dirender | `App.jsx` |
+
+---
+
+### 2. Props dan State
+
+| Aspek | Props | State |
+|---|---|---|
+| **Sumber data** | Dikirim dari komponen induk | Dibuat dan dikelola di dalam komponen itu sendiri |
+| **Dapat diubah?** | ❌ Tidak dapat diubah oleh komponen penerima | ✅ Dapat diubah menggunakan fungsi dari `useState` |
+| **Efek perubahan** | Jika induk memperbarui props, komponen anak ikut diperbarui | Jika state berubah, tampilan komponen tersebut diperbarui |
+| **Analogi** | Instruksi yang diberikan atasan kepada karyawan | Catatan kerja milik karyawan itu sendiri |
+
+---
+
+### 3. Fetch API
+
+**Fetch API** adalah fitur bawaan JavaScript untuk mengirim permintaan HTTP ke server. Tidak diperlukan instalasi library tambahan untuk menggunakannya.
+
+**Jenis permintaan yang digunakan dalam proyek ini:**
+
+| Tujuan | Method HTTP | Contoh penggunaan |
+|---|---|---|
+| Mengambil semua item | `GET` | `await fetch("/items")` |
+| Menambah item baru | `POST` | `fetch("/items", { method: "POST", body: ... })` |
+| Memperbarui item | `PUT` | `fetch("/items/8", { method: "PUT", body: ... })` |
+| Menghapus item | `DELETE` | `fetch("/items/8", { method: "DELETE" })` |
+| Memeriksa status backend | `GET` | `await fetch("/health")` |
+
+**Alasan semua fungsi fetch dipusatkan di `api.js`:**  
+Jika alamat backend berubah di kemudian hari (misalnya saat deployment ke cloud), perubahan hanya perlu dilakukan di satu tempat, yaitu di `api.js`. Tidak perlu mengubah kode di setiap komponen secara satu per satu.
+
+---
+
+### 4. Separation of Concerns pada Frontend
+
+Prinsip **Separation of Concerns** berarti setiap file hanya memiliki satu tanggung jawab yang spesifik. Prinsip yang sama diterapkan pada backend (pemisahan `main.py`, `crud.py`, `models.py`) juga berlaku pada frontend.
+
+| File | Tanggung Jawab |
+|---|---|
+| `App.jsx` | Menyimpan semua data (state) dan mendefinisikan semua fungsi aksi CRUD |
+| `Header.jsx` | Menampilkan judul, jumlah item, dan status koneksi API |
+| `ItemForm.jsx` | Mengelola input form untuk mode tambah dan mode edit |
+| `SearchBar.jsx` | Mengelola kolom pencarian dan tombol Clear |
+| `ItemList.jsx` | Menampilkan daftar item, status loading, dan tampilan saat data kosong |
+| `ItemCard.jsx` | Menampilkan satu item beserta tombol Edit dan Hapus |
+| `services/api.js` | Menyediakan fungsi-fungsi komunikasi HTTP ke backend |
+
+> 💡 Dengan pemisahan ini, apabila terjadi kesalahan pada tampilan form, pengembang cukup membuka `ItemForm.jsx` tanpa perlu memeriksa seluruh kode aplikasi.
+
+---
+
+## 🖥️ Panduan Membangun Frontend React
+
+### Langkah 1: Membuat Struktur Folder
+
+```bash
+cd cloud-team-XX/frontend/src
+mkdir -p components services
+```
+
+Perintah ini membuat dua folder baru di dalam direktori `src/`:
+- `components/` — tempat menyimpan semua file komponen tampilan
+- `services/` — tempat menyimpan file `api.js`
+
+---
+
+### Langkah 2: Membuat API Service Layer — `api.js`
+
+File: `frontend/src/services/api.js`
+
+File ini berisi semua fungsi untuk berkomunikasi dengan backend. Setiap komponen yang membutuhkan data dari backend akan memanggil fungsi dari file ini, bukan menulis kode fetch secara langsung di dalam komponen.
+
+```javascript
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000"
+
+// ==================== GET ====================
+
+export async function fetchItems(search = "", skip = 0, limit = 20) {
+    const params = new URLSearchParams()
+    if (search) params.append("search", search)
+    params.append("skip", skip)
+    params.append("limit", limit)
+
+    const response = await fetch(`${API_URL}/items?${params}`)
+    if (!response.ok) throw new Error("Gagal mengambil data items")
+    return response.json()
+}
+
+export async function fetchItem(id) {
+    const response = await fetch(`${API_URL}/items/${id}`)
+    if (!response.ok) throw new Error(`Item ${id} tidak ditemukan`)
+    return response.json()
+}
+
+// ==================== POST ====================
+
+export async function createItem(itemData) {
+    const response = await fetch(`${API_URL}/items`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(itemData),
+    })
+    if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.detail || "Gagal membuat item")
+    }
+    return response.json()
+}
+
+// ==================== PUT ====================
+
+export async function updateItem(id, itemData) {
+    const response = await fetch(`${API_URL}/items/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(itemData),
+    })
+    if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.detail || "Gagal mengupdate item")
+    }
+    return response.json()
+}
+
+// ==================== DELETE ====================
+
+export async function deleteItem(id) {
+    const response = await fetch(`${API_URL}/items/${id}`, {
+        method: "DELETE",
+    })
+
+    if (!response.ok) {
+        const error = await response.json().catch(() => ({}))
+        throw new Error(error.detail || `Gagal menghapus item ${id}`)
+    }
+
+    return true
+}
+
+// ==================== HEALTH ====================
+
+export async function checkHealth() {
+    try {
+        const response = await fetch(`${API_URL}/health`)
+        const data = await response.json()
+        return data.status === "healthy"
+    } catch {
+        return false
+    }
+}
+```
+
+> 💡 **Mengapa variabel harus diawali `VITE_`?**  
+> Vite memiliki aturan keamanan: hanya variabel yang diawali `VITE_` yang dapat diakses oleh kode JavaScript di browser. Variabel tanpa awalan `VITE_` tidak akan tersedia dan nilainya akan menjadi `undefined`. Aturan ini mencegah data sensitif seperti password database terbaca oleh pengguna melalui browser.
+
+---
+
+### Langkah 3: Membuat Komponen `Header.jsx`
+
+File: `frontend/src/components/Header.jsx`
+
+Komponen ini menampilkan bagian atas halaman yang berisi judul aplikasi, jumlah item saat ini, dan status koneksi ke backend.
+
+```jsx
+function Header({ totalItems, isConnected }) {
+    return (
+        <header style={styles.header}>
+            <div>
+                <h1 style={styles.title}>☁️ Cloud App</h1>
+                <p style={styles.subtitle}>Komputasi Awan — SI ITK</p>
+            </div>
+            <div style={styles.stats}>
+                <span style={styles.badge}>
+                    {totalItems} items
+                </span>
+                <span style={{
+                    ...styles.status,
+                    backgroundColor: isConnected ? "#E2EFDA" : "#FBE5D6",
+                    color: isConnected ? "#548235" : "#C00000",
+                }}>
+                    {isConnected ? "🟢 API Connected" : "🔴 API Disconnected"}
+                </span>
+            </div>
+        </header>
+    )
+}
+
+const styles = {
+    header: {
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        padding: "1.5rem 2rem",
+        backgroundColor: "#1F4E79",
+        color: "white",
+        borderRadius: "12px",
+        marginBottom: "1.5rem",
+    },
+    title: {
+        margin: 0,
+        fontSize: "1.8rem",
+    },
+    subtitle: {
+        margin: "0.25rem 0 0 0",
+        fontSize: "0.9rem",
+        opacity: 0.8,
+    },
+    stats: {
+        display: "flex",
+        gap: "0.75rem",
+        alignItems: "center",
+    },
+    badge: {
+        backgroundColor: "rgba(255,255,255,0.2)",
+        padding: "0.4rem 0.8rem",
+        borderRadius: "20px",
+        fontSize: "0.85rem",
+    },
+    status: {
+        padding: "0.4rem 0.8rem",
+        borderRadius: "20px",
+        fontSize: "0.8rem",
+        fontWeight: "bold",
+    },
+}
+
+export default Header
+```
+
+**Penjelasan kode:**
+
+- `{ totalItems, isConnected }` — cara mengambil props dari komponen induk. Penulisan ini setara dengan `props.totalItems` dan `props.isConnected`, namun lebih ringkas.
+- `isConnected ? "🟢 ..." : "🔴 ..."` — ekspresi kondisional. Jika `isConnected` bernilai `true`, tampilkan teks pertama; jika `false`, tampilkan teks kedua.
+- `{...styles.status, backgroundColor: ...}` — menyalin semua properti dari `styles.status`, kemudian mengganti nilai `backgroundColor` dan `color` sesuai kondisi yang berlaku saat itu.
+
+---
+
+### Langkah 4: Membuat Komponen `SearchBar.jsx`
+
+File: `frontend/src/components/SearchBar.jsx`
+
+Komponen ini menyediakan kolom pencarian. Pengguna dapat mengetik kata kunci, menekan tombol Cari, dan daftar item akan difilter. Tombol Clear tersedia untuk menghapus pencarian dan menampilkan semua item kembali.
+
+```jsx
+import { useState } from "react"
+
+function SearchBar({ onSearch }) {
+    const [query, setQuery] = useState("")
+
+    const handleSubmit = (e) => {
+        e.preventDefault()
+        onSearch(query)
+    }
+
+    const handleClear = () => {
+        setQuery("")
+        onSearch("")
+    }
+
+    return (
+        <form onSubmit={handleSubmit} style={styles.form}>
+            <input
+                type="text"
+                placeholder="Cari item berdasarkan nama atau deskripsi..."
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                style={styles.input}
+            />
+            <button type="submit" style={styles.btnSearch}>
+                🔍 Cari
+            </button>
+            {query && (
+                <button type="button" onClick={handleClear} style={styles.btnClear}>
+                    ✕ Clear
+                </button>
+            )}
+        </form>
+    )
+}
+
+const styles = {
+    form: {
+        display: "flex",
+        gap: "0.5rem",
+        marginBottom: "1.5rem",
+    },
+    input: {
+        flex: 1,
+        padding: "0.75rem 1rem",
+        fontSize: "1rem",
+        border: "2px solid #ddd",
+        borderRadius: "8px",
+        outline: "none",
+    },
+    btnSearch: {
+        padding: "0.75rem 1.25rem",
+        backgroundColor: "#2E75B6",
+        color: "white",
+        border: "none",
+        borderRadius: "8px",
+        cursor: "pointer",
+        fontSize: "0.9rem",
+    },
+    btnClear: {
+        padding: "0.75rem 1rem",
+        backgroundColor: "#f0f0f0",
+        border: "none",
+        borderRadius: "8px",
+        cursor: "pointer",
+        fontSize: "0.9rem",
+    },
+}
+
+export default SearchBar
+```
+
+**Penjelasan kode:**
+
+- `value={query}` dan `onChange={...}` — pola ini disebut *controlled input*. React menjadi pengendali nilai kolom input. Tanpa atribut `value`, tampilan kolom tidak akan berubah saat `handleClear` dipanggil meskipun state sudah dikosongkan.
+- `type="button"` pada tombol Clear — setiap tombol di dalam elemen `<form>` secara default bertipe `submit`. Tanpa `type="button"`, tombol Clear akan memicu pengiriman form, bukan menjalankan fungsi `handleClear`.
+- `{query && (...)}` — React hanya merender elemen jika kondisi sebelum `&&` bernilai `true`. Jika `query` kosong, tombol Clear tidak akan ditampilkan sama sekali.
+
+---
+
+### Langkah 5: Membuat Komponen `ItemForm.jsx`
+
+File: `frontend/src/components/ItemForm.jsx`
+
+Komponen ini menangani dua fungsi sekaligus: **menambah item baru** dan **mengedit item yang sudah ada**. Perilaku form berubah secara otomatis sesuai nilai `editingItem` yang diterima dari `App.jsx`.
+
+```jsx
+import { useState, useEffect } from "react"
+
+function ItemForm({ onSubmit, editingItem, onCancelEdit }) {
+    const [formData, setFormData] = useState({
+        name: "",
+        description: "",
+        price: "",
+        quantity: "0",
+    })
+    const [error, setError] = useState("")
+
+    // Jika editingItem berubah, isi form dengan datanya
+    useEffect(() => {
+        if (editingItem) {
+            setFormData({
+                name: editingItem.name,
+                description: editingItem.description || "",
+                price: String(editingItem.price),
+                quantity: String(editingItem.quantity),
+            })
+        } else {
+            setFormData({ name: "", description: "", price: "", quantity: "0" })
+        }
+        setError("")
+    }, [editingItem])
+
+    const handleChange = (e) => {
+        const { name, value } = e.target
+        setFormData((prev) => ({ ...prev, [name]: value }))
+    }
+
+    const handleSubmit = async (e) => {
+        e.preventDefault()
+        setError("")
+
+        // Validasi
+        if (!formData.name.trim()) {
+            setError("Nama item wajib diisi")
+            return
+        }
+        if (!formData.price || parseFloat(formData.price) <= 0) {
+            setError("Harga harus lebih dari 0")
+            return
+        }
+
+        const itemData = {
+            name: formData.name.trim(),
+            description: formData.description.trim() || null,
+            price: parseFloat(formData.price),
+            quantity: parseInt(formData.quantity) || 0,
+        }
+
+        try {
+            await onSubmit(itemData, editingItem?.id)
+            // Reset form setelah berhasil
+            setFormData({ name: "", description: "", price: "", quantity: "0" })
+        } catch (err) {
+            setError(err.message)
+        }
+    }
+
+    return (
+        <div style={styles.container}>
+            <h2 style={styles.title}>
+                {editingItem ? "✏️ Edit Item" : "➕ Tambah Item Baru"}
+            </h2>
+
+            {error && <div style={styles.error}>{error}</div>}
+
+            <form onSubmit={handleSubmit} style={styles.form}>
+                <div style={styles.row}>
+                    <div style={styles.field}>
+                        <label style={styles.label}>Nama Item *</label>
+                        <input
+                            type="text"
+                            name="name"
+                            value={formData.name}
+                            onChange={handleChange}
+                            placeholder="Contoh: Laptop"
+                            style={styles.input}
+                        />
+                    </div>
+                    <div style={styles.field}>
+                        <label style={styles.label}>Harga (Rp) *</label>
+                        <input
+                            type="number"
+                            name="price"
+                            value={formData.price}
+                            onChange={handleChange}
+                            placeholder="Contoh: 15000000"
+                            min="0"
+                            step="any"
+                            style={styles.input}
+                        />
+                    </div>
+                </div>
+
+                <div style={styles.row}>
+                    <div style={styles.field}>
+                        <label style={styles.label}>Deskripsi</label>
+                        <input
+                            type="text"
+                            name="description"
+                            value={formData.description}
+                            onChange={handleChange}
+                            placeholder="Opsional"
+                            style={styles.input}
+                        />
+                    </div>
+                    <div style={{ ...styles.field, maxWidth: "150px" }}>
+                        <label style={styles.label}>Jumlah Stok</label>
+                        <input
+                            type="number"
+                            name="quantity"
+                            value={formData.quantity}
+                            onChange={handleChange}
+                            min="0"
+                            style={styles.input}
+                        />
+                    </div>
+                </div>
+
+                <div style={styles.actions}>
+                    <button type="submit" style={styles.btnSubmit}>
+                        {editingItem ? "💾 Update Item" : "➕ Tambah Item"}
+                    </button>
+                    {editingItem && (
+                        <button type="button" onClick={onCancelEdit} style={styles.btnCancel}>
+                            ✕ Batal Edit
+                        </button>
+                    )}
+                </div>
+            </form>
+        </div>
+    )
+}
+
+const styles = {
+    container: {
+        backgroundColor: "#f8f9fa",
+        padding: "1.5rem",
+        borderRadius: "12px",
+        border: "2px solid #e0e0e0",
+        marginBottom: "1.5rem",
+    },
+    title: {
+        margin: "0 0 1rem 0",
+        color: "#1F4E79",
+        fontSize: "1.2rem",
+    },
+    form: {
+        display: "flex",
+        flexDirection: "column",
+        gap: "0.75rem",
+    },
+    row: {
+        display: "flex",
+        gap: "1rem",
+    },
+    field: {
+        flex: 1,
+        display: "flex",
+        flexDirection: "column",
+        gap: "0.25rem",
+    },
+    label: {
+        fontSize: "0.85rem",
+        fontWeight: "bold",
+        color: "#555",
+    },
+    input: {
+        padding: "0.6rem 0.8rem",
+        border: "2px solid #ddd",
+        borderRadius: "6px",
+        fontSize: "0.95rem",
+        outline: "none",
+    },
+    actions: {
+        display: "flex",
+        gap: "0.75rem",
+        marginTop: "0.5rem",
+    },
+    btnSubmit: {
+        padding: "0.7rem 1.5rem",
+        backgroundColor: "#548235",
+        color: "white",
+        border: "none",
+        borderRadius: "8px",
+        cursor: "pointer",
+        fontSize: "0.95rem",
+        fontWeight: "bold",
+    },
+    btnCancel: {
+        padding: "0.7rem 1.5rem",
+        backgroundColor: "#e0e0e0",
+        color: "#333",
+        border: "none",
+        borderRadius: "8px",
+        cursor: "pointer",
+        fontSize: "0.95rem",
+    },
+    error: {
+        backgroundColor: "#FBE5D6",
+        color: "#C00000",
+        padding: "0.6rem 1rem",
+        borderRadius: "6px",
+        marginBottom: "0.75rem",
+        fontSize: "0.9rem",
+    },
+}
+
+export default ItemForm
+```
+
+**Penjelasan kode:**
+
+- `useEffect(() => { ... }, [editingItem])` — nilai di dalam tanda kurung siku `[editingItem]` menentukan kapan `useEffect` dijalankan ulang. Artinya: setiap kali `editingItem` berubah nilainya, kode di dalam `useEffect` akan dieksekusi. Inilah cara form mengetahui bahwa pengguna baru saja memilih sebuah item untuk diedit.
+- `setFormData((prev) => ({ ...prev, [name]: value }))` — `prev` adalah nilai state sebelumnya. `[name]` adalah nama kolom yang diperbarui, misalnya `"price"`. Cara ini memastikan hanya kolom yang berubah yang diperbarui; kolom lainnya tetap memiliki nilai semula.
+- `editingItem?.id` — tanda `?.` disebut *optional chaining*. Artinya: ambil nilai `id` dari `editingItem` jika `editingItem` tidak bernilai `null` atau `undefined`. Jika `editingItem` adalah `null` (mode tambah), ekspresi ini menghasilkan `undefined` tanpa menyebabkan error.
+
+---
+
+### Langkah 6: Membuat Komponen `ItemCard.jsx`
+
+File: `frontend/src/components/ItemCard.jsx`
+
+Komponen ini menampilkan satu item dalam bentuk kartu yang berisi nama, harga, deskripsi, jumlah stok, tanggal dibuat, serta tombol Edit dan Hapus.
+
+```jsx
+function ItemCard({ item, onEdit, onDelete }) {
+    const formatRupiah = (num) => {
+        return new Intl.NumberFormat("id-ID", {
+            style: "currency",
+            currency: "IDR",
+            minimumFractionDigits: 0,
+        }).format(num)
+    }
+
+    const formatDate = (dateStr) => {
+        if (!dateStr) return "-"
+        return new Date(dateStr).toLocaleDateString("id-ID", {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+        })
+    }
+
+    return (
+        <div style={styles.card}>
+            <div style={styles.cardHeader}>
+                <h3 style={styles.name}>{item.name}</h3>
+                <span style={styles.price}>{formatRupiah(item.price)}</span>
+            </div>
+
+            {item.description && (
+                <p style={styles.description}>{item.description}</p>
+            )}
+
+            <div style={styles.meta}>
+                <span style={styles.quantity}>📦 Stok: {item.quantity}</span>
+                <span style={styles.date}>🕐 {formatDate(item.created_at)}</span>
+            </div>
+
+            <div style={styles.actions}>
+                <button onClick={() => onEdit(item)} style={styles.btnEdit}>
+                    ✏️ Edit
+                </button>
+                <button onClick={() => onDelete(item.id)} style={styles.btnDelete}>
+                    🗑️ Hapus
+                </button>
+            </div>
+        </div>
+    )
+}
+
+const styles = {
+    card: {
+        backgroundColor: "white",
+        padding: "1.25rem",
+        borderRadius: "10px",
+        border: "1px solid #e0e0e0",
+        boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+        transition: "box-shadow 0.2s",
+    },
+    cardHeader: {
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "flex-start",
+        marginBottom: "0.5rem",
+    },
+    name: {
+        margin: 0,
+        fontSize: "1.1rem",
+        color: "#1F4E79",
+    },
+    price: {
+        fontWeight: "bold",
+        color: "#548235",
+        fontSize: "1rem",
+        whiteSpace: "nowrap",
+    },
+    description: {
+        color: "#666",
+        fontSize: "0.9rem",
+        margin: "0.25rem 0 0.75rem 0",
+    },
+    meta: {
+        display: "flex",
+        gap: "1rem",
+        fontSize: "0.8rem",
+        color: "#888",
+        marginBottom: "0.75rem",
+    },
+    quantity: {},
+    date: {},
+    actions: {
+        display: "flex",
+        gap: "0.5rem",
+        borderTop: "1px solid #f0f0f0",
+        paddingTop: "0.75rem",
+    },
+    btnEdit: {
+        flex: 1,
+        padding: "0.5rem",
+        backgroundColor: "#DEEBF7",
+        color: "#1F4E79",
+        border: "none",
+        borderRadius: "6px",
+        cursor: "pointer",
+        fontSize: "0.85rem",
+        fontWeight: "bold",
+    },
+    btnDelete: {
+        flex: 1,
+        padding: "0.5rem",
+        backgroundColor: "#FBE5D6",
+        color: "#C00000",
+        border: "none",
+        borderRadius: "6px",
+        cursor: "pointer",
+        fontSize: "0.85rem",
+        fontWeight: "bold",
+    },
+}
+
+export default ItemCard
+```
+
+**Penjelasan kode:**
+
+- `onClick={() => onEdit(item)}` — penulisan `() =>` di depan fungsi diperlukan agar fungsi tidak langsung dieksekusi saat komponen dirender. Jika ditulis `onClick={onEdit(item)}` tanpa `() =>`, fungsi `onEdit` akan dipanggil saat halaman dimuat, bukan saat tombol ditekan oleh pengguna.
+- `{item.description && (...)}` — jika `item.description` bernilai kosong atau `null`, blok JSX di dalamnya tidak akan dirender. Ini mencegah munculnya elemen `<p>` yang kosong pada kartu item.
+
+---
+
+### Langkah 7: Membuat Komponen `ItemList.jsx`
+
+File: `frontend/src/components/ItemList.jsx`
+
+Komponen ini bertanggung jawab menampilkan seluruh daftar item. Sebelum menampilkan item, komponen ini memeriksa dua kondisi terlebih dahulu: apakah data masih dimuat dari backend, dan apakah daftar item kosong.
+
+```jsx
+import ItemCard from "./ItemCard"
+
+function ItemList({ items, onEdit, onDelete, loading }) {
+  if (loading) {
+    return <p style={styles.message}>⏳ Memuat data...</p>
+  }
+
+  if (items.length === 0) {
+    return (
+      <div style={styles.empty}>
+        <p style={styles.emptyIcon}>📭</p>
+        <p style={styles.emptyText}>Belum ada item.</p>
+        <p style={styles.emptyHint}>
+          Gunakan form di atas untuk menambahkan item pertama.
+        </p>
+      </div>
+    )
+  }
+
+  return (
+    <div style={styles.grid}>
+      {items.map((item) => (
+        <ItemCard
+          key={item.id}
+          item={item}
+          onEdit={onEdit}
+          onDelete={onDelete}
+        />
+      ))}
+    </div>
+  )
+}
+
+const styles = {
+  grid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
+    gap: "1rem",
+  },
+  message: {
+    textAlign: "center",
+    color: "#888",
+    padding: "2rem",
+    fontSize: "1.1rem",
+  },
+  empty: {
+    textAlign: "center",
+    padding: "3rem",
+    backgroundColor: "#f8f9fa",
+    borderRadius: "12px",
+    border: "2px dashed #ddd",
+  },
+  emptyIcon: {
+    fontSize: "3rem",
+    margin: "0 0 0.5rem 0",
+  },
+  emptyText: {
+    fontSize: "1.1rem",
+    color: "#555",
+    margin: "0 0 0.25rem 0",
+  },
+  emptyHint: {
+    fontSize: "0.9rem",
+    color: "#888",
+    margin: 0,
+  },
+}
+
+export default ItemList
+```
+
+**Penjelasan kode:**
+
+- Komponen ini menggunakan pola **early return**: memeriksa kondisi satu per satu dari atas. Jika kondisi terpenuhi, komponen langsung mengembalikan tampilan yang sesuai tanpa memproses kondisi berikutnya. Pola ini lebih mudah dibaca dibandingkan menggunakan percabangan `if-else` di dalam JSX.
+- `key={item.id}` — atribut `key` digunakan oleh React untuk mengidentifikasi setiap elemen dalam daftar. Dengan `key`, React hanya memperbarui elemen yang berubah saat ada penambahan atau penghapusan, tanpa merender ulang seluruh daftar. Gunakan nilai yang unik dan tetap seperti `id`, bukan nomor urut array yang nilainya dapat berubah.
+
+---
+
+### Langkah 8: Membangun Komponen Utama — `App.jsx`
+
+File: `frontend/src/App.jsx` (ganti seluruh isinya)
+
+`App.jsx` adalah komponen induk yang menjadi pusat kendali seluruh aplikasi. Semua data (state) disimpan di sini, dan semua fungsi aksi (tambah, edit, hapus, cari) didefinisikan di sini sebelum diteruskan ke komponen anak melalui props.
+
+```jsx
+import { useState, useEffect, useCallback } from "react"
+import Header from "./components/Header"
+import SearchBar from "./components/SearchBar"
+import ItemForm from "./components/ItemForm"
+import ItemList from "./components/ItemList"
+import { fetchItems, createItem, updateItem, deleteItem, checkHealth } from "./services/api"
+
+function App() {
+  // ==================== STATE ====================
+  const [items, setItems] = useState([])
+  const [totalItems, setTotalItems] = useState(0)
+  const [loading, setLoading] = useState(true)
+  const [isConnected, setIsConnected] = useState(false)
+  const [editingItem, setEditingItem] = useState(null)
+  const [searchQuery, setSearchQuery] = useState("")
+
+  // ==================== STATE SORTING ====================
+  const [sortBy, setSortBy] = useState("latest")
+
+  // ==================== LOAD DATA ====================
+  const loadItems = useCallback(async (search = "") => {
+    setLoading(true)
+    try {
+      const data = await fetchItems(search)
+      setItems(data.items)
+      setTotalItems(data.total)
+    } catch (err) {
+      console.error("Error loading items:", err)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  // ==================== ON MOUNT ====================
+  useEffect(() => {
+    checkHealth().then(setIsConnected)
+    loadItems()
+  }, [loadItems])
+
+  // ==================== HANDLERS ====================
+
+  const handleSubmit = async (itemData, editId) => {
+    if (editId) {
+      await updateItem(editId, itemData)
+      setEditingItem(null)
+    } else {
+      await createItem(itemData)
+    }
+    loadItems(searchQuery)
+  }
+
+  const handleEdit = (item) => {
+    setEditingItem(item)
+    window.scrollTo({ top: 0, behavior: "smooth" })
+  }
+
+  const handleDelete = async (id) => {
+    const item = items.find((i) => i.id === id)
+    if (!window.confirm(`Yakin ingin menghapus "${item?.name}"?`)) return
+
+    try {
+      await deleteItem(id)
+      loadItems(searchQuery)
+    } catch (err) {
+      alert("Gagal menghapus: " + err.message)
+    }
+  }
+
+  const handleSearch = (query) => {
+    setSearchQuery(query)
+    loadItems(query)
+  }
+
+  const handleCancelEdit = () => {
+    setEditingItem(null)
+  }
+
+  // ==================== SORTING FUNCTION ====================
+  const sortedItems = [...items].sort((a, b) => {
+    if (sortBy === "name") {
+      return a.name.localeCompare(b.name)
+    }
+
+    if (sortBy === "price") {
+      return a.price - b.price
+    }
+
+    if (sortBy === "latest") {
+      return b.id - a.id
+    }
+
+    return 0
+  })
+
+  // ==================== RENDER ====================
+  return (
+    <div style={styles.app}>
+      <div style={styles.container}>
+        <Header totalItems={totalItems} isConnected={isConnected} />
+
+        <ItemForm
+          onSubmit={handleSubmit}
+          editingItem={editingItem}
+          onCancelEdit={handleCancelEdit}
+        />
+
+        <SearchBar onSearch={handleSearch} />
+
+        {/* DROPDOWN SORTING */}
+        <div style={styles.sortContainer}>
+          <label style={styles.sortLabel}>Urutkan berdasarkan:</label>
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            style={styles.sortSelect}
+          >
+            <option value="name">Nama</option>
+            <option value="price">Harga</option>
+            <option value="latest">Terbaru</option>
+          </select>
+        </div>
+
+        <ItemList
+          items={sortedItems}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          loading={loading}
+        />
+      </div>
+    </div>
+  )
+}
+
+const styles = {
+  app: {
+    minHeight: "100vh",
+    backgroundColor: "#f0f2f5",
+    padding: "2rem",
+    fontFamily: "'Segoe UI', Arial, sans-serif",
+  },
+  container: {
+    maxWidth: "900px",
+    margin: "0 auto",
+  },
+
+  sortContainer: {
+    margin: "1rem 0",
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+  },
+
+  sortLabel: {
+    fontWeight: "500",
+  },
+
+  sortSelect: {
+    padding: "6px 10px",
+    borderRadius: "6px",
+    border: "1px solid #ccc",
+  },
+}
+
+export default App
+```
+
+**Penjelasan kode:**
+
+- `useCallback` — tanpa `useCallback`, fungsi `loadItems` akan dibuat ulang setiap kali `App` dirender. Karena `loadItems` terdaftar sebagai dependency di `useEffect`, React akan menganggap ada perubahan dan menjalankan `useEffect` kembali. Hal ini memicu pengambilan data, yang mengubah state, yang memicu render ulang, dan seterusnya tanpa berhenti. `useCallback` mencegah hal tersebut dengan memastikan referensi fungsi tetap sama selama tidak ada perubahan pada dependency-nya.
+- `finally { setLoading(false) }` — blok `finally` selalu dijalankan setelah blok `try` maupun `catch`, apapun hasilnya. Ini memastikan indikator loading selalu dimatikan, termasuk saat terjadi error, sehingga tampilan tidak tertahan di layar loading.
+- `items.find((i) => i.id === id)` — mencari objek item berdasarkan id di dalam array state. Nama item yang ditemukan kemudian ditampilkan pada dialog konfirmasi penghapusan sehingga pengguna dapat memverifikasi item mana yang akan dihapus.
+
+---
+
+### Langkah 9: Memperbarui `App.css` dan `main.jsx`
+
+**File: `frontend/src/App.css`** (ganti seluruh isinya)
+
+```css
+/* Reset default Vite styles */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+}
+
+input:focus {
+  border-color: #2E75B6 !important;
+}
+
+button:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+  transition: all 0.15s;
+}
+```
+
+**File: `frontend/src/main.jsx`** (pastikan baris import App.css tersedia)
+
+```jsx
+import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
+import './index.css'
+import App from './App.jsx'
+import './App.css'
+
+createRoot(document.getElementById('root')).render(
+  <StrictMode>
+    <App />
+  </StrictMode>,
+)
+
+```
+
+---
+
+### Langkah 10: Mengatur Environment Variable
+
+**Buat file `frontend/.env`** — file ini tidak boleh di-commit ke Git:
+```
+VITE_API_URL=http://localhost:8000
+```
+
+**Buat file `frontend/.env.example`** — file ini yang di-commit sebagai referensi untuk anggota tim:
+```
+VITE_API_URL=http://localhost:8000
+```
+
+**Periksa file `.gitignore`** di root project — pastikan kedua baris berikut sudah ada:
+```
+backend/.env
+frontend/.env
+```
+
+> 💡 **Mengapa perlu file `.env.example`?**  
+> File `.env` tidak boleh di-commit karena dapat berisi informasi sensitif. Anggota tim yang baru bergabung memerlukan panduan untuk mengetahui variabel apa yang perlu dikonfigurasi. File `.env.example` berperan sebagai panduan tersebut. Anggota tim cukup menyalin file ini menjadi `.env` dan mengisi nilainya sesuai konfigurasi masing-masing.
+
+---
+
+### Langkah 11: Menjalankan Aplikasi
+
+Buka **dua terminal** secara bersamaan:
+
+**Terminal 1 — Menjalankan Backend:**
+```bash
+cd cloud-team-XX/backend
+uvicorn main:app --reload --port 8000
+```
+
+**Terminal 2 — Menjalankan Frontend:**
+```bash
+cd cloud-team-XX/frontend
+cp .env.example .env
+npm install
+npm run dev
+```
+
+Buka `http://localhost:5173` di browser.  
+Jika Header menampilkan **🟢 API Connected**, kedua layanan berjalan dengan benar.
+
+---
+
+### Langkah 12: Pengujian dan Commit
+
+Lakukan pengujian seluruh fitur secara berurutan:
+
+| No | Fitur yang Diuji | Cara Menguji | Hasil yang Diharapkan |
+|---|---|---|---|
+| 1 | Status koneksi API | Buka `localhost:5173` | Badge **🟢 API Connected** tampil di Header |
+| 2 | Menampilkan data | Lihat daftar tanpa melakukan aksi | Item dari Modul 2 tampil secara otomatis |
+| 3 | Menambah item | Isi form → klik Tambah Item | Jumlah item di Header bertambah satu |
+| 4 | Verifikasi penambahan | Lihat daftar setelah menambah | Item baru langsung tampil tanpa perlu refresh |
+| 5 | Memulai edit | Klik tombol ✏️ Edit pada salah satu item | Form beralih ke mode "✏️ Edit Item", semua kolom terisi data lama |
+| 6 | Menyimpan hasil edit | Ubah harga → klik Update Item | Data di daftar diperbarui, form kembali kosong |
+| 7 | Pencarian item | Ketik kata kunci di SearchBar → klik Cari | Daftar hanya menampilkan item yang sesuai |
+| 8 | Memulai penghapusan | Klik tombol 🗑️ Hapus pada salah satu item | Dialog konfirmasi tampil beserta nama item |
+| 9 | Mengonfirmasi penghapusan | Klik OK pada dialog | Item hilang dari daftar secara otomatis |
+| 10 | Tampilan kosong | Hapus seluruh item yang ada | Tampilan 📭 "Belum ada item." muncul |
+
+**Setelah seluruh pengujian berhasil, lakukan commit:**
+```bash
+git add frontend/
+git commit -m "feat: add React CRUD frontend with component architecture
+
+- Add api.js: centralized API service layer
+- Add Header component: title, stats, API status
+- Add SearchBar component: search with clear
+- Add ItemForm component: create/edit with validation
+- Add ItemCard component: display item with edit/delete
+- Add ItemList component: grid layout with empty state
+- Update App.jsx: state management, CRUD handlers"
+
+git push origin main
+```
+
+---
+
+## ✅ Fitur UI yang Dibangun
+
+| Fitur | Komponen | Cara Kerja |
+|---|---|---|
+| **Status koneksi API** | `Header.jsx` | `checkHealth()` dipanggil saat halaman dibuka → hasilnya ditampilkan sebagai badge 🟢/🔴 |
+| **Total item real-time** | `Header.jsx` | Setiap `loadItems()` berjalan, `data.total` diperbarui dan dikirim ke Header |
+| **Menambah item** | `ItemForm.jsx` | Form dikirim → `createItem()` → `POST /items` |
+| **Mengedit item** | `ItemForm.jsx` | Klik Edit → form terisi otomatis melalui `useEffect` → kirim → `PUT /items/:id` |
+| **Menghapus item** | `ItemCard.jsx` | Klik Hapus → dialog konfirmasi → `deleteItem()` → `DELETE /items/:id` |
+| **Mencari item** | `SearchBar.jsx` | Kata kunci diteruskan ke `loadItems(keyword)` → `GET /items?search=keyword` |
+| **Sorting** | `App.jsx` | Dropdown untuk mengurutkan berdasarkan: Terbaru / Nama / Harga |
+| **Tampilan kosong** | `ItemList.jsx` | Ditampilkan jika `items.length === 0` setelah pemuatan selesai |
+| **Tampilan loading** | `ItemList.jsx` | Ditampilkan selama `loading === true` |
+| **Format Rupiah** | `ItemCard.jsx` | `Intl.NumberFormat("id-ID")` mengonversi angka menjadi format "Rp15.000.000" |
+| **Format tanggal** | `ItemCard.jsx` | `toLocaleDateString("id-ID")` mengonversi tanggal menjadi format "10 Mar 2026" |
+
+---
+
+## 🚀 Cara Menjalankan
+
+> ⚠️ Backend dari Modul 2 harus sudah berjalan di port 8000 sebelum menjalankan frontend.
+
+```bash
+# Terminal 1 — Backend
+cd cloud-team-XX/backend
+uvicorn main:app --reload --port 8000
+
+# Terminal 2 — Frontend
+cd cloud-team-XX/frontend
+cp .env.example .env
+npm install
+npm run dev
+```
+
+| URL | Keterangan |
+|---|---|
+| `http://localhost:5173` | Aplikasi Frontend React |
+| `http://localhost:8000/docs` | Dokumentasi API (Swagger UI) |
+| `http://localhost:8000/health` | Memeriksa status backend |
+
+---
 
 ## 📅 Roadmap
 
@@ -1523,7 +2710,7 @@ http://localhost:8000/docs
 |--------|--------|--------|
 | 1 | Setup & Hello World | ✅ |
 | 2 | REST API + Database | ✅ |
-| 3 | React Frontend | ⬜ |
+| 3 | React Frontend | ✅ |
 | 4 | Full-Stack Integration | ⬜ |
 | 5-7 | Docker & Compose | ⬜ |
 | 8 | UTS Demo | ⬜ |
