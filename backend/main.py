@@ -52,18 +52,11 @@ def create_item(item: ItemCreate, db: Session = Depends(get_db)):
 
 @app.get("/items", response_model=ItemListResponse)
 def list_items(
-    skip: int = Query(0, ge=0, description="Jumlah data yang di-skip"),
-    limit: int = Query(20, ge=1, le=100, description="Jumlah data per halaman"),
-    search: str = Query(None, description="Cari berdasarkan nama/deskripsi"),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(20, ge=1, le=100),
+    search: str = Query(None),
     db: Session = Depends(get_db),
 ):
-    """
-    Ambil daftar items dengan pagination dan search.
-    
-    - **skip**: Offset untuk pagination (default: 0)
-    - **limit**: Jumlah item per halaman (default: 20, max: 100)
-    - **search**: Kata kunci pencarian (opsional)
-    """
     return crud.get_items(db=db, skip=skip, limit=limit, search=search)
 
 @app.get("/items/stats")
