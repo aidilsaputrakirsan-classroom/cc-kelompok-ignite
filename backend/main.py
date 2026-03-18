@@ -57,8 +57,10 @@ def register(user_data: UserCreate, db: Session = Depends(get_db)):
     """
     user = crud.create_user(db=db, user_data=user_data)
     if not user:
-        raise HTTPException(status_code=400, detail="Email sudah terdaftar")
-    return user
+     raise HTTPException(
+        status_code=400,
+        detail="Registrasi gagal: email sudah digunakan"
+    )
 
 
 @app.post("/auth/login", response_model=TokenResponse)
@@ -71,7 +73,10 @@ def login(login_data: LoginRequest, db: Session = Depends(get_db)):
     """
     user = crud.authenticate_user(db=db, email=login_data.email, password=login_data.password)
     if not user:
-        raise HTTPException(status_code=401, detail="Email atau password salah")
+     raise HTTPException(
+        status_code=401,
+        detail="Login gagal: email atau password salah"
+    )
 
     token = create_access_token(data={"sub": str(user.id)})
     return {
@@ -110,6 +115,13 @@ def list_items(
     """Ambil daftar items. **Membutuhkan autentikasi.**"""
     return crud.get_items(db=db, skip=skip, limit=limit, search=search)
 
+@app.get("/items/stats")
+def item_stats(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Statistik item (total item, total stok, rata-rata harga)."""
+    return crud.get_item_stats(db)
 
 @app.get("/items/{item_id}", response_model=ItemResponse)
 def get_item(

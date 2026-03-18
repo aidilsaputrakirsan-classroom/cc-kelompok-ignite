@@ -3,6 +3,7 @@ from sqlalchemy import or_
 from models import Item, User
 from schemas import ItemCreate, ItemUpdate, UserCreate
 from auth import hash_password, verify_password
+from sqlalchemy import func
 
 
 def create_item(db: Session, item_data: ItemCreate) -> Item:
@@ -101,3 +102,14 @@ def authenticate_user(db: Session, email: str, password: str) -> User | None:
     if not verify_password(password, user.hashed_password):
         return None
     return user
+
+def get_item_stats(db: Session):
+    total_items = db.query(func.count(Item.id)).scalar()
+    total_stock = db.query(func.sum(Item.quantity)).scalar()
+    avg_price = db.query(func.avg(Item.price)).scalar()
+
+    return {
+        "total_items": total_items or 0,
+        "total_stock": total_stock or 0,
+        "average_price": float(avg_price) if avg_price else 0
+    }
