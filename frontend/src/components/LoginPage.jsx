@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { toast } from "react-toastify"
 
 function LoginPage({ onLogin, onRegister }) {
     const [isRegister, setIsRegister] = useState(false)
@@ -9,6 +10,15 @@ function LoginPage({ onLogin, onRegister }) {
     })
     const [error, setError] = useState("")
     const [loading, setLoading] = useState(false)
+
+    const validateEmail = (email) => {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+        return emailRegex.test(email)
+    }
+
+    const validatePassword = (password) => {
+        return password.length >= 8 && /\d/.test(password)
+    }
 
     const handleChange = (e) => {
         setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }))
@@ -26,17 +36,31 @@ function LoginPage({ onLogin, onRegister }) {
                     setLoading(false)
                     return
                 }
-                if (formData.password.length < 8) {
-                    setError("Password minimal 8 karakter")
+                if (!validateEmail(formData.email)) {
+                    setError("Format email tidak valid")
+                    setLoading(false)
+                    return
+                }
+                if (!validatePassword(formData.password)) {
+                    setError("Password minimal 8 karakter dan harus mengandung angka")
                     setLoading(false)
                     return
                 }
                 await onRegister(formData)
+                toast.success("✅ Registrasi berhasil! Silakan login.", { position: "top-center" })
             } else {
+                if (!validateEmail(formData.email)) {
+                    setError("Format email tidak valid")
+                    setLoading(false)
+                    return
+                }
                 await onLogin(formData.email, formData.password)
+                toast.success("✅ Login berhasil!", { position: "top-center" })
             }
         } catch (err) {
-            setError(err.message)
+            const errorMsg = err instanceof Error ? err.message : String(err)
+            setError(errorMsg)
+            toast.error(`❌ ${errorMsg}`, { position: "top-center" })
         } finally {
             setLoading(false)
         }
@@ -107,7 +131,7 @@ function LoginPage({ onLogin, onRegister }) {
                         />
                     </div>
 
-                    <button type="submit" style={styles.btnSubmit} disabled={loading}>
+                    <button type="submit" style={{...styles.btnSubmit, opacity: loading ? 0.6 : 1, cursor: loading ? "not-allowed" : "pointer"}} disabled={loading}>
                         {loading ? "⏳ Loading..." : isRegister ? "📝 Register" : "🔐 Login"}
                     </button>
                 </form>
@@ -199,6 +223,7 @@ const styles = {
         fontSize: "1rem",
         fontWeight: "bold",
         marginTop: "0.5rem",
+        transition: "opacity 0.2s",
     },
     error: {
         backgroundColor: "#FBE5D6",

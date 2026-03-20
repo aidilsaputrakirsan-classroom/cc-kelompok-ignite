@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from "react"
+import { ToastContainer, toast } from "react-toastify"
+import "react-toastify/dist/ReactToastify.css"
 import Header from "./components/Header"
 import SearchBar from "./components/SearchBar"
 import ItemForm from "./components/ItemForm"
@@ -21,12 +23,13 @@ function App() {
   const [isConnected, setIsConnected] = useState(false)
   const [editingItem, setEditingItem] = useState(null)
   const [searchQuery, setSearchQuery] = useState("")
+  const [filters, setFilters] = useState({ minPrice: null, maxPrice: null })
 
   // ==================== LOAD DATA ====================
-  const loadItems = useCallback(async (search = "") => {
+  const loadItems = useCallback(async (search = "", minPrice = null, maxPrice = null) => {
     setLoading(true)
     try {
-      const data = await fetchItems(search)
+      const data = await fetchItems(search, 0, 20, minPrice, maxPrice)
       setItems(data.items)
       setTotalItems(data.total)
     } catch (err) {
@@ -45,22 +48,29 @@ function App() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      loadItems()
+      loadItems(searchQuery, filters.minPrice, filters.maxPrice)
     }
-  }, [isAuthenticated, loadItems])
+  }, [isAuthenticated, loadItems, searchQuery, filters])
 
   // ==================== AUTH HANDLERS ====================
 
   const handleLogin = async (email, password) => {
-    const data = await login(email, password)
-    setUser(data.user)
-    setIsAuthenticated(true)
+    try {
+      const data = await login(email, password)
+      setUser(data.user)
+      setIsAuthenticated(true)
+    } catch (err) {
+      throw err
+    }
   }
 
   const handleRegister = async (userData) => {
-    // Register lalu otomatis login
-    await register(userData)
-    await handleLogin(userData.email, userData.password)
+    try {
+      await register(userData)
+      await handleLogin(userData.email, userData.password)
+    } catch (err) {
+      throw err
+    }
   }
 
   const handleLogout = () => {
@@ -71,6 +81,7 @@ function App() {
     setTotalItems(0)
     setEditingItem(null)
     setSearchQuery("")
+    setFilters({ minPrice: null, maxPrice: null })
   }
 
   // ==================== ITEM HANDLERS ====================
@@ -83,10 +94,14 @@ function App() {
       } else {
         await createItem(itemData)
       }
-      loadItems(searchQuery)
+      loadItems(searchQuery, filters.minPrice, filters.maxPrice)
     } catch (err) {
-      if (err.message === "UNAUTHORIZED") handleLogout()
-      else throw err
+      if (err.message === "UNAUTHORIZED") {
+        handleLogout()
+      } else {
+        const errorMsg = err instanceof Error ? err.message : String(err)
+        throw new Error(errorMsg)
+      }
     }
   }
 
@@ -100,28 +115,39 @@ function App() {
     if (!window.confirm(`Yakin ingin menghapus "${item?.name}"?`)) return
     try {
       await deleteItem(id)
-      loadItems(searchQuery)
+      toast.success("✅ Item berhasil dihapus!", { position: "top-center" })
+      loadItems(searchQuery, filters.minPrice, filters.maxPrice)
     } catch (err) {
-      if (err.message === "UNAUTHORIZED") handleLogout()
-      else alert("Gagal menghapus: " + err.message)
+      if (err.message === "UNAUTHORIZED") {
+        handleLogout()
+      } else {
+        const errorMsg = err instanceof Error ? err.message : String(err)
+        toast.error(`❌ Gagal menghapus: ${errorMsg}`, { position: "top-center" })
+      }
     }
   }
 
-  const handleSearch = (query) => {
+  const handleSearch = (query, minPrice = null, maxPrice = null) => {
     setSearchQuery(query)
-    loadItems(query)
+    setFilters({ minPrice, maxPrice })
   }
 
   // ==================== RENDER ====================
 
   // Jika belum login, tampilkan login page
   if (!isAuthenticated) {
-    return <LoginPage onLogin={handleLogin} onRegister={handleRegister} />
+    return (
+      <>
+        <ToastContainer position="top-center" autoClose={3000} />
+        <LoginPage onLogin={handleLogin} onRegister={handleRegister} />
+      </>
+    )
   }
 
   // Jika sudah login, tampilkan main app
   return (
     <div style={styles.app}>
+      <ToastContainer position="top-center" autoClose={3000} />
       <div style={styles.container}>
         <Header
           totalItems={totalItems}

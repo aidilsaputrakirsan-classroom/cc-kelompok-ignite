@@ -31,8 +31,14 @@ async function handleResponse(response) {
         throw new Error("UNAUTHORIZED")
     }
     if (!response.ok) {
-        const error = await response.json().catch(() => ({}))
-        throw new Error(error.detail || `Request gagal (${response.status})`)
+        try {
+            const error = await response.json()
+            const errorMsg = error.detail || error.message || JSON.stringify(error)
+            throw new Error(errorMsg)
+        } catch (parseErr) {
+            const text = await response.text()
+            throw new Error(text || `Request gagal (${response.status})`)
+        }
     }
     // 204 No Content
     if (response.status === 204) return null
@@ -70,9 +76,11 @@ export async function getMe() {
 
 // ==================== ITEMS API ====================
 
-export async function fetchItems(search = "", skip = 0, limit = 20) {
+export async function fetchItems(search = "", skip = 0, limit = 20, minPrice = null, maxPrice = null) {
     const params = new URLSearchParams()
     if (search) params.append("search", search)
+    if (minPrice !== null) params.append("min_price", minPrice)
+    if (maxPrice !== null) params.append("max_price", maxPrice)
     params.append("skip", skip)
     params.append("limit", limit)
 
@@ -85,7 +93,10 @@ export async function fetchItems(search = "", skip = 0, limit = 20) {
 export async function createItem(itemData) {
     const response = await fetch(`${API_URL}/items`, {
         method: "POST",
-        headers: authHeaders(),
+        headers: {
+            ...authHeaders(),
+            "Content-Type": "application/json",
+        },
         body: JSON.stringify(itemData),
     })
     return handleResponse(response)
@@ -94,7 +105,10 @@ export async function createItem(itemData) {
 export async function updateItem(id, itemData) {
     const response = await fetch(`${API_URL}/items/${id}`, {
         method: "PUT",
-        headers: authHeaders(),
+        headers: {
+            ...authHeaders(),
+            "Content-Type": "application/json",
+        },
         body: JSON.stringify(itemData),
     })
     return handleResponse(response)

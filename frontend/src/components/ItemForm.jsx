@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react"
+import { toast } from "react-toastify"
 
 function ItemForm({ onSubmit, editingItem, onCancelEdit }) {
     const [formData, setFormData] = useState({
@@ -8,6 +9,7 @@ function ItemForm({ onSubmit, editingItem, onCancelEdit }) {
         quantity: "0",
     })
     const [error, setError] = useState("")
+    const [loading, setLoading] = useState(false)
 
     // Jika editingItem berubah, isi form dengan datanya
     useEffect(() => {
@@ -43,6 +45,16 @@ function ItemForm({ onSubmit, editingItem, onCancelEdit }) {
             return
         }
 
+        // Konfirmasi sebelum submit
+        const action = editingItem ? "update" : "menambah"
+        const confirmMessage = editingItem 
+            ? "Apakah Anda yakin untuk update data item ini?"
+            : "Apakah Anda yakin menambahkan data item ini?"
+        
+        if (!window.confirm(confirmMessage)) {
+            return
+        }
+
         const itemData = {
             name: formData.name.trim(),
             description: formData.description.trim() || null,
@@ -50,12 +62,18 @@ function ItemForm({ onSubmit, editingItem, onCancelEdit }) {
             quantity: parseInt(formData.quantity) || 0,
         }
 
+        setLoading(true)
         try {
             await onSubmit(itemData, editingItem?.id)
             // Reset form setelah berhasil
             setFormData({ name: "", description: "", price: "", quantity: "0" })
+            toast.success(`✅ Item ${action} berhasil!`, { position: "top-center" })
         } catch (err) {
-            setError(err.message)
+            const errorMsg = err instanceof Error ? err.message : String(err)
+            setError(errorMsg)
+            toast.error(`❌ ${errorMsg}`, { position: "top-center" })
+        } finally {
+            setLoading(false)
         }
     }
 
@@ -78,6 +96,7 @@ function ItemForm({ onSubmit, editingItem, onCancelEdit }) {
                             onChange={handleChange}
                             placeholder="Contoh: Laptop"
                             style={styles.input}
+                            disabled={loading}
                         />
                     </div>
                     <div style={styles.field}>
@@ -91,6 +110,7 @@ function ItemForm({ onSubmit, editingItem, onCancelEdit }) {
                             min="0"
                             step="any"
                             style={styles.input}
+                            disabled={loading}
                         />
                     </div>
                 </div>
@@ -105,6 +125,7 @@ function ItemForm({ onSubmit, editingItem, onCancelEdit }) {
                             onChange={handleChange}
                             placeholder="Opsional"
                             style={styles.input}
+                            disabled={loading}
                         />
                     </div>
                     <div style={{ ...styles.field, maxWidth: "150px" }}>
@@ -116,16 +137,26 @@ function ItemForm({ onSubmit, editingItem, onCancelEdit }) {
                             onChange={handleChange}
                             min="0"
                             style={styles.input}
+                            disabled={loading}
                         />
                     </div>
                 </div>
 
                 <div style={styles.actions}>
-                    <button type="submit" style={styles.btnSubmit}>
-                        {editingItem ? "💾 Update Item" : "➕ Tambah Item"}
+                    <button 
+                        type="submit" 
+                        style={{...styles.btnSubmit, opacity: loading ? 0.6 : 1, cursor: loading ? "not-allowed" : "pointer"}}
+                        disabled={loading}
+                    >
+                        {loading ? "⏳ Memproses..." : (editingItem ? "💾 Update Item" : "➕ Tambah Item")}
                     </button>
                     {editingItem && (
-                        <button type="button" onClick={onCancelEdit} style={styles.btnCancel}>
+                        <button 
+                            type="button" 
+                            onClick={onCancelEdit} 
+                            style={styles.btnCancel}
+                            disabled={loading}
+                        >
                             ✕ Batal Edit
                         </button>
                     )}

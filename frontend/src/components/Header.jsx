@@ -1,4 +1,13 @@
+import { toast } from "react-toastify"
+
 function Header({ totalItems, isConnected, user, onLogout }) {
+    const handleLogout = () => {
+        if (window.confirm("Apakah Anda yakin ingin logout?")) {
+            onLogout()
+            toast.info("👋 Anda telah logout", { position: "top-center" })
+        }
+    }
+
     return (
         <header style={styles.header}>
             <div>
@@ -19,7 +28,7 @@ function Header({ totalItems, isConnected, user, onLogout }) {
                 {user && (
                     <div style={styles.user}>
                         <span style={styles.userName}>👤 {user.name}</span>
-                        <button onClick={onLogout} style={styles.btnLogout}>
+                        <button onClick={handleLogout} style={styles.btnLogout}>
                             Logout
                         </button>
                     </div>

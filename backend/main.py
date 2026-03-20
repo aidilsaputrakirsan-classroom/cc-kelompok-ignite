@@ -109,11 +109,13 @@ def list_items(
     skip: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=100),
     search: str = Query(None),
+    min_price: float = Query(None, ge=0),
+    max_price: float = Query(None, ge=0),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Ambil daftar items. **Membutuhkan autentikasi.**"""
-    return crud.get_items(db=db, skip=skip, limit=limit, search=search)
+    """Ambil daftar items dengan filter harga. **Membutuhkan autentikasi.**"""
+    return crud.get_items(db=db, skip=skip, limit=limit, search=search, min_price=min_price, max_price=max_price)
 
 @app.get("/items/stats")
 def item_stats(

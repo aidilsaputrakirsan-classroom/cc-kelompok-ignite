@@ -15,12 +15,14 @@ def create_item(db: Session, item_data: ItemCreate) -> Item:
     return db_item
 
 
-def get_items(db: Session, skip: int = 0, limit: int = 20, search: str = None):
+def get_items(db: Session, skip: int = 0, limit: int = 20, search: str = None, min_price: float = None, max_price: float = None):
     """
-    Ambil daftar items dengan pagination & search.
+    Ambil daftar items dengan pagination, search, dan filter harga.
     - skip: jumlah data yang di-skip (untuk pagination)
     - limit: jumlah data per halaman
     - search: cari berdasarkan nama atau deskripsi
+    - min_price: filter harga minimum
+    - max_price: filter harga maksimum
     """
     query = db.query(Item)
     
@@ -31,6 +33,12 @@ def get_items(db: Session, skip: int = 0, limit: int = 20, search: str = None):
                 Item.description.ilike(f"%{search}%")
             )
         )
+    
+    if min_price is not None:
+        query = query.filter(Item.price >= min_price)
+    
+    if max_price is not None:
+        query = query.filter(Item.price <= max_price)
     
     total = query.count()
     items = query.order_by(Item.created_at.desc()).offset(skip).limit(limit).all()
