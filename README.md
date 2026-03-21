@@ -19,9 +19,11 @@ RAZ'Q App (E-Commerce UMKM RAZ'Q) adalah platform e-commerce berbasis website ya
   - [🏗️ Arsitektur Sistem](#️-arsitektur-sistem)
   - [🚀 Getting Started](#-getting-started)
     - [Prasyarat](#prasyarat)
-    - [Backend](#backend)
-    - [Frontend](#frontend)
-    - [Verifikasi](#verifikasi)
+  - [🚀 Cara Menjalankan](#-cara-menjalankan)
+    - [1. Clone repository](#1-clone-repository)
+    - [2. Jalankan Backend](#2-jalankan-backend)
+    - [3. Jalankan Frontend](#3-jalankan-frontend)
+    - [4. Verifikasi](#4-verifikasi)
   - [📁 Struktur Proyek](#-struktur-proyek)
   - [📚 Dasar Teori](#-dasar-teori)
     - [1. API (Application Programming Interface)](#1-api-application-programming-interface)
@@ -66,8 +68,8 @@ RAZ'Q App (E-Commerce UMKM RAZ'Q) adalah platform e-commerce berbasis website ya
     - [`DELETE /items/{item_id}` — Hapus Item](#delete-itemsitem_id--hapus-item)
     - [`GET /team` — Informasi Tim](#get-team--informasi-tim)
   - [📊 Ringkasan Endpoint](#-ringkasan-endpoint)
-  - [🚀 Cara Menjalankan](#-cara-menjalankan)
-    - [1. Clone repository](#1-clone-repository)
+  - [🚀 Cara Menjalankan](#-cara-menjalankan-1)
+    - [1. Clone repository](#1-clone-repository-1)
     - [2. Setup environment](#2-setup-environment)
     - [3. Install dependencies \& jalankan server](#3-install-dependencies--jalankan-server)
     - [4. Buka dokumentasi interaktif](#4-buka-dokumentasi-interaktif)
@@ -91,7 +93,34 @@ RAZ'Q App (E-Commerce UMKM RAZ'Q) adalah platform e-commerce berbasis website ya
     - [Langkah 11: Menjalankan Aplikasi](#langkah-11-menjalankan-aplikasi)
     - [Langkah 12: Pengujian dan Commit](#langkah-12-pengujian-dan-commit)
   - [✅ Fitur UI yang Dibangun](#-fitur-ui-yang-dibangun)
-  - [🚀 Cara Menjalankan](#-cara-menjalankan-1)
+  - [📊 Daftar Endpoint API](#-daftar-endpoint-api)
+    - [Endpoint Autentikasi (Publik)](#endpoint-autentikasi-publik)
+    - [Endpoint Item (Membutuhkan Token)](#endpoint-item-membutuhkan-token)
+    - [Endpoint Lainnya (Publik)](#endpoint-lainnya-publik)
+    - [Kode Status yang Digunakan](#kode-status-yang-digunakan)
+  - [🔑 Backend Autentikasi](#-backend-autentikasi)
+    - [File Baru yang Ditambahkan](#file-baru-yang-ditambahkan)
+    - [`auth.py` — Inti Sistem Autentikasi](#authpy--inti-sistem-autentikasi)
+    - [Endpoint Autentikasi yang Ditambahkan di `main.py`](#endpoint-autentikasi-yang-ditambahkan-di-mainpy)
+    - [Perubahan CORS — dari Wildcard ke Whitelist](#perubahan-cors--dari-wildcard-ke-whitelist)
+    - [Perubahan ENV — variabel baru di `.env`](#perubahan-env--variabel-baru-di-env)
+  - [🖥️ Frontend Autentikasi](#️-frontend-autentikasi)
+    - [Komponen Baru yang Ditambahkan](#komponen-baru-yang-ditambahkan)
+    - [Perubahan di `App.jsx`](#perubahan-di-appjsx)
+    - [Perubahan di `Header.jsx`](#perubahan-di-headerjsx)
+  - [🔐 Autentikasi](#-autentikasi)
+    - [Alur Autentikasi](#alur-autentikasi)
+    - [Contoh Response Login](#contoh-response-login)
+    - [Cara Menyertakan Token di Setiap Request](#cara-menyertakan-token-di-setiap-request)
+    - [Cara Menggunakan Token di Swagger UI](#cara-menggunakan-token-di-swagger-ui)
+    - [Validasi Data Saat Registrasi](#validasi-data-saat-registrasi)
+    - [Konfigurasi JWT di File `.env`](#konfigurasi-jwt-di-file-env)
+  - [📂 Dokumentasi](#-dokumentasi)
+    - [Ringkasan Hasil Pengujian](#ringkasan-hasil-pengujian)
+  - [🐛 Catatan Bug yang Ditemukan](#-catatan-bug-yang-ditemukan)
+    - [Bug yang Ditemukan](#bug-yang-ditemukan)
+    - [Mengapa Hanya Edit yang Bermasalah?](#mengapa-hanya-edit-yang-bermasalah)
+    - [Perbaikan yang Dilakukan](#perbaikan-yang-dilakukan)
   - [📅 Roadmap](#-roadmap)
 ---
 ## Fitur Utama
@@ -145,26 +174,29 @@ RAZ'Q App (E-Commerce UMKM RAZ'Q) adalah platform e-commerce berbasis website ya
 ## 🛠️ Tech Stack
 
 | Teknologi | Fungsi | Penjelasan |
-|------------|----------|------------|
-| **FastAPI** | Backend REST API | Framework Python berbasis asynchronous yang digunakan untuk membangun REST API dengan performa tinggi dan dokumentasi otomatis (Swagger). |
-| **React 18** | Frontend SPA | Library JavaScript untuk membangun Single Page Application (SPA) yang responsif dan modular menggunakan component-based architecture. |
+|---|---|---|
+| **FastAPI** | Backend REST API | Framework Python berbasis asynchronous untuk membangun REST API dengan performa tinggi dan dokumentasi otomatis via Swagger UI. |
+| **Uvicorn** | Server | ASGI server untuk menjalankan FastAPI. |
+| **SQLAlchemy** | ORM | Menerjemahkan Python object ke SQL dan sebaliknya, sehingga tidak perlu menulis query SQL secara manual. |
+| **Pydantic v2** | Validasi Data | Memvalidasi format data request dan response serta mendefinisikan schema API. |
+| **python-jose** | JWT | Membuat dan memverifikasi JWT token untuk sistem autentikasi. |
+| **passlib + bcrypt** | Keamanan Password | Mengubah password menjadi hash bcrypt sebelum disimpan ke database, sehingga password asli tidak pernah tersimpan. |
+| **python-dotenv** | Konfigurasi | Membaca variabel sensitif (password, secret key) dari file `.env` agar tidak ter-commit ke Git. |
+| **React 18** | Frontend | Library JavaScript untuk membangun antarmuka pengguna berbasis komponen yang responsif dan modular. |
 | **Vite** | Build Tool | Development server dan build tool untuk frontend React dengan hot-reload cepat. Berjalan di port 5173. |
-| **Fetch API** | HTTP Client | API bawaan JavaScript untuk melakukan HTTP request (GET/POST/PUT/DELETE) dari frontend ke backend. |
-| **PostgreSQL** | Database | Sistem manajemen basis data relasional (RDBMS) yang digunakan untuk menyimpan data user, produk, pesanan, dan transaksi secara terstruktur. |
-| **Docker** | Containerization | Digunakan untuk mengemas aplikasi beserta dependensinya ke dalam container agar environment konsisten di berbagai sistem. |
-| **GitHub Actions** | CI/CD | Digunakan untuk otomatisasi proses build, testing, dan deployment setiap terjadi perubahan pada repository. |
-| **Railway / Render** | Cloud Deployment | Platform cloud yang digunakan untuk hosting backend dan database agar aplikasi dapat diakses secara online. |
-| **SQLAlchemy** | ORM | Translasi Python object ↔ SQL |
-| **Pydantic v2** | Validasi | Validasi request body & response schema |
-| **Uvicorn** | Server | ASGI server untuk menjalankan FastAPI |
-| **python-dotenv** | Config | Membaca variabel dari file `.env` |
+| **Fetch API** | HTTP Client | API bawaan JavaScript untuk mengirim request HTTP (GET/POST/PUT/DELETE) dari frontend ke backend. |
+| **PostgreSQL** | Database | Sistem manajemen basis data relasional untuk menyimpan data user dan item inventori secara terstruktur. |
+| **Docker** | Containerization | Mengemas aplikasi beserta seluruh dependensinya ke dalam container agar environment berjalan konsisten di berbagai sistem. |
+| **GitHub Actions** | CI/CD | Mengotomatisasi proses build, testing, dan deployment setiap ada perubahan yang di-push ke repository. |
+| **Railway / Render** | Cloud Deployment | Platform cloud untuk hosting backend dan database agar aplikasi dapat diakses secara online. |
+ 
 
 ---
-
+ 
 ## 🏗️ Arsitektur Sistem
-
+ 
 Proyek ini menggunakan arsitektur **three-tier** yang memisahkan tampilan, logika bisnis, dan penyimpanan data secara bersih.
-
+ 
 ```
 ┌─────────────────────┐        HTTP/JSON        ┌──────────────────────┐        SQL        ┌─────────────────────┐
 │                     │  ──── GET /items ──►  │                      │  ── SELECT * ──►  │                     │
@@ -174,9 +206,9 @@ Proyek ini menggunakan arsitektur **three-tier** yang memisahkan tampilan, logik
 └─────────────────────┘                        └──────────────────────┘                   └─────────────────────┘
        Browser                                        Server                                    Database
 ```
-
-**Alur data saat client melakukan request ke Backend:**
-
+ 
+**Alur data saat client melakukan request:**
+ 
 ```
 Browser / Postman
       │
@@ -189,11 +221,13 @@ main.py  ──►  schemas.py  ──►  crud.py  ──►  models.py  ──
       ▼
 Browser / Postman
 ```
-
-**Alur data di sisi Frontend React (Modul 3):**
-
+ 
+> 📌 Diagram ini akan berkembang setiap minggu — mulai dari monolith sederhana hingga arsitektur microservices di fase akhir (Minggu 12–14).
+ 
+**Alur data di sisi Frontend:**
+ 
 ```
-User Action (klik tombol / isi form)
+User Action (klik/isi form)
       │
       ▼
 App.jsx  ──►  services/api.js  ──►  HTTP Request  ──►  FastAPI Backend
@@ -203,20 +237,23 @@ App.jsx  ──►  services/api.js  ──►  HTTP Request  ──►  FastAPI
       ▼
 setItems() / setTotalItems()  ──►  Re-render komponen  ──►  UI terupdate
 ```
-
-**Komponen Tree Frontend:**
+ 
+**Komponen Tree Frontend (dengan autentikasi):**
 ```
-App (state: items, editingItem, searchQuery, loading, isConnected)
- ├── Header        (props: totalItems, isConnected)
- ├── ItemForm      (props: onSubmit, editingItem, onCancelEdit)
- ├── SearchBar     (props: onSearch)
- └── ItemList      (props: items, onEdit, onDelete, loading)
-      └── ItemCard (props: item, onEdit, onDelete)
+App (state: items, editingItem, searchQuery, user, isAuthenticated)
+ ├── [jika belum login]
+ │    └── LoginPage   (props: onLogin, onRegister)
+ │
+ └── [jika sudah login]
+      ├── Header      (props: totalItems, isConnected, user, onLogout)
+      ├── ItemForm    (props: onSubmit, editingItem, onCancelEdit)
+      ├── SearchBar   (props: onSearch)
+      └── ItemList    (props: items, onEdit, onDelete, loading)
+           └── ItemCard (props: item, onEdit, onDelete)
 ```
-
-> 📌 Diagram ini akan berkembang setiap minggu — mulai dari monolith sederhana hingga arsitektur microservices di fase akhir (Minggu 12–14).
-
+ 
 ---
+
 
 ## 🚀 Getting Started
 
@@ -225,21 +262,34 @@ App (state: items, editingItem, searchQuery, loading, isConnected)
 - **Node.js 18+**: Diperlukan untuk kompilasi aset React dan manajemen package (NPM).
 - **Git**: Untuk manajemen versi dan kolaborasi antar anggota tim.
 
+## 🚀 Cara Menjalankan
+ 
 > ⚠️ **Perlu 2 terminal berjalan bersamaan** — satu untuk backend, satu untuk frontend.
-
-### Backend
+ 
+### 1. Clone repository
+ 
+```bash
+git clone https://github.com/aidilsaputrakirsan-classroom/cloud-team-XX.git
+cd cloud-team-XX
+```
+ 
+### 2. Jalankan Backend
+ 
 ```bash
 cd backend
 cp .env.example .env
-# Edit .env — isi DATABASE_URL dengan password PostgreSQL Anda
+# Edit .env — isi password PostgreSQL Anda
 pip install -r requirements.txt
 uvicorn main:app --reload --port 8000
 ```
-
+ 
 Backend tersedia di `http://localhost:8000`  
 Dokumentasi API (Swagger UI): `http://localhost:8000/docs`
-
-### Frontend
+ 
+### 3. Jalankan Frontend
+ 
+Buka terminal **baru** (jangan tutup terminal backend):
+ 
 ```bash
 cd frontend
 cp .env.example .env
@@ -247,26 +297,28 @@ cp .env.example .env
 npm install
 npm run dev
 ```
-
+ 
 Frontend tersedia di `http://localhost:5173`
-
-### Verifikasi
-Buka `http://localhost:5173` — Header harus menampilkan badge **🟢 API Connected**.
-
+ 
+### 4. Verifikasi
+ 
+Buka `http://localhost:5173` — halaman **Login** akan tampil. Lakukan registrasi akun baru, kemudian login untuk mengakses aplikasi.
+ 
 ---
 
 ## 📁 Struktur Proyek
 
 ```
-cloud-team-ignite/
+cloud-team-XX/
 ├── backend/
-│   ├── main.py                    ← Entry point, FastAPI router & semua endpoint
+│   ├── main.py                    ← Entry point, router, CORS, semua endpoint
+│   ├── auth.py                    ← JWT utilities: buat token, verifikasi, hash password
 │   ├── database.py                ← Koneksi PostgreSQL via SQLAlchemy
-│   ├── models.py                  ← SQLAlchemy models (definisi tabel database)
-│   ├── schemas.py                 ← Pydantic schemas (validasi request/response)
-│   ├── crud.py                    ← Fungsi CRUD (business logic & query database)
+│   ├── models.py                  ← SQLAlchemy models: tabel items & users
+│   ├── schemas.py                 ← Pydantic schemas: validasi request/response + auth
+│   ├── crud.py                    ← Fungsi CRUD items & user (create, authenticate)
 │   ├── requirements.txt           ← Daftar dependencies Python
-│   ├── .env                       ← ⛔ RAHASIA — berisi password, jangan di-commit!
+│   ├── .env                       ← ⛔ RAHASIA — berisi password & secret, jangan di-commit!
 │   └── .env.example               ← ✅ Template konfigurasi — ini yang di-commit
 ├── frontend/
 │   ├── src/
@@ -274,25 +326,26 @@ cloud-team-ignite/
 │   │   ├── App.css                ← Global styling & CSS reset
 │   │   ├── main.jsx               ← Entry point React
 │   │   ├── components/
-│   │   │   ├── Header.jsx         ← Judul, badge total item & status koneksi API
-│   │   │   ├── SearchBar.jsx      ← Input pencarian dengan tombol Clear
+│   │   │   ├── Header.jsx         ← Judul, badge total item, info user & tombol Logout
+│   │   │   ├── LoginPage.jsx      ← Halaman login & register dengan tab switch
+│   │   │   ├── SearchBar.jsx      ← Input pencarian dengan clear button
 │   │   │   ├── ItemForm.jsx       ← Form create/edit item dengan validasi
 │   │   │   ├── ItemList.jsx       ← Grid container daftar item + empty state
 │   │   │   └── ItemCard.jsx       ← Card per item + tombol Edit & Hapus
 │   │   └── services/
 │   │       └── api.js             ← Semua fungsi fetch ke backend API
-│   ├── .env                       ← ⛔ RAHASIA — berisi VITE_API_URL, jangan di-commit!
-│   ├── .env.example               ← ✅ Template konfigurasi frontend — ini yang di-commit
+│   ├── .env                       ← ⛔ RAHASIA — berisi VITE_API_URL
+│   ├── .env.example               ← ✅ Template konfigurasi frontend
 │   ├── index.html
 │   ├── package.json               ← Dependencies & scripts Node.js
 │   └── vite.config.js             ← Konfigurasi Vite bundler
 ├── docs/
-│   ├── api-test-results.md        ← Dokumentasi hasil testing endpoint API
-│   ├── ui-test-results.md         ← Dokumentasi hasil testing UI React (Modul 3)
-│   ├── database-schema.md         ← Schema tabel database
+│   ├── api-test-results.md        ← (Lead Frontend) Dokumentasi hasil testing endpoint API
+│   ├── ui-test-results.md         ← (Lead QA & Docs) Dokumentasi hasil testing UI React
+│   ├── database-schema.md         ← (Lead CI/CD) Schema tabel database
 │   └── member-[NAMA].md           ← File verifikasi masing-masing anggota
 ├── .gitignore                     ← Daftar file yang tidak di-commit (termasuk .env)
-└── README.md                      ← Dokumentasi proyek
+└── README.md                      ← Dokumentasi proyek (file ini)
 ```
 
 ---
@@ -2679,29 +2732,457 @@ git push origin main
 | **Format tanggal** | `ItemCard.jsx` | `toLocaleDateString("id-ID")` mengonversi tanggal menjadi format "10 Mar 2026" |
 
 ---
-
-## 🚀 Cara Menjalankan
-
-> ⚠️ Backend harus sudah berjalan di port 8000 sebelum menjalankan frontend.
-
-```bash
-# Terminal 1 — Backend
-cd cloud-team-XX/backend
-uvicorn main:app --reload --port 8000
-
-# Terminal 2 — Frontend
-cd cloud-team-XX/frontend
-cp .env.example .env
-npm install
-npm run dev
-```
-
-| URL | Keterangan |
+## 📊 Daftar Endpoint API
+ 
+Seluruh endpoint yang tersedia pada aplikasi Cloud App. Endpoint yang ditandai ✅ pada kolom Auth membutuhkan token JWT untuk dapat diakses.
+ 
+> ✅ = Membutuhkan token JWT di header: `Authorization: Bearer <token>`  
+> ❌ = Dapat diakses tanpa token (endpoint publik)
+ 
+### Endpoint Autentikasi (Publik)
+ 
+| Method | Endpoint | Deskripsi | Request Body | Status Sukses | Status Error |
+|--------|----------|-----------|--------------|---------------|--------------|
+| `POST` | `/auth/register` | Mendaftarkan akun baru | `{ email, name, password }` | `201 Created` | `400` email duplikat, `422` validasi gagal |
+| `POST` | `/auth/login` | Login dan mendapatkan token | `{ email, password }` | `200 OK` + token | `401` email/password salah |
+| `GET` | `/auth/me` | Melihat profil akun yang sedang aktif | — | `200 OK` | `401` token tidak valid |
+ 
+### Endpoint Item (Membutuhkan Token)
+ 
+| Method | Endpoint | Deskripsi | Request | Status Sukses | Status Error |
+|--------|----------|-----------|---------|---------------|--------------|
+| `POST` | `/items` | Menambahkan item baru ke inventori | Body: `{ name, price, description?, quantity? }` | `201 Created` | `401`, `422` |
+| `GET` | `/items` | Mengambil daftar semua item | Query: `search?`, `skip?`, `limit?` | `200 OK` | `401` |
+| `GET` | `/items/stats` | Melihat statistik inventori | — | `200 OK` | `401` |
+| `GET` | `/items/{id}` | Mengambil detail satu item berdasarkan ID | Path: `id` | `200 OK` | `401`, `404` |
+| `PUT` | `/items/{id}` | Memperbarui data item (hanya field yang dikirim yang berubah) | Path: `id`, Body: field yang ingin diubah | `200 OK` | `401`, `404`, `422` |
+| `DELETE` | `/items/{id}` | Menghapus item dari inventori | Path: `id` | `204 No Content` | `401`, `404` |
+ 
+### Endpoint Lainnya (Publik)
+ 
+| Method | Endpoint | Deskripsi | Status Sukses |
+|--------|----------|-----------|---------------|
+| `GET` | `/health` | Memeriksa apakah server berjalan normal | `200 OK` |
+| `GET` | `/team` | Menampilkan informasi anggota tim | `200 OK` |
+ 
+### Kode Status yang Digunakan
+ 
+| Kode | Artinya | Kapan Muncul |
+|---|---|---|
+| `200 OK` | Permintaan berhasil | GET, PUT yang berhasil |
+| `201 Created` | Data baru berhasil dibuat | POST register, POST items |
+| `204 No Content` | Berhasil, tidak ada data dikembalikan | DELETE yang berhasil |
+| `400 Bad Request` | Data ditolak karena konflik | Email sudah terdaftar |
+| `401 Unauthorized` | Tidak memiliki akses | Token tidak ada, token tidak valid, login gagal |
+| `404 Not Found` | Data tidak ditemukan | ID item tidak ada di database |
+| `422 Unprocessable Entity` | Format data tidak sesuai aturan | Field wajib kosong, harga negatif, password terlalu pendek |
+ 
+---
+ 
+## 🔑 Backend Autentikasi
+ 
+Setelah backend REST API berjalan, langkah selanjutnya adalah menambahkan sistem autentikasi JWT. Perubahan ini melibatkan penambahan beberapa file baru dan perubahan pada file yang sudah ada.
+ 
+---
+ 
+### File Baru yang Ditambahkan
+ 
+| File | Isi |
 |---|---|
-| `http://localhost:5173` | Aplikasi Frontend React |
-| `http://localhost:8000/docs` | Dokumentasi API (Swagger UI) |
-| `http://localhost:8000/health` | Memeriksa status backend |
+| `backend/auth.py` | Fungsi membuat token JWT, mendekode token, hash password, verifikasi password, dan dependency `get_current_user` |
+| `backend/models.py` | Ditambahkan model `User` untuk tabel `users` di database |
+| `backend/schemas.py` | Ditambahkan schema `UserCreate`, `UserResponse`, `LoginRequest`, `TokenResponse` |
+| `backend/crud.py` | Ditambahkan fungsi `create_user()` dan `authenticate_user()` |
+ 
+---
+ 
+### `auth.py` — Inti Sistem Autentikasi
+ 
+File ini berisi semua fungsi yang berkaitan dengan autentikasi:
+ 
+```python
+# backend/auth.py
+from jose import JWTError, jwt
+from passlib.context import CryptContext
+from fastapi import Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
+from datetime import datetime, timedelta
+import os
+ 
+SECRET_KEY = os.getenv("SECRET_KEY")
+ALGORITHM = os.getenv("ALGORITHM", "HS256")
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 60))
+ 
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+ 
+def hash_password(password: str) -> str:
+    return pwd_context.hash(password)          # ubah plain text → hash bcrypt
+ 
+def verify_password(plain: str, hashed: str) -> bool:
+    return pwd_context.verify(plain, hashed)   # bandingkan plain text dengan hash
+ 
+def create_access_token(data: dict) -> str:
+    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    return jwt.encode({**data, "exp": expire}, SECRET_KEY, algorithm=ALGORITHM)
+ 
+def get_current_user(token: str = Depends(oauth2_scheme), db = Depends(get_db)):
+    # Dependency ini dijalankan otomatis sebelum setiap endpoint yang dilindungi
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id = payload.get("sub")
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Token tidak valid")
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=401, detail="User tidak ditemukan")
+    return user
+```
+ 
+---
+ 
+### Endpoint Autentikasi yang Ditambahkan di `main.py`
+ 
+```python
+@app.post("/auth/register", response_model=UserResponse, status_code=201)
+def register(user_data: UserCreate, db: Session = Depends(get_db)):
+    existing = crud.get_user_by_email(db, user_data.email)
+    if existing:
+        raise HTTPException(status_code=400, detail="Email sudah terdaftar")
+    return crud.create_user(db, user_data)
+ 
+@app.post("/auth/login", response_model=TokenResponse)
+def login(login_data: LoginRequest, db: Session = Depends(get_db)):
+    user = crud.authenticate_user(db, login_data.email, login_data.password)
+    if not user:
+        raise HTTPException(status_code=401, detail="Login gagal: email atau password salah")
+    token = create_access_token({"sub": user.id})
+    return {"access_token": token, "token_type": "bearer", "user": user}
+ 
+@app.get("/auth/me", response_model=UserResponse)
+def get_me(current_user = Depends(get_current_user)):
+    return current_user
+```
+ 
+Semua endpoint item sekarang menggunakan `Depends(get_current_user)`:
+ 
+```python
+# Versi awal — tidak ada proteksi
+@app.get("/items", response_model=ItemListResponse)
+def list_items(db: Session = Depends(get_db)):
+    ...
+ 
+# Versi terbaru — dilindungi token
+@app.get("/items", response_model=ItemListResponse)
+def list_items(db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+    ...
+```
+ 
+---
+ 
+### Perubahan CORS — dari Wildcard ke Whitelist
+ 
+```python
+# Versi awal — tidak aman, semua origin diizinkan
+app.add_middleware(CORSMiddleware, allow_origins=["*"], ...)
+ 
+# Versi terbaru — hanya origin terdaftar yang diizinkan
+allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173")
+origins_list = [o.strip() for o in allowed_origins.split(",")]
+app.add_middleware(CORSMiddleware, allow_origins=origins_list, ...)
+```
+ 
+---
+ 
+### Perubahan ENV — variabel baru di `.env`
+ 
+```env
+# Variabel awal
+DATABASE_URL=postgresql://postgres:PASSWORD@localhost:5432/cloudapp
+ 
+# Variabel tambahan untuk autentikasi
+SECRET_KEY=buat-dengan-python-c-import-secrets-print-secrets-token-hex-32
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=60
+ALLOWED_ORIGINS=http://localhost:5173
+```
+ 
+---
+ 
+## 🖥️ Frontend Autentikasi
+ 
+Setelah sistem autentikasi backend selesai, langkah selanjutnya adalah menambahkan halaman login dan mekanisme penyimpanan token JWT di frontend.
+ 
+---
+ 
+### Komponen Baru yang Ditambahkan
+ 
+| Komponen | File | Fungsi |
+|---|---|---|
+| Halaman Login | `components/LoginPage.jsx` | Menampilkan form login dan form register dalam satu halaman dengan dua tab |
+ 
+**Tampilan `LoginPage.jsx`:**
+- Latar biru gelap (#1F4E79)
+- Dua tab: **Login** dan **Register**
+- Tab Login: kolom Email dan Password
+- Tab Register: kolom Nama Lengkap, Email, dan Password (min. 8 karakter)
+- Tombol submit berwarna hijau
+ 
+---
+ 
+### Perubahan di `App.jsx`
+ 
+State yang ditambahkan untuk autentikasi:
+ 
+```javascript
+const [user, setUser] = useState(null)              // data pengguna yang sedang login
+const [isAuthenticated, setIsAuthenticated] = useState(false)  // status login
+```
+ 
+Handler yang ditambahkan:
+ 
+| Handler | Fungsi |
+|---|---|
+| `handleLogin(email, password)` | Memanggil `login()` dari `api.js`, menyimpan data user ke state, set `isAuthenticated = true` |
+| `handleRegister(userData)` | Memanggil `register()` dari `api.js`, lalu otomatis memanggil `handleLogin()` |
+| `handleLogout()` | Memanggil `clearToken()`, mereset semua state, tampilan kembali ke halaman login |
+ 
+Logika tampilan baru di bagian render:
+ 
+```javascript
+// Jika belum login → tampilkan halaman login
+if (!isAuthenticated) {
+    return <LoginPage onLogin={handleLogin} onRegister={handleRegister} />
+}
+ 
+// Jika sudah login → tampilkan halaman utama
+return (
+    <div>
+        <Header user={user} onLogout={handleLogout} ... />
+        <ItemForm ... />
+        <SearchBar ... />
+        <ItemList ... />
+    </div>
+)
+```
+ 
+---
+ 
+### Perubahan di `Header.jsx`
+ 
+Header sekarang menerima dua props baru:
+ 
+| Props | Tipe | Keterangan |
+|---|---|---|
+| `user` | object | Data pengguna dari response login — digunakan untuk menampilkan nama |
+| `onLogout` | function | Dipanggil saat tombol Logout ditekan |
+ 
+Tampilan header berubah dari hanya menampilkan judul dan status koneksi, menjadi menampilkan **nama pengguna** dan **tombol Logout** setelah login.
+ 
+---
 
+ 
+## 🔐 Autentikasi
+ 
+Seluruh endpoint `/items` dilindungi dengan sistem autentikasi berbasis **JWT (JSON Web Token)**.
+ 
+> 💡 **JWT (JSON Web Token)** adalah kode unik yang diberikan server kepada pengguna setelah berhasil login. Kode ini berfungsi seperti tanda pengenal sementara — setiap kali pengguna ingin mengakses data, kode ini disertakan sebagai bukti bahwa pengguna sudah login. Token berlaku selama 60 menit.
+ 
+---
+ 
+### Alur Autentikasi
+ 
+```
+┌─────────────────────────────────────────────────────────────┐
+│  1. REGISTER                                                │
+│     POST /auth/register                                     │
+│     Body: { email, name, password }                         │
+│           ↓                                                 │
+│     Password di-hash dengan bcrypt → disimpan ke database   │
+│     Response: data akun (tanpa password)  →  201 Created    │
+├─────────────────────────────────────────────────────────────┤
+│  2. LOGIN                                                   │
+│     POST /auth/login                                        │
+│     Body: { email, password }                               │
+│           ↓                                                 │
+│     Server verifikasi password → buat JWT token             │
+│     Response: { access_token, token_type, user }  → 200 OK  │
+├─────────────────────────────────────────────────────────────┤
+│  3. AKSES DATA (setiap request ke /items)                   │
+│     Header: Authorization: Bearer <access_token>            │
+│           ↓                                                 │
+│     Server verifikasi token → proses request → kirim data   │
+│     Tanpa token → 401 Unauthorized                          │
+├─────────────────────────────────────────────────────────────┤
+│  4. LOGOUT                                                  │
+│     Token dihapus dari memori browser                       │
+│     Tampilan kembali ke halaman login                       │
+└─────────────────────────────────────────────────────────────┘
+```
+ 
+---
+ 
+### Contoh Response Login
+ 
+Setelah login berhasil, server mengembalikan data berikut:
+ 
+```json
+{
+  "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+  "token_type": "bearer",
+  "user": {
+    "id": 1,
+    "email": "10231030@student.itk.ac.id",
+    "name": "Desnita Dwi Putri",
+    "is_active": true,
+    "created_at": "2026-03-17T08:00:00+07:00"
+  }
+}
+```
+ 
+Nilai `access_token` inilah yang perlu disertakan di setiap permintaan ke endpoint `/items`.
+ 
+---
+ 
+### Cara Menyertakan Token di Setiap Request
+ 
+Token dikirim melalui **header** permintaan dengan format berikut:
+ 
+```
+Authorization: Bearer <nilai_access_token>
+```
+ 
+Contoh menggunakan cURL:
+```bash
+curl -X 'GET'   'http://localhost:8000/items'   -H 'accept: application/json'   -H 'Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...'
+```
+ 
+Di frontend React, token disertakan secara otomatis oleh fungsi `authHeaders()` di `api.js` setiap kali fungsi fetch dipanggil.
+ 
+---
+ 
+### Cara Menggunakan Token di Swagger UI
+ 
+1. Jalankan `POST /auth/register` → buat akun baru
+2. Jalankan `POST /auth/login` → salin nilai `access_token` dari response
+3. Klik tombol **Authorize 🔒** di bagian atas halaman `http://localhost:8000/docs`
+4. Tempelkan nilai token ke kolom yang tersedia → klik **Authorize**
+5. Semua endpoint `/items` kini dapat diakses langsung dari Swagger UI
+ 
+---
+ 
+### Validasi Data Saat Registrasi
+ 
+| Field | Aturan |
+|---|---|
+| `email` | Wajib diisi, harus unik (tidak boleh sama dengan akun lain) |
+| `name` | Wajib diisi, minimal 2 karakter |
+| `password` | Wajib diisi, minimal 8 karakter |
+ 
+---
+ 
+### Konfigurasi JWT di File `.env`
+ 
+```env
+SECRET_KEY=ganti-dengan-random-string-panjang-minimal-32-karakter
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=60
+ALLOWED_ORIGINS=http://localhost:5173
+```
+ 
+Cara membuat `SECRET_KEY` secara acak:
+```bash
+python -c "import secrets; print(secrets.token_hex(32))"
+```
+ 
+> ⚠️ Nilai `SECRET_KEY` harus dirahasiakan dan tidak boleh di-commit ke Git. Simpan di file `.env` yang sudah terdaftar di `.gitignore`.
+ 
+---
+ 
+## 📂 Dokumentasi
+ 
+Seluruh dokumen hasil pengujian dan referensi proyek tersedia di folder `docs/`:
+ 
+| File | Dibuat oleh | Keterangan |
+|---|---|---|
+| `docs/api-test-results.md` | Lead QA & Docs | Hasil pengujian 14 endpoint API via Swagger UI |
+| `docs/ui-test-results.md` | Lead QA & Docs | Hasil pengujian 10 test case UI React via browser |
+| `docs/auth-test-results.md` | Lead QA & Docs | Hasil pengujian 19 test case alur autentikasi JWT |
+| `docs/database-schema.md` | Lead DevOps | Skema tabel database PostgreSQL |
+| `docs/setup-guide.md` | Lead DevOps | Panduan setup lengkap dari clone hingga running |
+| `docs/member-[NAMA].md` | Masing-masing anggota | File verifikasi kontribusi per anggota |
+| `docs/images/` | Lead QA & Docs | Screenshot hasil pengujian API dan UI |
+ 
+### Ringkasan Hasil Pengujian
+ 
+**API Testing (Swagger UI)**
+ 
+| Total Test Case | Passed | Failed | Pass Rate |
+|---|---|---|---|
+| 14 | ✅ 14 | ❌ 0 | **100%** |
+ 
+**UI Testing (Browser)**
+ 
+| Total Test Case | Passed | Failed | Pass Rate |
+|---|---|---|---|
+| 10 | ✅ 10 | ❌ 0 | **100%** |
+ 
+**Auth Testing (JWT End-to-End)**
+ 
+| Total Test Case | Passed | Failed | Pass Rate |
+|---|---|---|---|
+| 19 | ✅ 19 | ❌ 0 | **100%** |
+ 
+---
+ 
+## 🐛 Catatan Bug yang Ditemukan
+ 
+Selama pengujian autentikasi, ditemukan dua bug pada kode frontend yang menyebabkan fitur edit item tidak berjalan dengan benar dari browser. Bug ini sudah diperbaiki.
+ 
+### Bug yang Ditemukan
+ 
+| No | File | Fungsi | Masalah | Dampak |
+|---|---|---|---|---|
+| 1 | `api.js` | `updateItem()` | Tidak ada `Content-Type: application/json` di header | Server menerima permintaan edit tetapi tidak bisa membaca data perubahan yang dikirim, sehingga tidak ada yang tersimpan ke database |
+| 2 | `api.js` | `createItem()` | Tidak ada `Content-Type: application/json` di header | Server kadang tidak bisa membaca data item baru yang dikirim (rentan bergantung pada toleransi backend) |
+| 3 | `App.jsx` | `handleSubmit()` | `loadItems()` dipanggil tanpa `await` | Daftar item dimuat ulang sebelum server selesai menyimpan perubahan, sehingga data lama yang muncul. Perlu refresh manual untuk melihat data terbaru |
+| 4 | `App.jsx` | `handleDelete()` | `loadItems()` dipanggil tanpa `await` | Sama seperti di atas — daftar dimuat sebelum server selesai menghapus |
+ 
+### Mengapa Hanya Edit yang Bermasalah?
+ 
+Meskipun bug ada di dua file, gejala yang terlihat hanya pada fitur edit. Ini karena:
+ 
+- **Hapus item** — tidak mengirim body data, sehingga tidak terdampak bug `Content-Type`
+- **Tambah item** — FastAPI terkadang masih bisa memproses POST sederhana tanpa `Content-Type` karena lebih toleran
+- **Edit item (PUT)** — operasi partial update lebih ketat dalam membaca header. Tanpa `Content-Type`, server tidak bisa membaca data perubahan sama sekali
+ 
+### Perbaikan yang Dilakukan
+ 
+**File `api.js` — tambahkan `Content-Type` di fungsi yang mengirim data:**
+ 
+```javascript
+// Sebelum — hanya ada token, tidak ada keterangan format data
+headers: authHeaders()
+ 
+// Sesudah — token dan keterangan format data
+headers: {
+    ...authHeaders(),
+    "Content-Type": "application/json",
+}
+```
+ 
+**File `App.jsx` — tambahkan `await` sebelum `loadItems()`:**
+ 
+```javascript
+// Sebelum — langsung muat ulang tanpa tunggu server
+loadItems(searchQuery)
+ 
+// Sesudah — tunggu server selesai dulu, baru muat ulang
+await loadItems(searchQuery)
+```
+ 
+> 📄 Penjelasan lengkap beserta kode sebelum dan sesudah perbaikan tersedia di `docs/auth-test-results.md` bagian Catatan Bug.
+ 
 ---
 
 ## 📅 Roadmap
@@ -2711,7 +3192,7 @@ npm run dev
 | 1 | Setup & Hello World | ✅ |
 | 2 | REST API + Database | ✅ |
 | 3 | React Frontend | ✅ |
-| 4 | Full-Stack Integration | ⬜ |
+| 4 | Full-Stack Integration | ✅ |
 | 5-7 | Docker & Compose | ⬜ |
 | 8 | UTS Demo | ⬜ |
 | 9-11 | CI/CD Pipeline | ⬜ |
