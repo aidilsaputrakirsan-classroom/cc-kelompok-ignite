@@ -631,9 +631,8 @@ Contoh: jika client mengirim `price: -500` atau `price: "lima ratus"`, Pydantic 
 ---
 
 ### 9. Arsitektur Aplikasi
-
 Proyek ini menggunakan pola **Separation of Concerns** — setiap file punya satu tanggung jawab yang spesifik:
-
+ 
 ```
 Request dari client
        ↓
@@ -651,9 +650,9 @@ PostgreSQL       ← Menyimpan & mengambil data
        ↑
 (alur balik: data dikembalikan ke client sebagai JSON)
 ```
-
+ 
 > 💡 **Kenapa dipisah jadi banyak file?** Ketika proyek berkembang menjadi microservices (fase Minggu 12–14), struktur ini membuat kode lebih mudah dibaca, di-test, dan di-maintain oleh seluruh anggota tim.
-
+ 
 ---
 
 ### Langkah 1: Siapkan Database PostgreSQL
