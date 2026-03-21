@@ -2682,7 +2682,7 @@ git push origin main
 
 ## 🚀 Cara Menjalankan
 
-> ⚠️ Backend dari Modul 2 harus sudah berjalan di port 8000 sebelum menjalankan frontend.
+> ⚠️ Backend harus sudah berjalan di port 8000 sebelum menjalankan frontend.
 
 ```bash
 # Terminal 1 — Backend
