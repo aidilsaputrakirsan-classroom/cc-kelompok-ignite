@@ -47,10 +47,10 @@ function ItemForm({ onSubmit, editingItem, onCancelEdit }) {
 
         // Konfirmasi sebelum submit
         const action = editingItem ? "update" : "menambah"
-        const confirmMessage = editingItem 
+        const confirmMessage = editingItem
             ? "Apakah Anda yakin untuk update data item ini?"
             : "Apakah Anda yakin menambahkan data item ini?"
-        
+
         if (!window.confirm(confirmMessage)) {
             return
         }
@@ -143,17 +143,17 @@ function ItemForm({ onSubmit, editingItem, onCancelEdit }) {
                 </div>
 
                 <div style={styles.actions}>
-                    <button 
-                        type="submit" 
-                        style={{...styles.btnSubmit, opacity: loading ? 0.6 : 1, cursor: loading ? "not-allowed" : "pointer"}}
+                    <button
+                        type="submit"
+                        style={{ ...styles.btnSubmit, opacity: loading ? 0.6 : 1, cursor: loading ? "not-allowed" : "pointer" }}
                         disabled={loading}
                     >
                         {loading ? "⏳ Memproses..." : (editingItem ? "💾 Update Item" : "➕ Tambah Item")}
                     </button>
                     {editingItem && (
-                        <button 
-                            type="button" 
-                            onClick={onCancelEdit} 
+                        <button
+                            type="button"
+                            onClick={onCancelEdit}
                             style={styles.btnCancel}
                             disabled={loading}
                         >

@@ -47,7 +47,7 @@ function LoginPage({ onLogin, onRegister }) {
                     return
                 }
                 await onRegister(formData)
-                toast.success("✅ Registrasi berhasil! Silakan login.", { position: "top-center" })
+                toast.success("✅ Akun berhasil dibuat! Silakan login.", { position: "top-center" })
             } else {
                 if (!validateEmail(formData.email)) {
                     setError("Format email tidak valid")
@@ -55,7 +55,7 @@ function LoginPage({ onLogin, onRegister }) {
                     return
                 }
                 await onLogin(formData.email, formData.password)
-                toast.success("✅ Login berhasil!", { position: "top-center" })
+                toast.success("✅ Anda berhasil masuk!", { position: "top-center" })
             }
         } catch (err) {
             const errorMsg = err instanceof Error ? err.message : String(err)
@@ -131,7 +131,7 @@ function LoginPage({ onLogin, onRegister }) {
                         />
                     </div>
 
-                    <button type="submit" style={{...styles.btnSubmit, opacity: loading ? 0.6 : 1, cursor: loading ? "not-allowed" : "pointer"}} disabled={loading}>
+                    <button type="submit" style={{ ...styles.btnSubmit, opacity: loading ? 0.6 : 1, cursor: loading ? "not-allowed" : "pointer" }} disabled={loading}>
                         {loading ? "⏳ Loading..." : isRegister ? "📝 Register" : "🔐 Login"}
                     </button>
                 </form>

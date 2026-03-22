@@ -57,10 +57,11 @@ def register(user_data: UserCreate, db: Session = Depends(get_db)):
     """
     user = crud.create_user(db=db, user_data=user_data)
     if not user:
-     raise HTTPException(
-        status_code=400,
-        detail="Registrasi gagal: email sudah digunakan"
-    )
+        raise HTTPException(
+            status_code=400,
+            detail="Registrasi gagal: email sudah digunakan"
+        )
+    return user
 
 
 @app.post("/auth/login", response_model=TokenResponse)
@@ -73,10 +74,10 @@ def login(login_data: LoginRequest, db: Session = Depends(get_db)):
     """
     user = crud.authenticate_user(db=db, email=login_data.email, password=login_data.password)
     if not user:
-     raise HTTPException(
-        status_code=401,
-        detail="Login gagal: email atau password salah"
-    )
+        raise HTTPException(
+            status_code=401,
+            detail="Login gagal: email atau password salah"
+        )
 
     token = create_access_token(data={"sub": str(user.id)})
     return {

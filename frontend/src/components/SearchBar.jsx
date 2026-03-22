@@ -1,6 +1,6 @@
 import { useState } from "react"
 
-function SearchBar({ onSearch }) {
+function SearchBar({ onSearch, sortBy, sortOrder, onSort }) {
     const [query, setQuery] = useState("")
     const [minPrice, setMinPrice] = useState("")
     const [maxPrice, setMaxPrice] = useState("")
@@ -31,9 +31,9 @@ function SearchBar({ onSearch }) {
                 <button type="submit" style={styles.btnSearch}>
                     🔍 Cari
                 </button>
-                <button 
-                    type="button" 
-                    onClick={() => setShowFilters(!showFilters)} 
+                <button
+                    type="button"
+                    onClick={() => setShowFilters(!showFilters)}
                     style={styles.btnFilter}
                 >
                     {showFilters ? "▲ Tutup Filter" : "▼ Filter Harga"}
@@ -72,6 +72,31 @@ function SearchBar({ onSearch }) {
                     </button>
                 </div>
             )}
+
+            <div style={styles.sortRow}>
+                <div style={styles.sortField}>
+                    <label style={styles.sortLabel}>📊 Urutkan Berdasarkan:</label>
+                    <select
+                        value={sortBy}
+                        onChange={(e) => onSort(e.target.value, sortOrder)}
+                        style={styles.sortSelect}
+                    >
+                        <option value="date">Tanggal</option>
+                        <option value="name">Nama (A-Z)</option>
+                    </select>
+                </div>
+                <div style={styles.sortField}>
+                    <label style={styles.sortLabel}>↕️ Urutan:</label>
+                    <select
+                        value={sortOrder}
+                        onChange={(e) => onSort(sortBy, e.target.value)}
+                        style={styles.sortSelect}
+                    >
+                        <option value="desc">{sortBy === "date" ? "Terbaru" : "Z-A"}</option>
+                        <option value="asc">{sortBy === "date" ? "Terlama" : "A-Z"}</option>
+                    </select>
+                </div>
+            </div>
         </form>
     )
 }
@@ -160,6 +185,36 @@ const styles = {
         fontSize: "0.9rem",
         fontWeight: "bold",
         marginTop: "auto",
+    },
+    sortRow: {
+        display: "flex",
+        gap: "1rem",
+        padding: "0.75rem",
+        backgroundColor: "#f0f7ff",
+        borderRadius: "8px",
+        border: "1px solid #d1e0f0",
+    },
+    sortField: {
+        display: "flex",
+        flexDirection: "column",
+        gap: "0.25rem",
+        flex: 1,
+        minWidth: "180px",
+    },
+    sortLabel: {
+        fontSize: "0.8rem",
+        fontWeight: "bold",
+        color: "#1F4E79",
+    },
+    sortSelect: {
+        padding: "0.6rem 0.8rem",
+        fontSize: "0.9rem",
+        border: "2px solid #2E75B6",
+        borderRadius: "6px",
+        backgroundColor: "white",
+        color: "#333",
+        cursor: "pointer",
+        outline: "none",
     },
 }
 

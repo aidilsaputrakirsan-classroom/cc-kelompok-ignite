@@ -24,13 +24,32 @@ function App() {
   const [editingItem, setEditingItem] = useState(null)
   const [searchQuery, setSearchQuery] = useState("")
   const [filters, setFilters] = useState({ minPrice: null, maxPrice: null })
+  const [sortBy, setSortBy] = useState("date") // "name" or "date"
+  const [sortOrder, setSortOrder] = useState("desc") // "asc" or "desc"
 
   // ==================== LOAD DATA ====================
   const loadItems = useCallback(async (search = "", minPrice = null, maxPrice = null) => {
     setLoading(true)
     try {
       const data = await fetchItems(search, 0, 20, minPrice, maxPrice)
-      setItems(data.items)
+      let sortedItems = [...data.items]
+
+      // Apply sorting
+      if (sortBy === "name") {
+        sortedItems.sort((a, b) => {
+          const nameA = a.name.toLowerCase()
+          const nameB = b.name.toLowerCase()
+          return sortOrder === "asc" ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA)
+        })
+      } else if (sortBy === "date") {
+        sortedItems.sort((a, b) => {
+          const dateA = new Date(a.created_at)
+          const dateB = new Date(b.created_at)
+          return sortOrder === "asc" ? dateA - dateB : dateB - dateA
+        })
+      }
+
+      setItems(sortedItems)
       setTotalItems(data.total)
     } catch (err) {
       if (err.message === "UNAUTHORIZED") {
@@ -40,7 +59,7 @@ function App() {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [sortBy, sortOrder])
 
   useEffect(() => {
     checkHealth().then(setIsConnected)
@@ -82,6 +101,8 @@ function App() {
     setEditingItem(null)
     setSearchQuery("")
     setFilters({ minPrice: null, maxPrice: null })
+    setSortBy("date")
+    setSortOrder("desc")
   }
 
   // ==================== ITEM HANDLERS ====================
@@ -132,6 +153,11 @@ function App() {
     setFilters({ minPrice, maxPrice })
   }
 
+  const handleSort = (newSortBy, newSortOrder) => {
+    setSortBy(newSortBy)
+    setSortOrder(newSortOrder)
+  }
+
   // ==================== RENDER ====================
 
   // Jika belum login, tampilkan login page
@@ -160,7 +186,7 @@ function App() {
           editingItem={editingItem}
           onCancelEdit={() => setEditingItem(null)}
         />
-        <SearchBar onSearch={handleSearch} />
+        <SearchBar onSearch={handleSearch} sortBy={sortBy} sortOrder={sortOrder} onSort={handleSort} />
         <ItemList
           items={items}
           onEdit={handleEdit}
