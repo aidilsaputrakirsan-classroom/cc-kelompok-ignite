@@ -117,7 +117,18 @@ RAZ'Q App (E-Commerce UMKM RAZ'Q) adalah platform e-commerce berbasis website ya
     - [Konfigurasi JWT di File `.env`](#konfigurasi-jwt-di-file-env)
   - [📂 Dokumentasi](#-dokumentasi)
     - [Ringkasan Hasil Pengujian](#ringkasan-hasil-pengujian)
-  - [� Roadmap](#-roadmap)
+  - [🐛 Catatan Bug yang Ditemukan](#-catatan-bug-yang-ditemukan)
+    - [Bug yang Ditemukan](#bug-yang-ditemukan)
+      - [Bug 1 dan 2 — File `api.js`: Keterangan Format Data Tidak Disertakan](#bug-1-dan-2--file-apijs-keterangan-format-data-tidak-disertakan)
+      - [Bug 3 dan 4 — File `App.jsx`: Daftar Dimuat Sebelum Server Selesai](#bug-3-dan-4--file-appjsx-daftar-dimuat-sebelum-server-selesai)
+      - [Mengapa Hanya Edit yang Terlihat Bermasalah?](#mengapa-hanya-edit-yang-terlihat-bermasalah)
+    - [Revisi dan Peningkatan Sistem](#revisi-dan-peningkatan-sistem)
+      - [Latar Belakang Revisi](#latar-belakang-revisi)
+      - [Perbaikan Backend](#perbaikan-backend)
+      - [Perbaikan Frontend](#perbaikan-frontend)
+      - [Fitur Baru yang Berhasil Ditambahkan](#fitur-baru-yang-berhasil-ditambahkan)
+      - [Ringkasan File yang Diubah](#ringkasan-file-yang-diubah)
+  - [📅 Roadmap](#-roadmap)
 ---
 ## Fitur Utama
 
@@ -3127,6 +3138,172 @@ Seluruh dokumen hasil pengujian dan referensi proyek tersedia di folder `docs/`:
 | Total Test Case | Passed | Failed | Pass Rate |
 |---|---|---|---|
 | 20 | ✅ 20 | ❌ 0 | **100%** |
+ 
+---
+
+## 🐛 Catatan Bug yang Ditemukan
+---
+ 
+### Bug yang Ditemukan
+ 
+Selama pengujian ditemukan empat bug pada kode frontend. Dua bug berada di file `api.js` dan dua lainnya di file `App.jsx`. Meskipun ada empat bug, gejala yang terlihat oleh pengguna hanya muncul pada fitur edit item — fitur tambah dan hapus masih terlihat berjalan normal.
+ 
+#### Bug 1 dan 2 — File `api.js`: Keterangan Format Data Tidak Disertakan
+ 
+Bug pertama dan kedua ditemukan pada fungsi `updateItem()` dan `createItem()` di file `api.js`. Kedua fungsi ini bertugas mengirimkan data item ke server — baik saat menambah item baru maupun saat mengubah data item yang sudah ada.
+ 
+Masalahnya adalah kedua fungsi hanya menyertakan token login (sebagai bukti bahwa pengguna sudah masuk), tetapi tidak memberitahu server dalam format apa data tersebut dikirim. Keterangan format ini disebut `Content-Type` dan diletakkan di dalam bagian **header** dari sebuah permintaan ke server.
+ 
+> 💡 **Header** pada sebuah permintaan ke server adalah kumpulan informasi tambahan yang menyertai data utama — seperti amplop surat yang berisi informasi pengirim, penerima, dan jenis isi surat. Isi suratnya sendiri ada di dalam amplop.
+ 
+> 💡 **`Content-Type: application/json`** adalah keterangan yang memberitahu server bahwa data yang dikirim menggunakan format JSON. Tanpa keterangan ini, server menerima data tetapi tidak tahu cara membacanya — seperti menerima surat yang ditulis dalam kode yang tidak dikenal.
+ 
+Tanpa keterangan ini, server menerima permintaan edit tetapi tidak dapat membaca isi perubahan yang dikirim, sehingga tidak ada yang tersimpan ke database. Permintaan dianggap berhasil dari sisi teknis, tetapi data yang lama tetap tersimpan.
+ 
+**Kode yang bermasalah:**
+```javascript
+// ❌ Sebelum diperbaiki — hanya ada token, tidak ada keterangan format data
+headers: authHeaders()
+```
+ 
+**Kode yang sudah diperbaiki:**
+```javascript
+// ✅ Sesudah diperbaiki — token dan keterangan format data
+headers: {
+    ...authHeaders(),               // sertakan token login
+    "Content-Type": "application/json",  // tambahkan keterangan format JSON
+}
+```
+ 
+> 💡 **`...authHeaders()`** — tanda tiga titik di depan berarti "salin semua isi dari fungsi authHeaders() ke sini". Hasilnya adalah satu kumpulan header yang berisi token login sekaligus keterangan format data, keduanya sekaligus.
+ 
+#### Bug 3 dan 4 — File `App.jsx`: Daftar Dimuat Sebelum Server Selesai
+ 
+Bug ketiga dan keempat ditemukan pada fungsi `handleSubmit()` dan `handleDelete()` di file `App.jsx`. Kedua fungsi ini bertugas memuat ulang daftar item setelah pengguna selesai menambah, mengubah, atau menghapus data.
+ 
+Masalahnya adalah perintah "muat ulang daftar" (`loadItems`) dijalankan tanpa menunggu server selesai memproses perubahan terlebih dahulu. Dalam JavaScript, fungsi yang berhubungan dengan pengiriman data ke server membutuhkan waktu karena harus menunggu jawaban dari server. Untuk memastikan JavaScript menunggu suatu proses selesai sebelum melanjutkan ke baris berikutnya, digunakan kata kunci `await`.
+ 
+> 💡 **`await`** artinya "tunggu dulu sampai proses ini benar-benar selesai, baru lanjutkan ke baris berikutnya". Tanpa `await`, JavaScript langsung melanjutkan ke perintah berikutnya tanpa menunggu, seperti membuka lemari pakaian sebelum baju selesai dicuci — tentu bajunya belum ada di sana.
+ 
+Akibat tidak adanya `await`, daftar item dimuat ulang sebelum server sempat menyimpan perubahan. Yang dikembalikan server adalah data lama, sehingga tampilan tidak berubah. Pengguna harus me-refresh halaman secara manual baru data terbaru muncul.
+ 
+**Kode yang bermasalah:**
+```javascript
+// ❌ Sebelum diperbaiki — daftar dimuat sebelum server selesai
+loadItems(searchQuery)
+```
+ 
+**Kode yang sudah diperbaiki:**
+```javascript
+// ✅ Sesudah diperbaiki — tunggu server selesai, baru muat daftar
+await loadItems(searchQuery)
+```
+ 
+#### Mengapa Hanya Edit yang Terlihat Bermasalah?
+ 
+Meskipun keempat bug ada, pengguna hanya merasakan masalah pada fitur edit. Ini karena masing-masing fitur berperilaku berbeda:
+ 
+Fitur **hapus item** tidak mengirim data apapun ke server — hanya memberi tahu server bahwa item dengan ID tertentu harus dihapus. Karena tidak ada data yang dikirim, bug keterangan format data tidak berpengaruh sama sekali.
+ 
+Fitur **tambah item** menggunakan metode POST. Server FastAPI cukup toleran terhadap permintaan POST tanpa keterangan format data — dalam banyak kondisi, server masih bisa membaca datanya sehingga penambahan item tetap berhasil.
+ 
+Fitur **edit item** menggunakan metode PUT yang bersifat **partial update**, artinya hanya field yang dikirim yang berubah. Metode ini lebih ketat dalam memeriksa header — tanpa keterangan format data, server tidak bisa membaca perubahan sama sekali, sehingga data lama yang tetap tersimpan.
+ 
+---
+ 
+> 📄 Penjelasan lengkap beserta kode sebelum dan sesudah perbaikan tersedia di `docs/auth-test-results.md` bagian Catatan Bug.
+ 
+---
+ 
+### Revisi dan Peningkatan Sistem
+ 
+Setelah bug diperbaiki dan pengujian awal selesai, dilakukan serangkaian perbaikan dan penambahan fitur berdasarkan hasil evaluasi. Perbaikan ini mencakup backend dan frontend sekaligus, dengan fokus pada pengalaman pengguna, validasi data, dan penanganan kesalahan yang lebih baik.
+ 
+---
+ 
+#### Latar Belakang Revisi
+ 
+Pengujian awal berhasil menemukan beberapa kekurangan yang perlu segera ditangani. Pertama, belum ada fitur untuk menyaring item berdasarkan rentang harga — pengguna hanya bisa melihat semua item atau mencari berdasarkan nama. Kedua, tidak ada notifikasi visual setelah setiap operasi CRUD (tambah, ubah, hapus), sehingga pengguna tidak mendapat konfirmasi apakah tindakannya berhasil atau gagal. Ketiga, tidak ada tampilan loading saat proses berlangsung, yang membuat pengguna tidak tahu apakah aplikasi sedang bekerja atau tidak.
+ 
+> 💡 **CRUD** adalah singkatan dari Create (tambah), Read (baca), Update (ubah), Delete (hapus) — empat operasi dasar yang bisa dilakukan pada data.
+ 
+Selain itu, validasi email dan password pada form login dan registrasi masih longgar — sistem menerima email dengan format sembarang dan password yang terlalu sederhana. Terakhir, belum ada dialog konfirmasi sebelum pengguna menambah atau mengubah data, sehingga ada risiko data tersimpan secara tidak sengaja.
+ 
+---
+ 
+#### Perbaikan Backend
+ 
+Backend diperbaiki pada 4 file utama. Berikut penjelasan masing-masing perubahan:
+ 
+**`models.py` dan `crud.py`** — Fungsi `get_items()` yang bertugas mengambil daftar item dari database ditambahkan dua parameter baru: `min_price` (harga minimum) dan `max_price` (harga maksimum). Dengan tambahan ini, ketika frontend mengirimkan permintaan dengan rentang harga tertentu, database akan langsung menyaring dan hanya mengembalikan item yang harganya sesuai — tanpa perlu memuat semua data lalu menyaringnya di sisi tampilan.
+ 
+> 💡 **Parameter** adalah nilai masukan yang diterima sebuah fungsi. Analoginya seperti isian formulir — dengan mengisi `min_price: 100000` dan `max_price: 2000000`, kita memberitahu fungsi batas harga yang ingin ditampilkan.
+ 
+**`schemas.py`** — Aturan validasi data diperketat. Email sekarang diperiksa menggunakan `EmailStr` — sebuah tipe data khusus dari Pydantic yang memastikan format email benar (harus ada tanda `@` dan domain yang valid). Password diwajibkan minimal 8 karakter dan harus mengandung setidaknya satu angka, yang diverifikasi menggunakan **regex** (regular expression).
+ 
+> 💡 **Regex** atau *regular expression* adalah pola pencocokan teks yang digunakan untuk memeriksa apakah sebuah teks memenuhi format tertentu. Contohnya, pola `^(?=.*\d).{8,}$` berarti: "teks harus minimal 8 karakter dan mengandung setidaknya satu angka." Regex dijalankan sebelum data masuk ke database.
+ 
+**`main.py`** — Endpoint `GET /items` ditambahkan dua parameter baru di URL yang bisa dikirim dari frontend: `min_price` dan `max_price`. Contoh penggunaannya: `GET /items?min_price=100000&max_price=2000000` akan mengembalikan hanya item dengan harga antara Rp100.000 dan Rp2.000.000.
+ 
+---
+ 
+#### Perbaikan Frontend
+ 
+Frontend mengalami perubahan pada 7 file. Berikut penjelasan masing-masing:
+ 
+**`App.jsx`** adalah komponen utama yang mengelola seluruh data dan logika aplikasi. Pada revisi ini, ditambahkan sistem notifikasi bernama `ToastContainer` — wadah yang menampilkan pesan-pesan notifikasi toast dari seluruh aplikasi. Selain itu, ditambahkan pula state (data yang disimpan di memori aplikasi) untuk menyimpan nilai harga minimum dan maksimum yang dipilih pengguna pada panel filter harga.
+ 
+> 💡 **State** dalam React adalah data yang disimpan di dalam komponen dan dapat berubah sewaktu-waktu. Setiap kali state berubah, tampilan akan diperbarui secara otomatis sesuai nilai terbaru.
+ 
+**`LoginPage.jsx`** — Halaman login dan registrasi diperkuat dengan validasi di sisi tampilan (frontend). Sebelum data dikirim ke server, aplikasi sudah memeriksa terlebih dahulu apakah format email benar dan apakah password memenuhi syarat minimal 8 karakter dengan angka. Jika tidak memenuhi syarat, pesan kesalahan langsung tampil di layar tanpa perlu menunggu respons dari server. Ditambahkan pula notifikasi toast saat login berhasil, login gagal, registrasi berhasil, dan registrasi gagal.
+ 
+> 💡 **Validasi di sisi frontend** berarti pemeriksaan dilakukan di browser pengguna sebelum data dikirim ke server. Ini lebih cepat karena tidak perlu menunggu bolak-balik komunikasi dengan server, dan mengurangi beban server karena data yang tidak valid tidak sampai ke backend sama sekali.
+ 
+**`ItemForm.jsx`** — Form tambah dan edit item mendapat beberapa peningkatan. Pertama, ditambahkan **loading state** — saat pengguna menekan tombol Tambah atau Update, tombol berubah menjadi "⏳ Memproses..." dan tidak bisa ditekan lagi sampai proses selesai. Ini mencegah pengguna mengirim data dua kali secara tidak sengaja. Kedua, ditambahkan dialog konfirmasi sebelum data dikirim — pengguna harus menekan OK terlebih dahulu. Ketiga, notifikasi toast tampil setelah proses berhasil atau gagal.
+ 
+> 💡 **Loading state** adalah kondisi di mana aplikasi sedang memproses sesuatu dan pengguna perlu menunggu. Menampilkan indikator visual seperti spinner atau teks "Memproses..." adalah praktik yang baik agar pengguna tidak bingung apakah aplikasi sedang bekerja atau macet.
+ 
+> 💡 **Spinner** adalah animasi berputar yang biasa digunakan sebagai indikator bahwa proses sedang berlangsung.
+ 
+**`Header.jsx`** — Bagian atas halaman ditambahkan dialog konfirmasi sebelum logout dieksekusi, serta notifikasi toast setelah logout berhasil. Ini memastikan pengguna tidak keluar secara tidak sengaja.
+ 
+**`SearchBar.jsx`** — Komponen pencarian diperluas dengan panel filter harga yang bisa dibuka dan ditutup. Panel ini berisi dua kolom input: Harga Min dan Harga Maks. Saat pengguna mengisi kedua kolom dan menekan tombol Terapkan, aplikasi akan memfilter item sesuai rentang harga tersebut. Tombol Tutup Filter tersedia untuk menutup panel kembali.
+ 
+**`ItemCard.jsx`** — Tampilan kartu setiap item diperbarui untuk meningkatkan keterbacaan. Perubahan meliputi penataan ulang tata letak, pemilihan ukuran dan warna teks yang lebih kontras, serta penyesuaian jarak antar elemen.
+ 
+**`services/api.js`** — File ini mendapat dua perbaikan penting. Pertama, `Content-Type: application/json` ditambahkan pada semua fungsi yang mengirim data ke server (POST dan PUT) — ini adalah perbaikan atas Bug 1 dan 2 yang dijelaskan di atas. Kedua, penanganan pesan error diperbaiki sehingga tidak lagi menampilkan `[object Object]` yang tidak informatif, melainkan pesan kesalahan yang sebenarnya dari server.
+ 
+> 💡 **`[object Object]`** adalah tampilan default JavaScript ketika sebuah objek (kumpulan data) dipaksa ditampilkan sebagai teks biasa tanpa proses konversi yang benar. Ini biasanya muncul ketika kode mencoba menampilkan pesan error tetapi tidak mengambil bagian teks yang tepat dari respons server.
+ 
+---
+ 
+#### Fitur Baru yang Berhasil Ditambahkan
+ 
+Secara keseluruhan, tujuh fitur baru berhasil diimplementasikan dalam revisi ini:
+ 
+Pertama, **validasi format email dan kekuatan password yang ketat** — diterapkan baik di backend maupun di frontend secara konsisten sehingga data yang tidak valid tidak bisa masuk ke sistem dari arah manapun.
+ 
+Kedua, **notifikasi toast** untuk setiap tindakan penting — login, registrasi, tambah item, update item, hapus item, dan logout. Pengguna selalu mendapat konfirmasi visual setelah setiap tindakan.
+ 
+Ketiga, **dialog konfirmasi** sebelum menambah item, mengubah item, dan logout. Langkah konfirmasi ini melindungi pengguna dari tindakan yang tidak disengaja.
+ 
+Keempat, **loading state dan spinner** pada form — tombol berubah menjadi "⏳ Memproses..." saat proses berlangsung dan tidak bisa ditekan ulang sampai selesai.
+ 
+Kelima, **filter harga** dengan kolom input minimum dan maksimum yang bisa dibuka dan ditutup sesuai kebutuhan.
+ 
+Keenam, **penanganan error yang lebih baik** — pesan kesalahan dari server kini ditampilkan dalam bahasa yang dapat dibaca pengguna, bukan kode teknis seperti `[object Object]`.
+ 
+Ketujuh, **logout otomatis** saat server mengembalikan error 401 Unauthorized — ini terjadi ketika token sudah habis masa berlakunya (lebih dari 60 menit). Daripada menampilkan pesan error yang membingungkan, aplikasi langsung mengarahkan pengguna ke halaman login.
+ 
+> 💡 **401 Unauthorized** adalah kode respons dari server yang berarti "kamu tidak punya izin untuk mengakses ini." Biasanya muncul karena token sudah tidak valid atau sudah kedaluwarsa.
+ 
+---
+ 
+#### Ringkasan File yang Diubah
+ 
+Secara keseluruhan, **11 file** mengalami perubahan dalam revisi ini — 4 file backend dan 7 file frontend. Tidak diperlukan **migrasi database** karena tidak ada perubahan pada struktur tabel yang sudah ada.
+ 
+> 💡 **Migrasi database** adalah proses memperbarui struktur tabel di database — misalnya menambah kolom baru atau mengubah tipe data kolom yang sudah ada. Karena revisi ini hanya menambahkan parameter pada query tanpa mengubah tabel, migrasi tidak diperlukan dan data yang sudah ada tetap aman.
  
 ---
  ## 📅 Roadmap
