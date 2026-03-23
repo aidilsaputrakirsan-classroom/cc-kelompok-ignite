@@ -121,6 +121,11 @@ RAZ'Q App (E-Commerce UMKM RAZ'Q) adalah platform e-commerce berbasis website ya
     - [Bug yang Ditemukan](#bug-yang-ditemukan)
     - [Mengapa Hanya Edit yang Bermasalah?](#mengapa-hanya-edit-yang-bermasalah)
     - [Perbaikan yang Dilakukan](#perbaikan-yang-dilakukan)
+    - [Revisi dan Peningkatan Sistem](#revisi-dan-peningkatan-sistem)
+      - [Latar Belakang Revisi](#latar-belakang-revisi)
+      - [Perbaikan Backend](#perbaikan-backend)
+      - [Perbaikan Frontend](#perbaikan-frontend)
+      - [Fitur Baru yang Berhasil Ditambahkan](#fitur-baru-yang-berhasil-ditambahkan)
   - [📅 Roadmap](#-roadmap)
 ---
 ## Fitur Utama
@@ -3106,7 +3111,7 @@ Seluruh dokumen hasil pengujian dan referensi proyek tersedia di folder `docs/`:
 |---|---|---|
 | `docs/api-test-results.md` | Lead QA & Docs | Hasil pengujian 14 endpoint API via Swagger UI |
 | `docs/ui-test-results.md` | Lead QA & Docs | Hasil pengujian 10 test case UI React via browser |
-| `docs/auth-test-results.md` | Lead QA & Docs | Hasil pengujian 19 test case alur autentikasi JWT |
+| `docs/auth-test-results.md` | Lead QA & Docs | Hasil pengujian 20 test case alur autentikasi JWT |
 | `docs/database-schema.md` | Lead DevOps | Skema tabel database PostgreSQL |
 | `docs/setup-guide.md` | Lead DevOps | Panduan setup lengkap dari clone hingga running |
 | `docs/member-[NAMA].md` | Masing-masing anggota | File verifikasi kontribusi per anggota |
@@ -3130,12 +3135,11 @@ Seluruh dokumen hasil pengujian dan referensi proyek tersedia di folder `docs/`:
  
 | Total Test Case | Passed | Failed | Pass Rate |
 |---|---|---|---|
-| 19 | ✅ 19 | ❌ 0 | **100%** |
+| 20 | ✅ 20 | ❌ 0 | **100%** |
  
 ---
  
 ## 🐛 Catatan Bug yang Ditemukan
- 
 Selama pengujian autentikasi, ditemukan dua bug pada kode frontend yang menyebabkan fitur edit item tidak berjalan dengan benar dari browser. Bug ini sudah diperbaiki.
  
 ### Bug yang Ditemukan
@@ -3179,8 +3183,62 @@ loadItems(searchQuery)
 // Sesudah — tunggu server selesai dulu, baru muat ulang
 await loadItems(searchQuery)
 ```
+
  
-> 📄 Penjelasan lengkap beserta kode sebelum dan sesudah perbaikan tersedia di `docs/auth-test-results.md` bagian Catatan Bug.
+---
+ 
+### Revisi dan Peningkatan Sistem
+ 
+Setelah pengujian awal selesai, dilakukan serangkaian perbaikan dan penambahan fitur berdasarkan hasil evaluasi. Perbaikan ini mencakup backend dan frontend sekaligus, dengan fokus pada pengalaman pengguna, validasi data, dan penanganan kesalahan.
+ 
+---
+ 
+#### Latar Belakang Revisi
+ 
+Pengujian awal menemukan beberapa kekurangan yang perlu ditangani: belum ada filter berdasarkan harga, belum ada notifikasi visual setelah setiap operasi CRUD, belum ada tampilan loading saat proses berlangsung, validasi email dan password masih longgar, dan belum ada dialog konfirmasi sebelum menambah atau mengubah data item.
+ 
+---
+ 
+#### Perbaikan Backend
+ 
+Backend diperbaiki pada 4 file utama:
+ 
+| File | Perubahan |
+|---|---|
+| `models.py` | Penambahan dukungan parameter filter harga pada query database |
+| `crud.py` | Fungsi `get_items()` ditambahkan parameter `min_price` dan `max_price` untuk memfilter item berdasarkan rentang harga |
+| `schemas.py` | Validasi diperketat — email menggunakan `EmailStr` dan password diwajibkan minimal 8 karakter serta mengandung angka menggunakan regex pattern |
+| `main.py` | Endpoint `GET /items` ditambahkan query parameter `min_price` dan `max_price` untuk mendukung filter harga dari frontend |
+ 
+---
+ 
+#### Perbaikan Frontend
+ 
+Frontend mengalami perubahan pada 7 file:
+ 
+| File | Perubahan |
+|---|---|
+| `App.jsx` | Ditambahkan `ToastContainer` untuk sistem notifikasi dan state management untuk menyimpan rentang harga filter |
+| `LoginPage.jsx` | Validasi email menggunakan regex format yang ketat, validasi password sama dengan backend, notifikasi toast untuk umpan balik login dan registrasi |
+| `ItemForm.jsx` | Loading state dan tampilan spinner saat proses berlangsung (tombol berubah menjadi "⏳ Memproses..."), dialog konfirmasi sebelum mengirim data, notifikasi toast untuk keberhasilan dan kegagalan |
+| `Header.jsx` | Dialog konfirmasi sebelum logout, notifikasi toast setelah logout |
+| `SearchBar.jsx` | Panel filter harga dengan kolom input harga minimum dan maksimum, tombol untuk membuka dan menutup panel filter |
+| `ItemCard.jsx` | Peningkatan tampilan kartu item untuk keterbacaan yang lebih baik |
+| `services/api.js` | Penambahan `Content-Type: application/json` pada request POST dan PUT, perbaikan penanganan pesan error agar tidak menampilkan `[object Object]` |
+ 
+---
+ 
+#### Fitur Baru yang Berhasil Ditambahkan
+ 
+| No | Fitur |
+|---|---|
+| 1 | Validasi format email dan kekuatan password yang ketat |
+| 2 | Notifikasi toast untuk: login, registrasi, tambah item, update item, hapus item, dan logout |
+| 3 | Dialog konfirmasi sebelum menambah item, mengubah item, dan logout |
+| 4 | Tampilan loading dan spinner visual pada form saat proses berlangsung |
+| 5 | Filter harga dengan kolom input minimum dan maksimum |
+| 6 | Penanganan error yang lebih baik dengan pesan yang ramah pengguna |
+| 7 | Logout otomatis saat server mengembalikan error 401 Unauthorized |
  
 ---
 
