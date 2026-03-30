@@ -171,11 +171,11 @@ def delete_item(
 @app.get("/team")
 def team_info():
     return {
-        "team": "cloud-team-XX",
+        "team": "cloud-team-ignite",
         "members": [
             {"name": "Andini Permata Dewanti", "nim": "10231014", "role": "Lead Backend"},
             {"name": "Putri Rahmawati", "nim": "10231074", "role": "Lead Frontend"},
-            {"name": "Desnita Dwi Putri", "nim": "10231030", "role": "Lead DevOps"},
-            {"name": "Krishandy Dhanysa Pratama", "nim": "10231050", "role": "Lead QA & Docs"},
+            {"name": "Krishandy Dhanysa Pratama", "nim": "10231050", "role": "Lead DevOps"},
+            {"name": "Desnita Dwi Putri", "nim": "10231030", "role": "Lead QA & Docs"},
         ],
     }
