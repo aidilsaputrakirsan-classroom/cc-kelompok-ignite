@@ -12,9 +12,12 @@ class User(Base):
     email = Column(String(255), unique=True, nullable=False, index=True)
     name = Column(String(100), nullable=False)
     hashed_password = Column(String(255), nullable=False)
+    phone = Column(String(20), nullable=True)  # Nomor telepon user
+    address = Column(Text, nullable=True)  # Alamat default user
     role = Column(String(20), default="customer", nullable=False)  # admin atau customer
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())  # Track perubahan profil user
 
 
 class Product(Base):
@@ -60,19 +63,6 @@ class CartItem(Base):
     
     # Relationship ke Cart
     cart = relationship("Cart", back_populates="items")
-
-
-class Item(Base):
-    """Model untuk tabel 'items' - Kompatibilitas dengan modul sebelumnya."""
-    __tablename__ = "items"
-
-    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    name = Column(String(100), nullable=False, index=True)
-    description = Column(Text, nullable=True)
-    price = Column(Float, nullable=False)
-    quantity = Column(Integer, nullable=False, default=0)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
 
 class Order(Base):

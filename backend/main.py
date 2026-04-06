@@ -7,7 +7,6 @@ from sqlalchemy.orm import Session
 from database import engine, get_db
 from models import Base, User
 from schemas import (
-    ItemCreate, ItemUpdate, ItemResponse, ItemListResponse,
     UserCreate, UserResponse, LoginRequest, TokenResponse,
     ProductCreate, ProductUpdate, ProductResponse, ProductListResponse, ProductStatsResponse,
     CartItemCreate, CartItemUpdate, CartItemResponse, CartResponse,
@@ -360,81 +359,7 @@ def remove_from_cart(
     return None
 
 
-# ==================== 5. ITEM ENDPOINTS (BACKWARD COMPATIBILITY) ====================
-
-@app.post("/items", response_model=ItemResponse, status_code=201, tags=["Items (Legacy)"])
-def create_item(
-    item: ItemCreate,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    """Buat item baru. **Membutuhkan autentikasi.** (Legacy endpoint - untuk compatibility)"""
-    return crud.create_item(db=db, item_data=item)
-
-
-@app.get("/items", response_model=ItemListResponse, tags=["Items (Legacy)"])
-def list_items(
-    skip: int = Query(0, ge=0),
-    limit: int = Query(20, ge=1, le=100),
-    search: str = Query(None),
-    min_price: float = Query(None, ge=0),
-    max_price: float = Query(None, ge=0),
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    """Ambil daftar items dengan filter harga. **Membutuhkan autentikasi.** (Legacy endpoint)"""
-    return crud.get_items(db=db, skip=skip, limit=limit, search=search, min_price=min_price, max_price=max_price)
-
-
-@app.get("/items/stats", tags=["Items (Legacy)"])
-def item_stats(
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    """Statistik item (total item, total stok, rata-rata harga). (Legacy endpoint)"""
-    return crud.get_item_stats(db)
-
-
-@app.get("/items/{item_id}", response_model=ItemResponse, tags=["Items (Legacy)"])
-def get_item(
-    item_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    """Ambil satu item. **Membutuhkan autentikasi.** (Legacy endpoint)"""
-    item = crud.get_item(db=db, item_id=item_id)
-    if not item:
-        raise HTTPException(status_code=404, detail=f"Item {item_id} tidak ditemukan")
-    return item
-
-
-@app.put("/items/{item_id}", response_model=ItemResponse, tags=["Items (Legacy)"])
-def update_item(
-    item_id: int,
-    item: ItemUpdate,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    """Update item. **Membutuhkan autentikasi.** (Legacy endpoint)"""
-    updated = crud.update_item(db=db, item_id=item_id, item_data=item)
-    if not updated:
-        raise HTTPException(status_code=404, detail=f"Item {item_id} tidak ditemukan")
-    return updated
-
-
-@app.delete("/items/{item_id}", status_code=204, tags=["Items (Legacy)"])
-def delete_item(
-    item_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    """Hapus item. **Membutuhkan autentikasi.** (Legacy endpoint)"""
-    success = crud.delete_item(db=db, item_id=item_id)
-    if not success:
-        raise HTTPException(status_code=404, detail=f"Item {item_id} tidak ditemukan")
-
-
-# ==================== 6. ORDER ENDPOINTS ====================
+# ==================== 5. ORDER ENDPOINTS ====================
 
 @app.post("/orders", response_model=OrderResponse, status_code=201, tags=["Orders"])
 def create_order(
@@ -550,7 +475,7 @@ def delete_order(
     return None
 
 
-# ==================== 7. PAYMENT ENDPOINTS ====================
+# ==================== 6. PAYMENT ENDPOINTS ====================
 
 @app.post("/payments", response_model=PaymentResponse, status_code=201, tags=["Payments"])
 def create_payment(
@@ -659,7 +584,7 @@ def delete_payment(
     return None
 
 
-# ==================== 8. TESTIMONIAL ENDPOINTS ====================
+# ==================== 7. TESTIMONIAL ENDPOINTS ====================
 
 @app.post("/testimonials", response_model=TestimonialResponse, status_code=201, tags=["Testimonials"])
 def create_testimonial(
