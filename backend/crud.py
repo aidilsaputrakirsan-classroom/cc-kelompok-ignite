@@ -112,17 +112,6 @@ def authenticate_user(db: Session, email: str, password: str) -> User | None:
         return None
     return user
 
-def get_item_stats(db: Session):
-    total_items = db.query(func.count(Item.id)).scalar()
-    total_stock = db.query(func.sum(Item.quantity)).scalar()
-    avg_price = db.query(func.avg(Item.price)).scalar()
-
-    return {
-        "total_items": total_items or 0,
-        "total_stock": total_stock or 0,
-        "average_price": float(avg_price) if avg_price else 0
-    }
-
 
 # ==================== PRODUCT CRUD ====================
 

@@ -27,7 +27,6 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 # Gunakan HTTPBearer (BUKAN OAuth2)
 security = HTTPBearer()
 
-print("SECRET_KEY YANG DIPAKAI:", SECRET_KEY)
 # ==================== PASSWORD ====================
 
 def hash_password(password: str) -> str:
@@ -51,20 +50,13 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
 
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
-print("SECRET_KEY YANG DIPAKAI:", SECRET_KEY)
 
 def decode_token(token: str) -> dict:
     try:
-        print("TOKEN MASUK:", token)
-        print("SECRET_KEY:", SECRET_KEY)
-
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-
-        print("PAYLOAD:", payload)
         return payload
 
     except JWTError as e:
-        print("JWT ERROR:", str(e)) 
         raise HTTPException(
             status_code=401,
             detail="Token tidak valid atau sudah expired",

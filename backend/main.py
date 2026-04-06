@@ -21,7 +21,7 @@ load_dotenv()
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
-    title="RAZ'Q App API - UMKM E-Commerce",
+    title="ATHSNACK API - UMKM E-Commerce",
     description="REST API untuk UMKM Makanan Khas Balikpapan | Cloud Computing Project",
     version="1.0.0",
 )
@@ -45,7 +45,7 @@ app.add_middleware(
 def root():
     """Root endpoint - Sistem backend aktif."""
     return {
-        "app": "RAZ'Q App - UMKM E-Commerce",
+        "app": "ATHSNACK - UMKM E-Commerce",
         "version": "1.0.0",
         "description": "Platform e-commerce untuk makanan khas Balikpapan",
         "status": "active"
@@ -58,7 +58,7 @@ def health_check():
     return {
         "status": "healthy",
         "version": "1.0.0",
-        "service": "RAZ'Q App API"
+        "service": "ATHSNACK API"
     }
 
 
@@ -67,31 +67,31 @@ def team_info():
     """Informasi tim pengembang."""
     return {
         "team": "Cloud Kelompok Ignite",
-        "project": "RAZ'Q App - UMKM E-Commerce Makanan Khas Balikpapan",
+        "project": "ATHSNACK - UMKM E-Commerce Makanan Khas Balikpapan",
         "members": [
             {
                 "name": "Andini Permata Dewanti",
                 "nim": "10231014",
                 "role": "Lead Backend",
-                "email": "andini.dwanti@student.itk.ac.id"
+                "email": "10231014@student.itk.ac.id"
             },
             {
                 "name": "Putri Rahmawati",
                 "nim": "10231074",
                 "role": "Lead Frontend",
-                "email": "putri.rahmawati@student.itk.ac.id"
+                "email": "10231074@student.itk.ac.id"
             },
             {
                 "name": "Krishandy Dhanysa Pratama",
                 "nim": "10231050",
                 "role": "Lead DevOps",
-                "email": "krishandy.pratama@student.itk.ac.id"
+                "email": "10231050@student.itk.ac.id"
             },
             {
                 "name": "Desnita Dwi Putri",
                 "nim": "10231030",
                 "role": "Lead QA & Docs",
-                "email": "desnita.putri@student.itk.ac.id"
+                "email": "10231030@student.itk.ac.id"
             },
         ],
         "institution": "Institut Teknologi Kalimantan (ITK)",
