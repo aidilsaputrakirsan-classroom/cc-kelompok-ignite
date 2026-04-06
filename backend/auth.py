@@ -115,3 +115,19 @@ def get_current_user(
         )
 
     return user
+
+
+def get_current_admin(
+    current_user: User = Depends(get_current_user),
+) -> User:
+    """
+    Pastikan user yang login adalah admin.
+    Case-insensitive check: akan accept "admin", "Admin", "ADMIN", dll
+    """
+    if current_user.role.lower() != "admin":  # ← FIX: Convert to lowercase
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Hanya admin yang dapat mengakses endpoint ini",
+        )
+    
+    return current_user

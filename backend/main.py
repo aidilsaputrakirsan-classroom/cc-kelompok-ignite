@@ -9,8 +9,10 @@ from models import Base, User
 from schemas import (
     ItemCreate, ItemUpdate, ItemResponse, ItemListResponse,
     UserCreate, UserResponse, LoginRequest, TokenResponse,
+    ProductCreate, ProductUpdate, ProductResponse, ProductListResponse, ProductStatsResponse,
+    CartItemCreate, CartItemUpdate, CartItemResponse, CartResponse,
 )
-from auth import create_access_token, get_current_user
+from auth import create_access_token, get_current_user, get_current_admin
 import crud
 
 load_dotenv()
@@ -19,12 +21,12 @@ load_dotenv()
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
-    title="Cloud App API",
-    description="REST API untuk mata kuliah Komputasi Awan — SI ITK",
-    version="0.4.0",
+    title="RAZ'Q App API - UMKM E-Commerce",
+    description="REST API untuk UMKM Makanan Khas Balikpapan | Cloud Computing Project",
+    version="1.0.0",
 )
 
-# ==================== CORS (FIXED) ====================
+# ==================== CORS ====================
 allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173")
 origins_list = [origin.strip() for origin in allowed_origins.split(",")]
 
@@ -37,23 +39,77 @@ app.add_middleware(
 )
 
 
-# ==================== HEALTH CHECK ====================
+# ==================== 1. ROOT & HEALTH CHECK ====================
 
-@app.get("/health")
+@app.get("/", tags=["System"])
+def root():
+    """Root endpoint - Sistem backend aktif."""
+    return {
+        "app": "RAZ'Q App - UMKM E-Commerce",
+        "version": "1.0.0",
+        "description": "Platform e-commerce untuk makanan khas Balikpapan",
+        "status": "active"
+    }
+
+
+@app.get("/health", tags=["System"])
 def health_check():
-    return {"status": "healthy", "version": "0.4.0"}
+    """Health check endpoint."""
+    return {
+        "status": "healthy",
+        "version": "1.0.0",
+        "service": "RAZ'Q App API"
+    }
 
 
-# ==================== AUTH ENDPOINTS (PUBLIC) ====================
+@app.get("/team", tags=["System"])
+def team_info():
+    """Informasi tim pengembang."""
+    return {
+        "team": "Cloud Kelompok Ignite",
+        "project": "RAZ'Q App - UMKM E-Commerce Makanan Khas Balikpapan",
+        "members": [
+            {
+                "name": "Andini Permata Dewanti",
+                "nim": "10231014",
+                "role": "Lead Backend",
+                "email": "andini.dwanti@student.itk.ac.id"
+            },
+            {
+                "name": "Putri Rahmawati",
+                "nim": "10231074",
+                "role": "Lead Frontend",
+                "email": "putri.rahmawati@student.itk.ac.id"
+            },
+            {
+                "name": "Krishandy Dhanysa Pratama",
+                "nim": "10231050",
+                "role": "Lead DevOps",
+                "email": "krishandy.pratama@student.itk.ac.id"
+            },
+            {
+                "name": "Desnita Dwi Putri",
+                "nim": "10231030",
+                "role": "Lead QA & Docs",
+                "email": "desnita.putri@student.itk.ac.id"
+            },
+        ],
+        "institution": "Institut Teknologi Kalimantan (ITK)",
+        "course": "Komputasi Awan - SI",
+    }
 
-@app.post("/auth/register", response_model=UserResponse, status_code=201)
+
+# ==================== 2. AUTH ENDPOINTS (PUBLIC) ====================
+
+@app.post("/auth/register", response_model=UserResponse, status_code=201, tags=["Authentication"])
 def register(user_data: UserCreate, db: Session = Depends(get_db)):
     """
     Registrasi user baru.
     
     - **email**: Email unik (akan digunakan untuk login)
     - **name**: Nama lengkap
-    - **password**: Minimal 8 karakter
+    - **password**: Minimal 8 karakter (harus mengandung angka)
+    - **role**: "customer" (default) atau "admin"
     """
     user = crud.create_user(db=db, user_data=user_data)
     if not user:
@@ -64,7 +120,7 @@ def register(user_data: UserCreate, db: Session = Depends(get_db)):
     return user
 
 
-@app.post("/auth/login", response_model=TokenResponse)
+@app.post("/auth/login", response_model=TokenResponse, tags=["Authentication"])
 def login(login_data: LoginRequest, db: Session = Depends(get_db)):
     """
     Login dan dapatkan JWT token.
@@ -87,25 +143,233 @@ def login(login_data: LoginRequest, db: Session = Depends(get_db)):
     }
 
 
-@app.get("/auth/me", response_model=UserResponse)
+@app.get("/auth/me", response_model=UserResponse, tags=["Authentication"])
 def get_me(current_user: User = Depends(get_current_user)):
-    """Ambil profil user yang sedang login."""
+    """Ambil profil user yang sedang login. **Membutuhkan autentikasi.**"""
     return current_user
 
 
-# ==================== ITEM ENDPOINTS (PROTECTED) ====================
+# ==================== 3. PRODUCT ENDPOINTS ====================
 
-@app.post("/items", response_model=ItemResponse, status_code=201)
+@app.get("/products", response_model=ProductListResponse, tags=["Products"])
+def list_products(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(20, ge=1, le=100),
+    search: str = Query(None),
+    category: str = Query(None),
+    db: Session = Depends(get_db),
+):
+    """
+    Ambil daftar produk dengan filter.
+    
+    - **skip**: Jumlah data yang di-skip (untuk pagination)
+    - **limit**: Jumlah data per halaman (1-100)
+    - **search**: Cari berdasarkan nama atau deskripsi produk
+    - **category**: Filter berdasarkan kategori (makanan, minuman, snack, dll)
+    
+    *Endpoint ini bisa diakses oleh siapa saja (tanpa login)*
+    """
+    result = crud.get_products(db=db, skip=skip, limit=limit, search=search, category=category)
+    return {"total": result["total"], "products": result["products"]}
+
+
+@app.get("/products/stats", response_model=ProductStatsResponse, tags=["Products"])
+def product_stats(
+    db: Session = Depends(get_db),
+    current_admin: User = Depends(get_current_admin),
+):
+    """
+    Dapatkan statistik produk untuk dashboard admin.
+    
+    Menampilkan:
+    - Total jumlah produk
+    - Total stock
+    - Produk yang tersedia
+    - Breakdown per kategori
+    - Total nilai inventory (price × stock)
+    
+    **Hanya admin yang dapat mengakses endpoint ini.**
+    """
+    return crud.get_product_stats(db)
+
+
+@app.get("/products/{product_id}", response_model=ProductResponse, tags=["Products"])
+def get_product(product_id: int, db: Session = Depends(get_db)):
+    """
+    Ambil detail satu produk.
+    
+    *Endpoint ini bisa diakses oleh siapa saja (tanpa login)*
+    """
+    product = crud.get_product(db=db, product_id=product_id)
+    if not product:
+        raise HTTPException(status_code=404, detail=f"Produk {product_id} tidak ditemukan")
+    return product
+
+
+@app.post("/products", response_model=ProductResponse, status_code=201, tags=["Products"])
+def create_product(
+    product_data: ProductCreate,
+    db: Session = Depends(get_db),
+    current_admin: User = Depends(get_current_admin),
+):
+    """
+    Buat produk baru.
+    
+    **Hanya admin yang dapat mengakses endpoint ini.**
+    Membutuhkan:
+    - Authorization header dengan JWT token
+    - User dengan role 'admin'
+    """
+    return crud.create_product(db=db, product_data=product_data)
+
+
+@app.put("/products/{product_id}", response_model=ProductResponse, tags=["Products"])
+def update_product(
+    product_id: int,
+    product_data: ProductUpdate,
+    db: Session = Depends(get_db),
+    current_admin: User = Depends(get_current_admin),
+):
+    """
+    Update produk.
+    
+    **Hanya admin yang dapat mengakses endpoint ini.**
+    """
+    updated = crud.update_product(db=db, product_id=product_id, product_data=product_data)
+    if not updated:
+        raise HTTPException(status_code=404, detail=f"Produk {product_id} tidak ditemukan")
+    return updated
+
+
+@app.delete("/products/{product_id}", status_code=204, tags=["Products"])
+def delete_product(
+    product_id: int,
+    db: Session = Depends(get_db),
+    current_admin: User = Depends(get_current_admin),
+):
+    """
+    Hapus produk.
+    
+    **Hanya admin yang dapat mengakses endpoint ini.**
+    """
+    success = crud.delete_product(db=db, product_id=product_id)
+    if not success:
+        raise HTTPException(status_code=404, detail=f"Produk {product_id} tidak ditemukan")
+    return None
+
+
+# ==================== 4. CART ENDPOINTS ====================
+
+@app.get("/cart", response_model=CartResponse, tags=["Cart"])
+def get_cart(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Melihat isi keranjang belanja.
+    
+    **Membutuhkan autentikasi sebagai customer.**
+    """
+    cart = crud.get_or_create_cart(db=db, user_id=current_user.id)
+    
+    # Hitung total dari items
+    total_items = sum(item.quantity for item in cart.items) if cart.items else 0
+    total_price = sum(item.quantity * item.price for item in cart.items) if cart.items else 0
+    
+    return {
+        "id": cart.id,
+        "user_id": cart.user_id,
+        "items": cart.items,
+        "total_items": total_items,
+        "total_price": total_price,
+        "created_at": cart.created_at,
+        "updated_at": cart.updated_at,
+    }
+
+
+@app.post("/cart/items", response_model=CartItemResponse, status_code=201, tags=["Cart"])
+def add_to_cart(
+    item_data: CartItemCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Menambahkan produk ke keranjang belanja.
+    
+    - **product_id**: ID produk yang ingin ditambahkan
+    - **quantity**: Jumlah produk (default: 1)
+    
+    Jika produk sudah ada di cart, quantity akan ditambah.
+    
+    **Membutuhkan autentikasi.**
+    """
+    # Dapatkan atau buat cart untuk user
+    cart = crud.get_or_create_cart(db=db, user_id=current_user.id)
+    
+    # Tambah item ke cart
+    cart_item = crud.add_to_cart(db=db, cart_id=cart.id, item_data=item_data)
+    if not cart_item:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Produk {item_data.product_id} tidak ditemukan"
+        )
+    
+    return cart_item
+
+
+@app.put("/cart/items/{item_id}", response_model=CartItemResponse, tags=["Cart"])
+def update_cart_item(
+    item_id: int,
+    item_data: CartItemUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Mengubah jumlah item di keranjang.
+    
+    - **item_id**: ID item di cart
+    - **quantity**: Jumlah baru (harus > 0)
+    
+    **Membutuhkan autentikasi.**
+    """
+    updated = crud.update_cart_item(db=db, item_id=item_id, item_data=item_data)
+    if not updated:
+        raise HTTPException(status_code=404, detail=f"Item {item_id} tidak ditemukan di cart")
+    return updated
+
+
+@app.delete("/cart/items/{item_id}", status_code=204, tags=["Cart"])
+def remove_from_cart(
+    item_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Menghapus item dari keranjang belanja.
+    
+    - **item_id**: ID item di cart yang ingin dihapus
+    
+    **Membutuhkan autentikasi.**
+    """
+    success = crud.remove_from_cart(db=db, item_id=item_id)
+    if not success:
+        raise HTTPException(status_code=404, detail=f"Item {item_id} tidak ditemukan di cart")
+    return None
+
+
+# ==================== 5. ITEM ENDPOINTS (BACKWARD COMPATIBILITY) ====================
+
+@app.post("/items", response_model=ItemResponse, status_code=201, tags=["Items (Legacy)"])
 def create_item(
     item: ItemCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Buat item baru. **Membutuhkan autentikasi.**"""
+    """Buat item baru. **Membutuhkan autentikasi.** (Legacy endpoint - untuk compatibility)"""
     return crud.create_item(db=db, item_data=item)
 
 
-@app.get("/items", response_model=ItemListResponse)
+@app.get("/items", response_model=ItemListResponse, tags=["Items (Legacy)"])
 def list_items(
     skip: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=100),
@@ -115,67 +379,54 @@ def list_items(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Ambil daftar items dengan filter harga. **Membutuhkan autentikasi.**"""
+    """Ambil daftar items dengan filter harga. **Membutuhkan autentikasi.** (Legacy endpoint)"""
     return crud.get_items(db=db, skip=skip, limit=limit, search=search, min_price=min_price, max_price=max_price)
 
-@app.get("/items/stats")
+
+@app.get("/items/stats", tags=["Items (Legacy)"])
 def item_stats(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Statistik item (total item, total stok, rata-rata harga)."""
+    """Statistik item (total item, total stok, rata-rata harga). (Legacy endpoint)"""
     return crud.get_item_stats(db)
 
-@app.get("/items/{item_id}", response_model=ItemResponse)
+
+@app.get("/items/{item_id}", response_model=ItemResponse, tags=["Items (Legacy)"])
 def get_item(
     item_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Ambil satu item. **Membutuhkan autentikasi.**"""
+    """Ambil satu item. **Membutuhkan autentikasi.** (Legacy endpoint)"""
     item = crud.get_item(db=db, item_id=item_id)
     if not item:
         raise HTTPException(status_code=404, detail=f"Item {item_id} tidak ditemukan")
     return item
 
 
-@app.put("/items/{item_id}", response_model=ItemResponse)
+@app.put("/items/{item_id}", response_model=ItemResponse, tags=["Items (Legacy)"])
 def update_item(
     item_id: int,
     item: ItemUpdate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Update item. **Membutuhkan autentikasi.**"""
+    """Update item. **Membutuhkan autentikasi.** (Legacy endpoint)"""
     updated = crud.update_item(db=db, item_id=item_id, item_data=item)
     if not updated:
         raise HTTPException(status_code=404, detail=f"Item {item_id} tidak ditemukan")
     return updated
 
 
-@app.delete("/items/{item_id}", status_code=204)
+@app.delete("/items/{item_id}", status_code=204, tags=["Items (Legacy)"])
 def delete_item(
     item_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Hapus item. **Membutuhkan autentikasi.**"""
+    """Hapus item. **Membutuhkan autentikasi.** (Legacy endpoint)"""
     success = crud.delete_item(db=db, item_id=item_id)
     if not success:
         raise HTTPException(status_code=404, detail=f"Item {item_id} tidak ditemukan")
     return None
-
-
-# ==================== TEAM INFO ====================
-
-@app.get("/team")
-def team_info():
-    return {
-        "team": "cloud-team-ignite",
-        "members": [
-            {"name": "Andini Permata Dewanti", "nim": "10231014", "role": "Lead Backend"},
-            {"name": "Putri Rahmawati", "nim": "10231074", "role": "Lead Frontend"},
-            {"name": "Krishandy Dhanysa Pratama", "nim": "10231050", "role": "Lead DevOps"},
-            {"name": "Desnita Dwi Putri", "nim": "10231030", "role": "Lead QA & Docs"},
-        ],
-    }
