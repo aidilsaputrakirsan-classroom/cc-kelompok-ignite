@@ -180,3 +180,123 @@ class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     user: UserResponse
+
+
+# ================= ORDER =================
+
+class OrderItemCreate(BaseModel):
+    product_id: int = Field(..., gt=0)
+    quantity: int = Field(1, gt=0, examples=[1, 2, 5])
+
+
+class OrderItemResponse(BaseModel):
+    id: int
+    order_id: int
+    product_id: int
+    quantity: int
+    price_at_time: float
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
+class OrderCreate(BaseModel):
+    items: list[OrderItemCreate] = Field(..., min_items=1)
+    ordering_address: str = Field(..., min_length=5, examples=["Jl. Ahmad Yani No. 123, Balikpapan"])
+    ordering_phone: str = Field(..., min_length=10, max_length=20, examples=["081234567890"])
+    notes: Optional[str] = Field(None, examples=["Antar sebelum jam 5 sore"])
+
+
+class OrderUpdate(BaseModel):
+    status: Optional[str] = Field(None, examples=["pending", "processing", "shipped", "delivered", "cancelled"])
+    ordering_address: Optional[str] = None
+    ordering_phone: Optional[str] = None
+    notes: Optional[str] = None
+
+
+class OrderResponse(BaseModel):
+    id: int
+    user_id: int
+    order_number: str
+    order_date: datetime
+    ordering_address: str
+    ordering_phone: str
+    notes: Optional[str] = None
+    total_amount: float
+    status: str
+    items: list[OrderItemResponse] = []
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
+class OrderListResponse(BaseModel):
+    total: int
+    orders: list[OrderResponse]
+
+
+# ================= PAYMENT =================
+
+class PaymentCreate(BaseModel):
+    order_id: int = Field(..., gt=0)
+    payment_method: str = Field(..., examples=["credit_card", "bank_transfer", "e_wallet", "cash"])
+    amount: float = Field(..., gt=0)
+    proof_url: Optional[str] = Field(None, examples=["https://example.com/receipt.jpg"])
+
+
+class PaymentUpdate(BaseModel):
+    payment_status: str = Field(..., examples=["pending", "completed", "failed", "refunded"])
+    verified_by: Optional[str] = Field(None, examples=["admin@example.com"])
+
+
+class PaymentResponse(BaseModel):
+    id: int
+    order_id: int
+    payment_method: str
+    amount: float
+    payment_status: str
+    proof_url: Optional[str] = None
+    receipt_id: Optional[str] = None
+    verified_by: Optional[str] = None
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
+class PaymentListResponse(BaseModel):
+    total: int
+    payments: list[PaymentResponse]
+
+
+# ================= TESTIMONIAL =================
+
+class TestimonialCreate(BaseModel):
+    product_id: int = Field(..., gt=0)
+    rating: int = Field(..., ge=1, le=5, examples=[5, 4, 3])
+    comment: Optional[str] = Field(None, max_length=500, examples=["Produk sangat enak dan berkualitas!"])
+
+
+class TestimonialResponse(BaseModel):
+    id: int
+    product_id: int
+    user_id: int
+    rating: int
+    comment: Optional[str] = None
+    verified_by: Optional[str] = None
+    verified_at: Optional[datetime] = None
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
+class TestimonialListResponse(BaseModel):
+    total: int
+    testimonials: list[TestimonialResponse]

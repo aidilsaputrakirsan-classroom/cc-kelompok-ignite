@@ -11,6 +11,9 @@ from schemas import (
     UserCreate, UserResponse, LoginRequest, TokenResponse,
     ProductCreate, ProductUpdate, ProductResponse, ProductListResponse, ProductStatsResponse,
     CartItemCreate, CartItemUpdate, CartItemResponse, CartResponse,
+    OrderCreate, OrderItemResponse, OrderResponse, OrderListResponse,
+    PaymentCreate, PaymentUpdate, PaymentResponse, PaymentListResponse,
+    TestimonialCreate, TestimonialResponse, TestimonialListResponse,
 )
 from auth import create_access_token, get_current_user, get_current_admin
 import crud
@@ -429,4 +432,356 @@ def delete_item(
     success = crud.delete_item(db=db, item_id=item_id)
     if not success:
         raise HTTPException(status_code=404, detail=f"Item {item_id} tidak ditemukan")
+
+
+# ==================== 6. ORDER ENDPOINTS ====================
+
+@app.post("/orders", response_model=OrderResponse, status_code=201, tags=["Orders"])
+def create_order(
+    order: OrderCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Buat pesanan baru.
+    
+    **Membutuhkan autentikasi.**
+    
+    - **items**: Daftar product yang dipesan (minimal 1 item)
+    - **ordering_address**: Alamat pengiriman
+    - **ordering_phone**: Nomor telepon penerima
+    - **notes**: Catatan pesanan (optional)
+    """
+    try:
+        return crud.create_order(db=db, user_id=current_user.id, order_data=order)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.get("/orders", response_model=OrderListResponse, tags=["Orders"])
+def list_orders(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(20, ge=1, le=100),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Ambil daftar order milik user.
+    
+    **Membutuhkan autentikasi.**
+    
+    - **skip**: Jumlah data yang di-skip (untuk pagination)
+    - **limit**: Jumlah data per halaman (max 100)
+    """
+    return crud.get_orders(db=db, user_id=current_user.id, skip=skip, limit=limit)
+
+
+@app.get("/orders/admin/all", response_model=OrderListResponse, tags=["Orders"])
+def list_all_orders_admin(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(20, ge=1, le=100),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin),
+):
+    """
+    Ambil daftar semua order (hanya admin).
+    
+    **Membutuhkan autentikasi admin.**
+    """
+    return crud.get_orders(db=db, skip=skip, limit=limit)
+
+
+@app.get("/orders/{order_id}", response_model=OrderResponse, tags=["Orders"])
+def get_order(
+    order_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Ambil detail pesanan spesifik.
+    
+    **Membutuhkan autentikasi.**
+    """
+    order = crud.get_order(db=db, order_id=order_id)
+    if not order:
+        raise HTTPException(status_code=404, detail=f"Order {order_id} tidak ditemukan")
+    
+    # Validasi: hanya pemilik atau admin bisa lihat
+    if order.user_id != current_user.id and current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Anda tidak memiliki akses ke order ini")
+    
+    return order
+
+
+@app.put("/orders/{order_id}", response_model=OrderResponse, tags=["Orders"])
+def update_order_status(
+    order_id: int,
+    status: str = Query(..., examples=["pending", "processing", "shipped", "delivered", "cancelled"]),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin),
+):
+    """
+    Update status pesanan (hanya admin).
+    
+    **Membutuhkan autentikasi admin.**
+    
+    Status yang valid: pending, processing, shipped, delivered, cancelled
+    """
+    updated = crud.update_order_status(db=db, order_id=order_id, status=status)
+    if not updated:
+        raise HTTPException(status_code=404, detail=f"Order {order_id} tidak ditemukan")
+    return updated
+
+
+@app.delete("/orders/{order_id}", status_code=204, tags=["Orders"])
+def delete_order(
+    order_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin),
+):
+    """
+    Hapus pesanan (hanya admin).
+    
+    **Membutuhkan autentikasi admin.**
+    """
+    success = crud.delete_order(db=db, order_id=order_id)
+    if not success:
+        raise HTTPException(status_code=404, detail=f"Order {order_id} tidak ditemukan")
+    return None
+
+
+# ==================== 7. PAYMENT ENDPOINTS ====================
+
+@app.post("/payments", response_model=PaymentResponse, status_code=201, tags=["Payments"])
+def create_payment(
+    payment: PaymentCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Buat record pembayaran baru.
+    
+    **Membutuhkan autentikasi.**
+    
+    - **order_id**: ID order yang dibayar
+    - **payment_method**: Metode pembayaran (credit_card, bank_transfer, e_wallet, cash)
+    - **amount**: Jumlah pembayaran
+    - **proof_url**: URL bukti pembayaran (optional)
+    """
+    # Validasi order ada dan milik user
+    order = crud.get_order(db=db, order_id=payment.order_id)
+    if not order:
+        raise HTTPException(status_code=404, detail=f"Order {payment.order_id} tidak ditemukan")
+    
+    if order.user_id != current_user.id and current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Anda tidak memiliki akses ke order ini")
+    
+    return crud.create_payment(db=db, payment_data=payment)
+
+
+@app.get("/payments", response_model=PaymentListResponse, tags=["Payments"])
+def list_payments(
+    order_id: int = Query(None),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(20, ge=1, le=100),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Ambil daftar pembayaran.
+    
+    **Membutuhkan autentikasi.**
+    """
+    return crud.get_payments(db=db, order_id=order_id, skip=skip, limit=limit)
+
+
+@app.get("/payments/{payment_id}", response_model=PaymentResponse, tags=["Payments"])
+def get_payment(
+    payment_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Ambil detail pembayaran spesifik.
+    
+    **Membutuhkan autentikasi.**
+    """
+    payment = crud.get_payment(db=db, payment_id=payment_id)
+    if not payment:
+        raise HTTPException(status_code=404, detail=f"Payment {payment_id} tidak ditemukan")
+    
+    # Validasi akses
+    if payment.order.user_id != current_user.id and current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Anda tidak memiliki akses ke payment ini")
+    
+    return payment
+
+
+@app.put("/payments/{payment_id}", response_model=PaymentResponse, tags=["Payments"])
+def update_payment_status(
+    payment_id: int,
+    payment_status: str = Query(..., examples=["pending", "completed", "failed", "refunded"]),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin),
+):
+    """
+    Update status pembayaran (hanya admin).
+    
+    **Membutuhkan autentikasi admin.**
+    
+    Status yang valid: pending, completed, failed, refunded
+    """
+    updated = crud.update_payment_status(
+        db=db, 
+        payment_id=payment_id, 
+        payment_status=payment_status,
+        verified_by=current_user.email
+    )
+    if not updated:
+        raise HTTPException(status_code=404, detail=f"Payment {payment_id} tidak ditemukan")
+    return updated
+
+
+@app.delete("/payments/{payment_id}", status_code=204, tags=["Payments"])
+def delete_payment(
+    payment_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin),
+):
+    """
+    Hapus record pembayaran (hanya admin).
+    
+    **Membutuhkan autentikasi admin.**
+    """
+    success = crud.delete_payment(db=db, payment_id=payment_id)
+    if not success:
+        raise HTTPException(status_code=404, detail=f"Payment {payment_id} tidak ditemukan")
+    return None
+
+
+# ==================== 8. TESTIMONIAL ENDPOINTS ====================
+
+@app.post("/testimonials", response_model=TestimonialResponse, status_code=201, tags=["Testimonials"])
+def create_testimonial(
+    testimonial: TestimonialCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Buat review/testimonial produk baru.
+    
+    **Membutuhkan autentikasi.**
+    
+    - **product_id**: ID produk yang di-review
+    - **rating**: Rating 1-5 bintang
+    - **comment**: Komentar/review (optional)
+    """
+    return crud.create_testimonial(db=db, user_id=current_user.id, testimonial_data=testimonial)
+
+
+@app.get("/testimonials", response_model=TestimonialListResponse, tags=["Testimonials"])
+def list_testimonials(
+    product_id: int = Query(None),
+    user_id: int = Query(None),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(20, ge=1, le=100),
+    db: Session = Depends(get_db),
+):
+    """
+    Ambil daftar testimonials dengan filter product atau user.
+    
+    - **product_id**: Filter testimonials untuk produk tertentu
+    - **user_id**: Filter testimonials dari user tertentu
+    """
+    return crud.get_testimonials(db=db, product_id=product_id, user_id=user_id, skip=skip, limit=limit)
+
+
+@app.get("/testimonials/{testimonial_id}", response_model=TestimonialResponse, tags=["Testimonials"])
+def get_testimonial(
+    testimonial_id: int,
+    db: Session = Depends(get_db),
+):
+    """
+    Ambil detail testimonial spesifik.
+    """
+    testimonial = crud.get_testimonial(db=db, testimonial_id=testimonial_id)
+    if not testimonial:
+        raise HTTPException(status_code=404, detail=f"Testimonial {testimonial_id} tidak ditemukan")
+    return testimonial
+
+
+@app.put("/testimonials/{testimonial_id}", response_model=TestimonialResponse, tags=["Testimonials"])
+def update_testimonial(
+    testimonial_id: int,
+    rating: int = Query(None, ge=1, le=5),
+    comment: str = Query(None),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Update testimonial milik user sendiri.
+    
+    **Membutuhkan autentikasi.**
+    """
+    testimonial = crud.get_testimonial(db=db, testimonial_id=testimonial_id)
+    if not testimonial:
+        raise HTTPException(status_code=404, detail=f"Testimonial {testimonial_id} tidak ditemukan")
+    
+    # Validasi: hanya pemilik atau admin bisa edit
+    if testimonial.user_id != current_user.id and current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Anda tidak memiliki akses untuk edit testimonial ini")
+    
+    updated = crud.update_testimonial(
+        db=db, 
+        testimonial_id=testimonial_id, 
+        rating=rating,
+        comment=comment
+    )
+    return updated
+
+
+@app.put("/testimonials/{testimonial_id}/verify", response_model=TestimonialResponse, tags=["Testimonials"])
+def verify_testimonial(
+    testimonial_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin),
+):
+    """
+    Verify testimonial oleh admin (menandakan testimonial valid).
+    
+    **Membutuhkan autentikasi admin.**
+    """
+    updated = crud.verify_testimonial(
+        db=db, 
+        testimonial_id=testimonial_id, 
+        admin_email=current_user.email
+    )
+    if not updated:
+        raise HTTPException(status_code=404, detail=f"Testimonial {testimonial_id} tidak ditemukan")
+    return updated
+
+
+@app.delete("/testimonials/{testimonial_id}", status_code=204, tags=["Testimonials"])
+def delete_testimonial(
+    testimonial_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Hapus testimonial milik user sendiri.
+    
+    **Membutuhkan autentikasi.**
+    """
+    testimonial = crud.get_testimonial(db=db, testimonial_id=testimonial_id)
+    if not testimonial:
+        raise HTTPException(status_code=404, detail=f"Testimonial {testimonial_id} tidak ditemukan")
+    
+    # Validasi: hanya pemilik atau admin bisa hapus
+    if testimonial.user_id != current_user.id and current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Anda tidak memiliki akses untuk hapus testimonial ini")
+    
+    success = crud.delete_testimonial(db=db, testimonial_id=testimonial_id)
+    if not success:
+        raise HTTPException(status_code=404, detail=f"Testimonial {testimonial_id} tidak ditemukan")
+    return None
     return None

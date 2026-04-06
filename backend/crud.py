@@ -1,9 +1,11 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
-from models import Item, User, Product, Cart, CartItem
-from schemas import ItemCreate, ItemUpdate, UserCreate, ProductCreate, ProductUpdate, CartItemCreate, CartItemUpdate
+from models import Item, User, Product, Cart, CartItem, Order, OrderItem, Payment, Testimonial
+from schemas import ItemCreate, ItemUpdate, UserCreate, ProductCreate, ProductUpdate, CartItemCreate, CartItemUpdate, OrderCreate, OrderItemCreate, PaymentCreate, TestimonialCreate
 from auth import hash_password, verify_password
 from sqlalchemy import func
+from datetime import datetime
+import uuid
 
 
 def create_item(db: Session, item_data: ItemCreate) -> Item:
@@ -302,3 +304,234 @@ def clear_cart(db: Session, cart_id: int) -> bool:
         db.delete(item)
     db.commit()
     return True
+
+
+# ==================== ORDER CRUD ====================
+
+def create_order(db: Session, user_id: int, order_data: OrderCreate) -> Order:
+    """Buat order baru dari cart atau data pemesanan."""
+    # Generate order_number unik
+    order_number = f"ORD-{datetime.now().strftime('%Y%m%d')}-{uuid.uuid4().hex[:8].upper()}"
+    
+    # Hitung total amount dari items
+    total_amount = 0.0
+    order_items = []
+    
+    for item_data in order_data.items:
+        product = db.query(Product).filter(Product.id == item_data.product_id).first()
+        if not product:
+            raise ValueError(f"Product {item_data.product_id} tidak ditemukan")
+        
+        if product.stock < item_data.quantity:
+            raise ValueError(f"Stock {product.name} tidak cukup")
+        
+        # Kurangi stock
+        product.stock -= item_data.quantity
+        
+        # Hitung total
+        item_total = product.price * item_data.quantity
+        total_amount += item_total
+        
+        # Simpan order item
+        order_items.append(OrderItem(
+            product_id=item_data.product_id,
+            quantity=item_data.quantity,
+            price_at_time=product.price
+        ))
+    
+    # Buat order
+    db_order = Order(
+        user_id=user_id,
+        order_number=order_number,
+        ordering_address=order_data.ordering_address,
+        ordering_phone=order_data.ordering_phone,
+        notes=order_data.notes,
+        total_amount=total_amount,
+        status="pending"
+    )
+    
+    # Add items ke order
+    db_order.items = order_items
+    db.add(db_order)
+    db.commit()
+    db.refresh(db_order)
+    
+    return db_order
+
+
+def get_orders(db: Session, user_id: int = None, skip: int = 0, limit: int = 20):
+    """Ambil daftar orders dengan filter user dan pagination."""
+    query = db.query(Order)
+    
+    if user_id:
+        query = query.filter(Order.user_id == user_id)
+    
+    total = query.count()
+    orders = query.order_by(Order.created_at.desc()).offset(skip).limit(limit).all()
+    
+    return {"total": total, "orders": orders}
+
+
+def get_order(db: Session, order_id: int) -> Order | None:
+    """Ambil satu order berdasarkan ID."""
+    return db.query(Order).filter(Order.id == order_id).first()
+
+
+def get_order_by_number(db: Session, order_number: str) -> Order | None:
+    """Ambil order berdasarkan order_number."""
+    return db.query(Order).filter(Order.order_number == order_number).first()
+
+
+def update_order_status(db: Session, order_id: int, status: str) -> Order | None:
+    """Update status order."""
+    db_order = db.query(Order).filter(Order.id == order_id).first()
+    if db_order:
+        db_order.status = status
+        db_order.updated_at = datetime.now()
+        db.commit()
+        db.refresh(db_order)
+    return db_order
+
+
+def delete_order(db: Session, order_id: int) -> bool:
+    """Hapus order dan items-nya."""
+    db_order = db.query(Order).filter(Order.id == order_id).first()
+    if db_order:
+        db.delete(db_order)
+        db.commit()
+        return True
+    return False
+
+
+# ==================== PAYMENT CRUD ====================
+
+def create_payment(db: Session, payment_data: PaymentCreate) -> Payment:
+    """Buat record pembayaran baru."""
+    # Generate receipt ID
+    receipt_id = f"RCP-{datetime.now().strftime('%Y%m%d%H%M%S')}-{uuid.uuid4().hex[:6].upper()}"
+    
+    db_payment = Payment(
+        order_id=payment_data.order_id,
+        payment_method=payment_data.payment_method,
+        amount=payment_data.amount,
+        proof_url=payment_data.proof_url,
+        receipt_id=receipt_id,
+        payment_status="pending"
+    )
+    db.add(db_payment)
+    db.commit()
+    db.refresh(db_payment)
+    return db_payment
+
+
+def get_payments(db: Session, order_id: int = None, skip: int = 0, limit: int = 20):
+    """Ambil daftar payments dengan filter order dan pagination."""
+    query = db.query(Payment)
+    
+    if order_id:
+        query = query.filter(Payment.order_id == order_id)
+    
+    total = query.count()
+    payments = query.order_by(Payment.created_at.desc()).offset(skip).limit(limit).all()
+    
+    return {"total": total, "payments": payments}
+
+
+def get_payment(db: Session, payment_id: int) -> Payment | None:
+    """Ambil satu payment berdasarkan ID."""
+    return db.query(Payment).filter(Payment.id == payment_id).first()
+
+
+def update_payment_status(db: Session, payment_id: int, payment_status: str, verified_by: str = None) -> Payment | None:
+    """Update status pembayaran dan verify."""
+    db_payment = db.query(Payment).filter(Payment.id == payment_id).first()
+    if db_payment:
+        db_payment.payment_status = payment_status
+        if verified_by:
+            db_payment.verified_by = verified_by
+        db_payment.updated_at = datetime.now()
+        db.commit()
+        db.refresh(db_payment)
+    return db_payment
+
+
+def delete_payment(db: Session, payment_id: int) -> bool:
+    """Hapus record pembayaran."""
+    db_payment = db.query(Payment).filter(Payment.id == payment_id).first()
+    if db_payment:
+        db.delete(db_payment)
+        db.commit()
+        return True
+    return False
+
+
+# ==================== TESTIMONIAL CRUD ====================
+
+def create_testimonial(db: Session, user_id: int, testimonial_data: TestimonialCreate) -> Testimonial:
+    """Buat testimonial/review produk baru."""
+    db_testimonial = Testimonial(
+        product_id=testimonial_data.product_id,
+        user_id=user_id,
+        rating=testimonial_data.rating,
+        comment=testimonial_data.comment
+    )
+    db.add(db_testimonial)
+    db.commit()
+    db.refresh(db_testimonial)
+    return db_testimonial
+
+
+def get_testimonials(db: Session, product_id: int = None, user_id: int = None, skip: int = 0, limit: int = 20):
+    """Ambil daftar testimonials dengan filter product/user dan pagination."""
+    query = db.query(Testimonial)
+    
+    if product_id:
+        query = query.filter(Testimonial.product_id == product_id)
+    
+    if user_id:
+        query = query.filter(Testimonial.user_id == user_id)
+    
+    total = query.count()
+    testimonials = query.order_by(Testimonial.created_at.desc()).offset(skip).limit(limit).all()
+    
+    return {"total": total, "testimonials": testimonials}
+
+
+def get_testimonial(db: Session, testimonial_id: int) -> Testimonial | None:
+    """Ambil satu testimonial berdasarkan ID."""
+    return db.query(Testimonial).filter(Testimonial.id == testimonial_id).first()
+
+
+def update_testimonial(db: Session, testimonial_id: int, rating: int = None, comment: str = None) -> Testimonial | None:
+    """Update testimonial."""
+    db_testimonial = db.query(Testimonial).filter(Testimonial.id == testimonial_id).first()
+    if db_testimonial:
+        if rating is not None:
+            db_testimonial.rating = rating
+        if comment is not None:
+            db_testimonial.comment = comment
+        db_testimonial.updated_at = datetime.now()
+        db.commit()
+        db.refresh(db_testimonial)
+    return db_testimonial
+
+
+def verify_testimonial(db: Session, testimonial_id: int, admin_email: str) -> Testimonial | None:
+    """Verify testimonial oleh admin."""
+    db_testimonial = db.query(Testimonial).filter(Testimonial.id == testimonial_id).first()
+    if db_testimonial:
+        db_testimonial.verified_by = admin_email
+        db_testimonial.verified_at = datetime.now()
+        db.commit()
+        db.refresh(db_testimonial)
+    return db_testimonial
+
+
+def delete_testimonial(db: Session, testimonial_id: int) -> bool:
+    """Hapus testimonial."""
+    db_testimonial = db.query(Testimonial).filter(Testimonial.id == testimonial_id).first()
+    if db_testimonial:
+        db.delete(db_testimonial)
+        db.commit()
+        return True
+    return False

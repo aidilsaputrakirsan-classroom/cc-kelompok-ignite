@@ -73,3 +73,80 @@ class Item(Base):
     quantity = Column(Integer, nullable=False, default=0)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+
+class Order(Base):
+    """Model untuk tabel 'orders' - Pesanan dari customer."""
+    __tablename__ = "orders"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    order_number = Column(String(50), unique=True, nullable=False, index=True)
+    order_date = Column(DateTime(timezone=True), server_default=func.now())
+    ordering_address = Column(Text, nullable=False)
+    ordering_phone = Column(String(20), nullable=False)
+    notes = Column(Text, nullable=True)
+    total_amount = Column(Float, nullable=False)
+    status = Column(String(20), default="pending", nullable=False)  # pending, processing, shipped, delivered, cancelled
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    
+    # Relationships
+    user = relationship("User", backref="orders")
+    items = relationship("OrderItem", back_populates="order", cascade="all, delete-orphan")
+    payments = relationship("Payment", back_populates="order", cascade="all, delete-orphan")
+
+
+class OrderItem(Base):
+    """Model untuk tabel 'order_items' - Item dalam pesanan."""
+    __tablename__ = "order_items"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    order_id = Column(Integer, ForeignKey("orders.id", ondelete="CASCADE"), nullable=False, index=True)
+    product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
+    quantity = Column(Integer, nullable=False, default=1)
+    price_at_time = Column(Float, nullable=False)  # Harga saat order dibuat
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    
+    # Relationships
+    order = relationship("Order", back_populates="items")
+    product = relationship("Product", backref="order_items")
+
+
+class Payment(Base):
+    """Model untuk tabel 'payments' - Pembayaran untuk pesanan."""
+    __tablename__ = "payments"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    order_id = Column(Integer, ForeignKey("orders.id", ondelete="CASCADE"), nullable=False, index=True)
+    payment_method = Column(String(50), nullable=False)  # credit_card, bank_transfer, e_wallet, cash
+    amount = Column(Float, nullable=False)
+    payment_status = Column(String(20), default="pending", nullable=False)  # pending, completed, failed, refunded
+    proof_url = Column(String(255), nullable=True)  # URL bukti transfer/receipt
+    receipt_id = Column(String(100), nullable=True, unique=True)
+    verified_by = Column(String(100), nullable=True)  # Email admin yang verify
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    
+    # Relationships
+    order = relationship("Order", back_populates="payments")
+
+
+class Testimonial(Base):
+    """Model untuk tabel 'testimonials' - Review/rating produk dari customer."""
+    __tablename__ = "testimonials"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    product_id = Column(Integer, ForeignKey("products.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    rating = Column(Integer, nullable=False)  # 1-5 stars
+    comment = Column(Text, nullable=True)
+    verified_by = Column(String(100), nullable=True)  # Email admin yang verify
+    verified_at = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    
+    # Relationships
+    product = relationship("Product", backref="testimonials")
+    user = relationship("User", backref="testimonials")
