@@ -403,11 +403,12 @@ def delete_payment(db: Session, payment_id: int) -> bool:
 def create_testimonial(db: Session, user_id: int, testimonial_data: TestimonialCreate) -> Testimonial:
     """Buat testimonial/review produk baru."""
     db_testimonial = Testimonial(
-        order_id=testimonial_data.order_id,  # Perbaikan: Tambah order_id
+        order_id=testimonial_data.order_id,  # Restore: order_id (relasi ke order)
         product_id=testimonial_data.product_id,
         user_id=user_id,
         rating=testimonial_data.rating,
-        comment=testimonial_data.comment
+        comment=testimonial_data.comment,
+        is_visible=True  # Default: visible, bisa di-hide oleh admin
     )
     db.add(db_testimonial)
     db.commit()
@@ -415,8 +416,12 @@ def create_testimonial(db: Session, user_id: int, testimonial_data: TestimonialC
     return db_testimonial
 
 
-def get_testimonials(db: Session, product_id: int = None, user_id: int = None, skip: int = 0, limit: int = 20):
-    """Ambil daftar testimonials dengan filter product/user dan pagination."""
+def get_testimonials(db: Session, product_id: int = None, user_id: int = None, skip: int = 0, limit: int = 20, visible_only: bool = False):
+    """Ambil daftar testimonials dengan filter product/user dan pagination.
+    
+    Args:
+        visible_only: Jika True, hanya tampilkan testimonial dengan is_visible=True
+    """
     query = db.query(Testimonial)
     
     if product_id:
@@ -424,6 +429,9 @@ def get_testimonials(db: Session, product_id: int = None, user_id: int = None, s
     
     if user_id:
         query = query.filter(Testimonial.user_id == user_id)
+    
+    if visible_only:
+        query = query.filter(Testimonial.is_visible == True)  # Filter hanya yang visible
     
     total = query.count()
     testimonials = query.order_by(Testimonial.created_at.desc()).offset(skip).limit(limit).all()
@@ -450,12 +458,12 @@ def update_testimonial(db: Session, testimonial_id: int, rating: int = None, com
     return db_testimonial
 
 
-def verify_testimonial(db: Session, testimonial_id: int, admin_id: int) -> Testimonial | None:  # Perbaikan: admin_id INT
-    """Verify testimonial oleh admin."""
+def toggle_testimonial_visibility(db: Session, testimonial_id: int) -> Testimonial | None:
+    """Toggle visibility testimonial (admin control - hide/show)."""
     db_testimonial = db.query(Testimonial).filter(Testimonial.id == testimonial_id).first()
     if db_testimonial:
-        db_testimonial.verified_by = admin_id  # Perbaikan: INT admin_id
-        db_testimonial.verified_at = datetime.now()  # Perbaikan: Tambah verified_at
+        db_testimonial.is_visible = not db_testimonial.is_visible  # Toggle true/false
+        db_testimonial.updated_at = datetime.now()
         db.commit()
         db.refresh(db_testimonial)
     return db_testimonial

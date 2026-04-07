@@ -616,12 +616,13 @@ def list_testimonials(
     db: Session = Depends(get_db),
 ):
     """
-    Ambil daftar testimonials dengan filter product atau user.
+    Ambil daftar testimonials publik dengan filter product atau user.
     
     - **product_id**: Filter testimonials untuk produk tertentu
     - **user_id**: Filter testimonials dari user tertentu
+    - Hanya menampilkan testimonial dengan is_visible=True
     """
-    return crud.get_testimonials(db=db, product_id=product_id, user_id=user_id, skip=skip, limit=limit)
+    return crud.get_testimonials(db=db, product_id=product_id, user_id=user_id, skip=skip, limit=limit, visible_only=True)
 
 
 @app.get("/testimonials/{testimonial_id}", response_model=TestimonialResponse, tags=["Testimonials"])
@@ -668,21 +669,22 @@ def update_testimonial(
     return updated
 
 
-@app.put("/testimonials/{testimonial_id}/verify", response_model=TestimonialResponse, tags=["Testimonials"])
-def verify_testimonial(
+@app.put("/testimonials/{testimonial_id}/toggle-visibility", response_model=TestimonialResponse, tags=["Testimonials"])
+def toggle_testimonial_visibility(
     testimonial_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_admin),
 ):
     """
-    Verify testimonial oleh admin (menandakan testimonial valid).
+    Toggle visibility testimonial (admin control - hide/show testimonial dari tampilan).
     
     **Membutuhkan autentikasi admin.**
+    
+    Menampilkan/menyembunyikan testimonial dari daftar publik.
     """
-    updated = crud.verify_testimonial(
+    updated = crud.toggle_testimonial_visibility(
         db=db, 
-        testimonial_id=testimonial_id, 
-        admin_id=current_user.id  # Perbaikan: admin_id INT, bukan email
+        testimonial_id=testimonial_id
     )
     if not updated:
         raise HTTPException(status_code=404, detail=f"Testimonial {testimonial_id} tidak ditemukan")

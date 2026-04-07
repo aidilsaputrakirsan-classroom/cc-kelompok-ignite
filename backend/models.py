@@ -134,18 +134,16 @@ class Testimonial(Base):
     __tablename__ = "testimonials"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    order_id = Column(Integer, ForeignKey("orders.id", ondelete="CASCADE"), nullable=True)  # Perbaikan: Tambah order_id (sesuai ERD)
+    order_id = Column(Integer, ForeignKey("orders.id", ondelete="CASCADE"), nullable=True)  # Restore: order_id (relasi ke order)
     product_id = Column(Integer, ForeignKey("products.id", ondelete="CASCADE"), nullable=False, index=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     rating = Column(Integer, nullable=False)  # 1-5 stars
     comment = Column(Text, nullable=True)
-    verified_by = Column(Integer, ForeignKey("users.id"), nullable=True)  # Perbaikan: INT (user_id admin), bukan String
-    verified_at = Column(DateTime(timezone=True), nullable=True)
+    is_visible = Column(Boolean, default=True)  # Kontrol tampilan testimonial
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     
     # Relationships
-    order = relationship("Order", backref="testimonials")  # Perbaikan: Tambah relasi ke Order
+    order = relationship("Order", backref="testimonials")  # Restore: relasi ke Order
     product = relationship("Product", backref="testimonials")
-    user = relationship("User", foreign_keys=[user_id], backref="testimonials_given")
-    verified_admin = relationship("User", foreign_keys=[verified_by])
+    user = relationship("User", backref="testimonials")

@@ -259,7 +259,7 @@ class PaymentListResponse(BaseModel):
 # ================= TESTIMONIAL =================
 
 class TestimonialCreate(BaseModel):
-    order_id: Optional[int] = Field(None, gt=0)  # Perbaikan: Tambah order_id (sesuai ERD)
+    order_id: Optional[int] = Field(None, gt=0)  # Restore: order_id (relasi ke order)
     product_id: int = Field(..., gt=0)
     rating: int = Field(..., ge=1, le=5, examples=[5, 4, 3])
     comment: Optional[str] = Field(None, max_length=500, examples=["Produk sangat enak dan berkualitas!"])
@@ -267,13 +267,12 @@ class TestimonialCreate(BaseModel):
 
 class TestimonialResponse(BaseModel):
     id: int
-    order_id: Optional[int] = None  # Perbaikan: Tambah order_id (sesuai ERD)
+    order_id: Optional[int] = None  # Restore: order_id
     product_id: int
     user_id: int
     rating: int
     comment: Optional[str] = None
-    verified_by: Optional[int] = None  # Perbaikan: INT (user_id admin), bukan String
-    verified_at: Optional[datetime] = None
+    is_visible: bool = True  # Kontrol tampilan
     created_at: datetime
     updated_at: Optional[datetime] = None
 
