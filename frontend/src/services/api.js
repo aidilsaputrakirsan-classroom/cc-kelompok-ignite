@@ -2,46 +2,50 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000"
 
 // ==================== TOKEN MANAGEMENT ====================
 
-let authToken = null
-
 export function setToken(token) {
-    authToken = token
+    localStorage.setItem("token", token)
 }
 
 export function getToken() {
-    return authToken
+    return localStorage.getItem("token")
 }
 
 export function clearToken() {
-    authToken = null
+    localStorage.removeItem("token")
 }
 
 function authHeaders() {
     const headers = {}
-    if (authToken) {
-        headers["Authorization"] = `Bearer ${authToken}`
+    const token = getToken()
+
+    if (token) {
+        headers["Authorization"] = `Bearer ${token}`
     }
+
     return headers
 }
 
-// Helper: handle response errors
+// ==================== HELPER ====================
+
 async function handleResponse(response) {
     if (response.status === 401) {
         clearToken()
         throw new Error("UNAUTHORIZED")
     }
+
     if (!response.ok) {
         try {
             const error = await response.json()
             const errorMsg = error.detail || error.message || JSON.stringify(error)
             throw new Error(errorMsg)
-        } catch (parseErr) {
+        } catch {
             const text = await response.text()
             throw new Error(text || `Request gagal (${response.status})`)
         }
     }
-    // 204 No Content
+
     if (response.status === 204) return null
+
     return response.json()
 }
 
@@ -53,6 +57,7 @@ export async function register(userData) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(userData),
     })
+
     return handleResponse(response)
 }
 
@@ -62,8 +67,12 @@ export async function login(email, password) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
     })
+
     const data = await handleResponse(response)
+
+    // 🔥 simpan token
     setToken(data.access_token)
+
     return data
 }
 
@@ -71,22 +80,32 @@ export async function getMe() {
     const response = await fetch(`${API_URL}/auth/me`, {
         headers: authHeaders(),
     })
+
     return handleResponse(response)
 }
 
 // ==================== ITEMS API ====================
 
-export async function fetchItems(search = "", skip = 0, limit = 20, minPrice = null, maxPrice = null) {
+export async function fetchItems(
+    search = "",
+    skip = 0,
+    limit = 20,
+    minPrice = null,
+    maxPrice = null
+) {
     const params = new URLSearchParams()
+
     if (search) params.append("search", search)
     if (minPrice !== null) params.append("min_price", minPrice)
     if (maxPrice !== null) params.append("max_price", maxPrice)
+
     params.append("skip", skip)
     params.append("limit", limit)
 
     const response = await fetch(`${API_URL}/items?${params}`, {
         headers: authHeaders(),
     })
+
     return handleResponse(response)
 }
 
@@ -99,6 +118,7 @@ export async function createItem(itemData) {
         },
         body: JSON.stringify(itemData),
     })
+
     return handleResponse(response)
 }
 
@@ -111,6 +131,7 @@ export async function updateItem(id, itemData) {
         },
         body: JSON.stringify(itemData),
     })
+
     return handleResponse(response)
 }
 
@@ -119,8 +140,11 @@ export async function deleteItem(id) {
         method: "DELETE",
         headers: authHeaders(),
     })
+
     return handleResponse(response)
 }
+
+// ==================== HEALTH CHECK ====================
 
 export async function checkHealth() {
     try {

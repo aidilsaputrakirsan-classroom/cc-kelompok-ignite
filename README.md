@@ -128,7 +128,7 @@ RAZ'Q App (E-Commerce UMKM RAZ'Q) adalah platform e-commerce berbasis website ya
       - [Perbaikan Frontend](#perbaikan-frontend)
       - [Fitur Baru yang Berhasil Ditambahkan](#fitur-baru-yang-berhasil-ditambahkan)
       - [Ringkasan File yang Diubah](#ringkasan-file-yang-diubah)
-  - [📅 Roadmap](#-roadmap)
+  - [� Roadmap](#-roadmap)
 ---
 ## Fitur Utama
 
@@ -316,7 +316,7 @@ Buka `http://localhost:5173` — halaman **Login** akan tampil. Lakukan registra
 ## 📁 Struktur Proyek
 
 ```
-cloud-team-XX/
+cloud-team-ignite/
 ├── backend/
 │   ├── main.py                    ← Entry point, router, CORS, semua endpoint
 │   ├── auth.py                    ← JWT utilities: buat token, verifikasi, hash password
@@ -346,10 +346,17 @@ cloud-team-XX/
 │   ├── index.html
 │   ├── package.json               ← Dependencies & scripts Node.js
 │   └── vite.config.js             ← Konfigurasi Vite bundler
+├── backend/
+│   ├── Dockerfile                 ← Konfigurasi Docker image backend
+│   ├── .dockerignore              ← Daftar file yang tidak masuk ke Docker image
+│   └── ...
 ├── docs/
-│   ├── api-test-results.md        ← (Lead Frontend) Dokumentasi hasil testing endpoint API
+│   ├── api-test-results.md        ← (Lead QA & Docs) Dokumentasi hasil testing endpoint API
 │   ├── ui-test-results.md         ← (Lead QA & Docs) Dokumentasi hasil testing UI React
-│   ├── database-schema.md         ← (Lead CI/CD) Schema tabel database
+│   ├── auth-test-results.md       ← (Lead QA & Docs) Dokumentasi hasil testing autentikasi JWT
+│   ├── image-comparison.md        ← (Lead QA & Docs) Perbandingan ukuran Docker image
+│   ├── docker-cheatsheet.md       ← (Lead Frontend) Referensi perintah Docker
+│   ├── database-schema.md         ← (Lead DevOps) Skema tabel database PostgreSQL
 │   └── member-[NAMA].md           ← File verifikasi masing-masing anggota
 ├── .gitignore                     ← Daftar file yang tidak di-commit (termasuk .env)
 └── README.md                      ← Dokumentasi proyek (file ini)
@@ -3305,6 +3312,8 @@ Secara keseluruhan, **11 file** mengalami perubahan dalam revisi ini — 4 file 
  
 > 💡 **Migrasi database** adalah proses memperbarui struktur tabel di database — misalnya menambah kolom baru atau mengubah tipe data kolom yang sudah ada. Karena revisi ini hanya menambahkan parameter pada query tanpa mengubah tabel, migrasi tidak diperlukan dan data yang sudah ada tetap aman.
  
+---
+
 ---
  ## 📅 Roadmap
 

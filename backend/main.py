@@ -15,7 +15,7 @@ from schemas import (
     PaymentCreate, PaymentUpdate, PaymentResponse, PaymentListResponse,
     TestimonialCreate, TestimonialResponse, TestimonialListResponse,
 )
-from auth import create_access_token, get_current_user, get_current_admin
+from auth import create_access_token, get_current_user, get_current_admin, get_current_customer
 import crud
 
 load_dotenv()
@@ -266,7 +266,7 @@ def delete_product(
 @app.get("/cart", response_model=CartResponse, tags=["Cart"])
 def get_cart(
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_customer),
 ):
     """
     Melihat isi keranjang belanja.
@@ -294,7 +294,7 @@ def get_cart(
 def add_to_cart(
     item_data: CartItemCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_customer),
 ):
     """
     Menambahkan produk ke keranjang belanja.
@@ -304,7 +304,7 @@ def add_to_cart(
     
     Jika produk sudah ada di cart, quantity akan ditambah.
     
-    **Membutuhkan autentikasi.**
+    **Membutuhkan autentikasi sebagai customer.**
     """
     # Dapatkan atau buat cart untuk user
     cart = crud.get_or_create_cart(db=db, user_id=current_user.id)
@@ -325,7 +325,7 @@ def update_cart_item(
     item_id: int,
     item_data: CartItemUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_customer),
 ):
     """
     Mengubah jumlah item di keranjang.
@@ -333,7 +333,7 @@ def update_cart_item(
     - **item_id**: ID item di cart
     - **quantity**: Jumlah baru (harus > 0)
     
-    **Membutuhkan autentikasi.**
+    **Membutuhkan autentikasi sebagai customer.**
     """
     updated = crud.update_cart_item(db=db, item_id=item_id, item_data=item_data)
     if not updated:
@@ -345,14 +345,14 @@ def update_cart_item(
 def remove_from_cart(
     item_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_customer),
 ):
     """
     Menghapus item dari keranjang belanja.
     
     - **item_id**: ID item di cart yang ingin dihapus
     
-    **Membutuhkan autentikasi.**
+    **Membutuhkan autentikasi sebagai customer.**
     """
     success = crud.remove_from_cart(db=db, item_id=item_id)
     if not success:
@@ -366,12 +366,12 @@ def remove_from_cart(
 def create_order(
     order: OrderCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_customer),
 ):
     """
     Buat pesanan baru.
     
-    **Membutuhkan autentikasi.**
+    **Membutuhkan autentikasi sebagai customer.**
     
     - **items**: Daftar product yang dipesan (minimal 1 item)
     - **receipt_name**: Nama penerima (Perbaikan: sesuai ERD)
@@ -396,6 +396,11 @@ def list_orders(
     Ambil daftar order milik user.
     
     **Membutuhkan autentikasi.**
+    
+    - Customer akan melihat order mereka sendiri
+    - Admin akan melihat order milik mereka sendiri (jika mereka pernah belanja)
+    
+    *Untuk admin melihat SEMUA order dari semua customer, gunakan `/orders/admin/all`*
     
     - **skip**: Jumlah data yang di-skip (untuk pagination)
     - **limit**: Jumlah data per halaman (max 100)
@@ -483,24 +488,25 @@ def delete_order(
 def create_payment(
     payment: PaymentCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_customer),
 ):
     """
     Buat record pembayaran baru.
     
-    **Membutuhkan autentikasi.**
+    **Membutuhkan autentikasi sebagai customer.**
     
     - **order_id**: ID order yang dibayar
     - **payment_method**: Metode pembayaran (credit_card, bank_transfer, e_wallet, cash)
     - **amount**: Jumlah pembayaran
     - **proof_url**: URL bukti pembayaran (optional)
     """
-    # Validasi order ada dan milik user
+    # Validasi order ada dan milik customer (current_user sudah dipastikan customer)
     order = crud.get_order(db=db, order_id=payment.order_id)
     if not order:
         raise HTTPException(status_code=404, detail=f"Order {payment.order_id} tidak ditemukan")
     
-    if order.user_id != current_user.id and current_user.role != "admin":
+    # Customer hanya bisa bayar order milik mereka sendiri
+    if order.user_id != current_user.id:
         raise HTTPException(status_code=403, detail="Anda tidak memiliki akses ke order ini")
     
     return crud.create_payment(db=db, payment_data=payment)
@@ -518,8 +524,15 @@ def list_payments(
     Ambil daftar pembayaran.
     
     **Membutuhkan autentikasi.**
+    
+    - Customer hanya bisa lihat payment untuk order mereka sendiri
+    - Admin bisa lihat semua payment
     """
-    return crud.get_payments(db=db, order_id=order_id, skip=skip, limit=limit)
+    # Jika customer, filter untuk hanya order/payment mereka sendiri
+    # Jika admin, bisa lihat semua
+    user_id = current_user.id if current_user.role.lower() == "customer" else None
+    
+    return crud.get_payments(db=db, order_id=order_id, user_id=user_id, skip=skip, limit=limit)
 
 
 @app.get("/payments/{payment_id}", response_model=PaymentResponse, tags=["Payments"])
@@ -593,12 +606,12 @@ def delete_payment(
 def create_testimonial(
     testimonial: TestimonialCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_customer),
 ):
     """
     Buat review/testimonial produk baru.
     
-    **Membutuhkan autentikasi.**
+    **Membutuhkan autentikasi sebagai customer.**
     
     - **product_id**: ID produk yang di-review
     - **rating**: Rating 1-5 bintang

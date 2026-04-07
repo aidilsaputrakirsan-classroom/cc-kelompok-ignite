@@ -123,3 +123,19 @@ def get_current_admin(
         )
     
     return current_user
+
+
+def get_current_customer(
+    current_user: User = Depends(get_current_user),
+) -> User:
+    """
+    Pastikan user yang login adalah customer (bukan admin).
+    Case-insensitive check: akan accept "customer", "Customer", "CUSTOMER", dll
+    """
+    if current_user.role.lower() != "customer":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Hanya customer yang dapat mengakses endpoint ini",
+        )
+    
+    return current_user

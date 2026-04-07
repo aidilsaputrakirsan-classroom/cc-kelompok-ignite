@@ -353,12 +353,17 @@ def create_payment(db: Session, payment_data: PaymentCreate) -> Payment:
     return db_payment
 
 
-def get_payments(db: Session, order_id: int = None, skip: int = 0, limit: int = 20):
-    """Ambil daftar payments dengan filter order dan pagination."""
+def get_payments(db: Session, order_id: int = None, user_id: int = None, skip: int = 0, limit: int = 20):
+    """Ambil daftar payments dengan filter order/user dan pagination."""
     query = db.query(Payment)
     
     if order_id:
         query = query.filter(Payment.order_id == order_id)
+    
+    # Jika user_id dikirim, filter payment yang terikat dengan order milik user (untuk customer)
+    # Jika user_id tidak dikirim (None), get all payments (untuk admin)
+    if user_id is not None:
+        query = query.join(Order).filter(Order.user_id == user_id)
     
     total = query.count()
     payments = query.order_by(Payment.created_at.desc()).offset(skip).limit(limit).all()
