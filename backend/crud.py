@@ -20,7 +20,7 @@ def create_user(db: Session, user_data: UserCreate) -> User:
     db_user = User(
         email=user_data.email,
         name=user_data.name,
-        hashed_password=hash_password(user_data.password),
+        password_hash=hash_password(user_data.password),  # Perbaikan: password_hash
         phone=user_data.phone,
         address=user_data.address,
         role=user_data.role if hasattr(user_data, 'role') else "customer",
@@ -36,7 +36,7 @@ def authenticate_user(db: Session, email: str, password: str) -> User | None:
     user = db.query(User).filter(User.email == email).first()
     if not user:
         return None
-    if not verify_password(password, user.hashed_password):
+    if not verify_password(password, user.password_hash):  # Perbaikan: password_hash
         return None
     return user
 
@@ -119,7 +119,7 @@ def get_product_stats(db: Session):
     """Dapatkan statistik produk untuk dashboard admin."""
     total_products = db.query(func.count(Product.id)).scalar() or 0
     total_stock = db.query(func.sum(Product.stock)).scalar() or 0
-    total_available = db.query(func.count(Product.id)).filter(Product.is_available == True).scalar() or 0
+    total_available = db.query(func.count(Product.id)).filter(Product.is_active == True).scalar() or 0  # Perbaikan: is_active
     
     # Hitung per kategori
     categories_raw = db.query(
@@ -176,16 +176,19 @@ def add_to_cart(db: Session, cart_id: int, item_data: CartItemCreate) -> CartIte
     if existing_item:
         # Update quantity jika sudah ada
         existing_item.quantity += item_data.quantity
+        existing_item.subtotal = existing_item.price_at_time * existing_item.quantity  # Perbaikan: Tambah subtotal
         db.commit()
         db.refresh(existing_item)
         return existing_item
     else:
         # Buat item baru
+        subtotal = product.price * item_data.quantity  # Perbaikan: Hitung subtotal
         cart_item = CartItem(
             cart_id=cart_id,
             product_id=item_data.product_id,
             quantity=item_data.quantity,
-            price=product.price
+            price_at_time=product.price,  # Perbaikan: price_at_time
+            subtotal=subtotal  # Perbaikan: Tambah subtotal
         )
         db.add(cart_item)
         db.commit()
@@ -236,8 +239,8 @@ def clear_cart(db: Session, cart_id: int) -> bool:
 
 def create_order(db: Session, user_id: int, order_data: OrderCreate) -> Order:
     """Buat order baru dari cart atau data pemesanan."""
-    # Generate order_number unik
-    order_number = f"ORD-{datetime.now().strftime('%Y%m%d')}-{uuid.uuid4().hex[:8].upper()}"
+    # Generate order_code unik (Perbaikan: order_code bukan order_number)
+    order_code = f"ORD-{datetime.now().strftime('%Y%m%d')}-{uuid.uuid4().hex[:8].upper()}"
     
     # Hitung total amount dari items
     total_amount = 0.0
@@ -254,23 +257,25 @@ def create_order(db: Session, user_id: int, order_data: OrderCreate) -> Order:
         # Kurangi stock
         product.stock -= item_data.quantity
         
-        # Hitung total
-        item_total = product.price * item_data.quantity
-        total_amount += item_total
+        # Hitung total dan subtotal
+        item_subtotal = product.price * item_data.quantity  # Perbaikan: Tambah subtotal
+        total_amount += item_subtotal
         
         # Simpan order item
         order_items.append(OrderItem(
             product_id=item_data.product_id,
             quantity=item_data.quantity,
-            price_at_time=product.price
+            price_at_time=product.price,
+            subtotal=item_subtotal  # Perbaikan: Tambah subtotal
         ))
     
-    # Buat order
+    # Buat order (Perbaikan: order_code, shipping_address, recipient_phone, receipt_name)
     db_order = Order(
         user_id=user_id,
-        order_number=order_number,
-        ordering_address=order_data.ordering_address,
-        ordering_phone=order_data.ordering_phone,
+        order_code=order_code,
+        receipt_name=order_data.receipt_name,
+        recipient_phone=order_data.recipient_phone,
+        shipping_address=order_data.shipping_address,
         notes=order_data.notes,
         total_amount=total_amount,
         status="pending"
@@ -303,9 +308,9 @@ def get_order(db: Session, order_id: int) -> Order | None:
     return db.query(Order).filter(Order.id == order_id).first()
 
 
-def get_order_by_number(db: Session, order_number: str) -> Order | None:
-    """Ambil order berdasarkan order_number."""
-    return db.query(Order).filter(Order.order_number == order_number).first()
+def get_order_by_code(db: Session, order_code: str) -> Order | None:  # Perbaikan: order_code (bukan order_number)
+    """Ambil order berdasarkan order_code."""
+    return db.query(Order).filter(Order.order_code == order_code).first()
 
 
 def update_order_status(db: Session, order_id: int, status: str) -> Order | None:
@@ -333,15 +338,13 @@ def delete_order(db: Session, order_id: int) -> bool:
 
 def create_payment(db: Session, payment_data: PaymentCreate) -> Payment:
     """Buat record pembayaran baru."""
-    # Generate receipt ID
-    receipt_id = f"RCP-{datetime.now().strftime('%Y%m%d%H%M%S')}-{uuid.uuid4().hex[:6].upper()}"
-    
+    # Perbaikan: Tidak perlu receipt_id (bukan di ERD)
     db_payment = Payment(
         order_id=payment_data.order_id,
         payment_method=payment_data.payment_method,
         amount=payment_data.amount,
         proof_url=payment_data.proof_url,
-        receipt_id=receipt_id,
+        paid_at=payment_data.paid_at,  # Perbaikan: Tambah paid_at
         payment_status="pending"
     )
     db.add(db_payment)
@@ -368,13 +371,17 @@ def get_payment(db: Session, payment_id: int) -> Payment | None:
     return db.query(Payment).filter(Payment.id == payment_id).first()
 
 
-def update_payment_status(db: Session, payment_id: int, payment_status: str, verified_by: str = None) -> Payment | None:
+def update_payment_status(db: Session, payment_id: int, payment_status: str, verified_by: int = None, verified_at: datetime = None) -> Payment | None:  # Perbaikan: verified_by INT
     """Update status pembayaran dan verify."""
     db_payment = db.query(Payment).filter(Payment.id == payment_id).first()
     if db_payment:
         db_payment.payment_status = payment_status
-        if verified_by:
+        if verified_by is not None:  # Perbaikan: verified_by INT
             db_payment.verified_by = verified_by
+        if verified_at:  # Perbaikan: Tambah verified_at
+            db_payment.verified_at = verified_at
+        if payment_status == "completed":
+            db_payment.paid_at = datetime.now()  # Set paid_at saat completed
         db_payment.updated_at = datetime.now()
         db.commit()
         db.refresh(db_payment)
@@ -396,6 +403,7 @@ def delete_payment(db: Session, payment_id: int) -> bool:
 def create_testimonial(db: Session, user_id: int, testimonial_data: TestimonialCreate) -> Testimonial:
     """Buat testimonial/review produk baru."""
     db_testimonial = Testimonial(
+        order_id=testimonial_data.order_id,  # Perbaikan: Tambah order_id
         product_id=testimonial_data.product_id,
         user_id=user_id,
         rating=testimonial_data.rating,
@@ -442,15 +450,16 @@ def update_testimonial(db: Session, testimonial_id: int, rating: int = None, com
     return db_testimonial
 
 
-def verify_testimonial(db: Session, testimonial_id: int, admin_email: str) -> Testimonial | None:
+def verify_testimonial(db: Session, testimonial_id: int, admin_id: int) -> Testimonial | None:  # Perbaikan: admin_id INT
     """Verify testimonial oleh admin."""
     db_testimonial = db.query(Testimonial).filter(Testimonial.id == testimonial_id).first()
     if db_testimonial:
-        db_testimonial.verified_by = admin_email
-        db_testimonial.verified_at = datetime.now()
+        db_testimonial.verified_by = admin_id  # Perbaikan: INT admin_id
+        db_testimonial.verified_at = datetime.now()  # Perbaikan: Tambah verified_at
         db.commit()
         db.refresh(db_testimonial)
     return db_testimonial
+
 
 
 def delete_testimonial(db: Session, testimonial_id: int) -> bool:

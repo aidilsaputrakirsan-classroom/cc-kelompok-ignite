@@ -11,7 +11,7 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     email = Column(String(255), unique=True, nullable=False, index=True)
     name = Column(String(100), nullable=False)
-    hashed_password = Column(String(255), nullable=False)
+    password_hash = Column(String(255), nullable=False)  # Perbaikan: password_hash (sesuai ERD)
     phone = Column(String(20), nullable=True)  # Nomor telepon user
     address = Column(Text, nullable=True)  # Alamat default user
     role = Column(String(20), default="customer", nullable=False)  # admin atau customer
@@ -28,10 +28,11 @@ class Product(Base):
     name = Column(String(100), nullable=False, index=True)
     description = Column(Text, nullable=True)
     category = Column(String(50), nullable=False, default="makanan")  # makanan, minuman, snack, dll
+    slug = Column(String(100), nullable=True, unique=True)  # Perbaikan: Tambah slug (sesuai ERD)
     price = Column(Float, nullable=False)
     stock = Column(Integer, nullable=False, default=0)
     image_url = Column(String(255), nullable=True)
-    is_available = Column(Boolean, default=True)
+    is_active = Column(Boolean, default=True)  # Perbaikan: is_active (bukan is_available)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
@@ -42,6 +43,7 @@ class Cart(Base):
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    status = Column(String(20), default="active", nullable=False)  # Perbaikan: Tambah status (sesuai ERD)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     
@@ -57,7 +59,8 @@ class CartItem(Base):
     cart_id = Column(Integer, ForeignKey("carts.id"), nullable=False, index=True)
     product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
     quantity = Column(Integer, nullable=False, default=1)
-    price = Column(Float, nullable=False)  # Harga saat ditambahkan ke cart
+    price_at_time = Column(Float, nullable=False)  # Perbaikan: Sesuai ERD (price_at_time)
+    subtotal = Column(Float, nullable=False)  # Perbaikan: Tambah subtotal (sesuai ERD)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     
@@ -71,10 +74,10 @@ class Order(Base):
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
-    order_number = Column(String(50), unique=True, nullable=False, index=True)
-    order_date = Column(DateTime(timezone=True), server_default=func.now())
-    ordering_address = Column(Text, nullable=False)
-    ordering_phone = Column(String(20), nullable=False)
+    order_code = Column(String(50), unique=True, nullable=False, index=True)  # Perbaikan: order_code (bukan order_number)
+    receipt_name = Column(String(100), nullable=False)  # Perbaikan: Tambah receipt_name (sesuai ERD)
+    recipient_phone = Column(String(20), nullable=False)  # Perbaikan: recipient_phone (bukan ordering_phone)
+    shipping_address = Column(Text, nullable=False)  # Perbaikan: shipping_address (bukan ordering_address)
     notes = Column(Text, nullable=True)
     total_amount = Column(Float, nullable=False)
     status = Column(String(20), default="pending", nullable=False)  # pending, processing, shipped, delivered, cancelled
@@ -96,6 +99,7 @@ class OrderItem(Base):
     product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
     quantity = Column(Integer, nullable=False, default=1)
     price_at_time = Column(Float, nullable=False)  # Harga saat order dibuat
+    subtotal = Column(Float, nullable=False)  # Perbaikan: Tambah subtotal (sesuai ERD)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     
@@ -114,13 +118,15 @@ class Payment(Base):
     amount = Column(Float, nullable=False)
     payment_status = Column(String(20), default="pending", nullable=False)  # pending, completed, failed, refunded
     proof_url = Column(String(255), nullable=True)  # URL bukti transfer/receipt
-    receipt_id = Column(String(100), nullable=True, unique=True)
-    verified_by = Column(String(100), nullable=True)  # Email admin yang verify
+    paid_at = Column(DateTime(timezone=True), nullable=True)  # Perbaikan: Tambah paid_at (sesuai ERD)
+    verified_by = Column(Integer, ForeignKey("users.id"), nullable=True)  # Perbaikan: INT (user_id), bukan String
+    verified_at = Column(DateTime(timezone=True), nullable=True)  # Perbaikan: Tambah verified_at (sesuai ERD)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     
     # Relationships
     order = relationship("Order", back_populates="payments")
+    verified_admin = relationship("User", foreign_keys=[verified_by])
 
 
 class Testimonial(Base):
@@ -128,15 +134,18 @@ class Testimonial(Base):
     __tablename__ = "testimonials"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    order_id = Column(Integer, ForeignKey("orders.id", ondelete="CASCADE"), nullable=True)  # Perbaikan: Tambah order_id (sesuai ERD)
     product_id = Column(Integer, ForeignKey("products.id", ondelete="CASCADE"), nullable=False, index=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     rating = Column(Integer, nullable=False)  # 1-5 stars
     comment = Column(Text, nullable=True)
-    verified_by = Column(String(100), nullable=True)  # Email admin yang verify
+    verified_by = Column(Integer, ForeignKey("users.id"), nullable=True)  # Perbaikan: INT (user_id admin), bukan String
     verified_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     
     # Relationships
+    order = relationship("Order", backref="testimonials")  # Perbaikan: Tambah relasi ke Order
     product = relationship("Product", backref="testimonials")
-    user = relationship("User", backref="testimonials")
+    user = relationship("User", foreign_keys=[user_id], backref="testimonials_given")
+    verified_admin = relationship("User", foreign_keys=[verified_by])

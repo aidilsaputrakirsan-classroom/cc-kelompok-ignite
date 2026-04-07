@@ -1,4 +1,5 @@
 import os
+from datetime import datetime  # Perbaikan: Tambah import datetime
 from dotenv import load_dotenv
 from fastapi import FastAPI, Depends, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -373,8 +374,9 @@ def create_order(
     **Membutuhkan autentikasi.**
     
     - **items**: Daftar product yang dipesan (minimal 1 item)
-    - **ordering_address**: Alamat pengiriman
-    - **ordering_phone**: Nomor telepon penerima
+    - **receipt_name**: Nama penerima (Perbaikan: sesuai ERD)
+    - **recipient_phone**: Nomor telepon penerima (Perbaikan: sesuai ERD)
+    - **shipping_address**: Alamat pengiriman (Perbaikan: sesuai ERD)
     - **notes**: Catatan pesanan (optional)
     """
     try:
@@ -560,7 +562,8 @@ def update_payment_status(
         db=db, 
         payment_id=payment_id, 
         payment_status=payment_status,
-        verified_by=current_user.email
+        verified_by=current_user.id,  # Perbaikan: verified_by INT (user_id), bukan email
+        verified_at=datetime.now()  # Perbaikan: Tambah verified_at
     )
     if not updated:
         raise HTTPException(status_code=404, detail=f"Payment {payment_id} tidak ditemukan")
@@ -679,7 +682,7 @@ def verify_testimonial(
     updated = crud.verify_testimonial(
         db=db, 
         testimonial_id=testimonial_id, 
-        admin_email=current_user.email
+        admin_id=current_user.id  # Perbaikan: admin_id INT, bukan email
     )
     if not updated:
         raise HTTPException(status_code=404, detail=f"Testimonial {testimonial_id} tidak ditemukan")
