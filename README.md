@@ -222,7 +222,6 @@ App (state: items, editingItem, searchQuery, user, isAuthenticated)
  
 ---
 
-
 ## 🚀 Getting Started
 
 ### Prasyarat
