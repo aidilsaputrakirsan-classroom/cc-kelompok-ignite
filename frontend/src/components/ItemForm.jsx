@@ -1,34 +1,26 @@
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { toast } from "react-toastify"
 
-function ItemForm({ onSubmit, editingItem, onCancelEdit }) {
+function ItemForm({ onSuccess }) {
     const [formData, setFormData] = useState({
         name: "",
         description: "",
+        category: "makanan",
+        slug: "",
         price: "",
-        quantity: "0",
+        stock: "0",
+        image_url: "",
+        is_active: true,
     })
     const [error, setError] = useState("")
     const [loading, setLoading] = useState(false)
 
-    // Jika editingItem berubah, isi form dengan datanya
-    useEffect(() => {
-        if (editingItem) {
-            setFormData({
-                name: editingItem.name,
-                description: editingItem.description || "",
-                price: String(editingItem.price),
-                quantity: String(editingItem.quantity),
-            })
-        } else {
-            setFormData({ name: "", description: "", price: "", quantity: "0" })
-        }
-        setError("")
-    }, [editingItem])
-
     const handleChange = (e) => {
-        const { name, value } = e.target
-        setFormData((prev) => ({ ...prev, [name]: value }))
+        const { name, value, type, checked } = e.target
+        setFormData((prev) => ({
+            ...prev,
+            [name]: type === "checkbox" ? checked : value,
+        }))
     }
 
     const handleSubmit = async (e) => {
@@ -37,7 +29,7 @@ function ItemForm({ onSubmit, editingItem, onCancelEdit }) {
 
         // Validasi
         if (!formData.name.trim()) {
-            setError("Nama item wajib diisi")
+            setError("Nama produk wajib diisi")
             return
         }
         if (!formData.price || parseFloat(formData.price) <= 0) {
@@ -45,29 +37,36 @@ function ItemForm({ onSubmit, editingItem, onCancelEdit }) {
             return
         }
 
-        // Konfirmasi sebelum submit
-        const action = editingItem ? "update" : "menambah"
-        const confirmMessage = editingItem
-            ? "Apakah Anda yakin untuk update data item ini?"
-            : "Apakah Anda yakin menambahkan data item ini?"
-
-        if (!window.confirm(confirmMessage)) {
-            return
-        }
-
-        const itemData = {
+        const productData = {
             name: formData.name.trim(),
             description: formData.description.trim() || null,
+            category: formData.category,
+            slug: formData.slug.trim() || null,
             price: parseFloat(formData.price),
-            quantity: parseInt(formData.quantity) || 0,
+            stock: parseInt(formData.stock) || 0,
+            image_url: formData.image_url.trim() || null,
+            is_active: formData.is_active,
         }
 
         setLoading(true)
         try {
-            await onSubmit(itemData, editingItem?.id)
+            // This will be handled by the parent component
+            console.log("Product data to submit:", productData)
+            
             // Reset form setelah berhasil
-            setFormData({ name: "", description: "", price: "", quantity: "0" })
-            toast.success(`✅ Item ${action} berhasil!`, { position: "top-center" })
+            setFormData({
+                name: "",
+                description: "",
+                category: "makanan",
+                slug: "",
+                price: "",
+                stock: "0",
+                image_url: "",
+                is_active: true,
+            })
+            
+            toast.success("✅ Produk berhasil ditambahkan!", { position: "top-center" })
+            onSuccess?.()
         } catch (err) {
             const errorMsg = err instanceof Error ? err.message : String(err)
             setError(errorMsg)
@@ -79,26 +78,25 @@ function ItemForm({ onSubmit, editingItem, onCancelEdit }) {
 
     return (
         <div style={styles.container}>
-            <h2 style={styles.title}>
-                {editingItem ? "✏️ Edit Item" : "➕ Tambah Item Baru"}
-            </h2>
+            <h3 style={styles.title}>➕ Tambah Produk Baru</h3>
 
             {error && <div style={styles.error}>{error}</div>}
 
             <form onSubmit={handleSubmit} style={styles.form}>
-                <div style={styles.row}>
+                <div style={styles.grid}>
                     <div style={styles.field}>
-                        <label style={styles.label}>Nama Item *</label>
+                        <label style={styles.label}>Nama Produk *</label>
                         <input
                             type="text"
                             name="name"
                             value={formData.name}
                             onChange={handleChange}
-                            placeholder="Contoh: Laptop"
+                            placeholder="Contoh: Amplang Balikpapan"
                             style={styles.input}
                             disabled={loading}
                         />
                     </div>
+
                     <div style={styles.field}>
                         <label style={styles.label}>Harga (Rp) *</label>
                         <input
@@ -106,61 +104,105 @@ function ItemForm({ onSubmit, editingItem, onCancelEdit }) {
                             name="price"
                             value={formData.price}
                             onChange={handleChange}
-                            placeholder="Contoh: 15000000"
+                            placeholder="Contoh: 25000"
                             min="0"
-                            step="any"
+                            step="100"
                             style={styles.input}
                             disabled={loading}
                         />
                     </div>
-                </div>
 
-                <div style={styles.row}>
                     <div style={styles.field}>
-                        <label style={styles.label}>Deskripsi</label>
-                        <input
-                            type="text"
-                            name="description"
-                            value={formData.description}
+                        <label style={styles.label}>Kategori</label>
+                        <select
+                            name="category"
+                            value={formData.category}
                             onChange={handleChange}
-                            placeholder="Opsional"
                             style={styles.input}
-                            disabled={loading}
-                        />
-                    </div>
-                    <div style={{ ...styles.field, maxWidth: "150px" }}>
-                        <label style={styles.label}>Jumlah Stok</label>
-                        <input
-                            type="number"
-                            name="quantity"
-                            value={formData.quantity}
-                            onChange={handleChange}
-                            min="0"
-                            style={styles.input}
-                            disabled={loading}
-                        />
-                    </div>
-                </div>
-
-                <div style={styles.actions}>
-                    <button
-                        type="submit"
-                        style={{ ...styles.btnSubmit, opacity: loading ? 0.6 : 1, cursor: loading ? "not-allowed" : "pointer" }}
-                        disabled={loading}
-                    >
-                        {loading ? "⏳ Memproses..." : (editingItem ? "💾 Update Item" : "➕ Tambah Item")}
-                    </button>
-                    {editingItem && (
-                        <button
-                            type="button"
-                            onClick={onCancelEdit}
-                            style={styles.btnCancel}
                             disabled={loading}
                         >
-                            ✕ Batal Edit
-                        </button>
-                    )}
+                            <option value="makanan">Makanan</option>
+                            <option value="minuman">Minuman</option>
+                            <option value="snack">Snack</option>
+                            <option value="lainnya">Lainnya</option>
+                        </select>
+                    </div>
+
+                    <div style={styles.field}>
+                        <label style={styles.label}>Stok</label>
+                        <input
+                            type="number"
+                            name="stock"
+                            value={formData.stock}
+                            onChange={handleChange}
+                            min="0"
+                            style={styles.input}
+                            disabled={loading}
+                        />
+                    </div>
                 </div>
+
+                <div style={styles.field}>
+                    <label style={styles.label}>Deskripsi</label>
+                    <input
+                        type="text"
+                        name="description"
+                        value={formData.description}
+                        onChange={handleChange}
+                        placeholder="Opsional"
+                        style={styles.input}
+                        disabled={loading}
+                    />
+                </div>
+
+                <div style={styles.grid}>
+                    <div style={styles.field}>
+                        <label style={styles.label}>Slug (URL-friendly name)</label>
+                        <input
+                            type="text"
+                            name="slug"
+                            value={formData.slug}
+                            onChange={handleChange}
+                            placeholder="Contoh: amplang-balikpapan"
+                            style={styles.input}
+                            disabled={loading}
+                        />
+                    </div>
+
+                    <div style={styles.field}>
+                        <label style={styles.label}>URL Gambar</label>
+                        <input
+                            type="url"
+                            name="image_url"
+                            value={formData.image_url}
+                            onChange={handleChange}
+                            placeholder="https://example.com/image.jpg"
+                            style={styles.input}
+                            disabled={loading}
+                        />
+                    </div>
+                </div>
+
+                <div style={styles.checkboxField}>
+                    <input
+                        type="checkbox"
+                        id="is_active"
+                        name="is_active"
+                        checked={formData.is_active}
+                        onChange={handleChange}
+                        style={styles.checkbox}
+                        disabled={loading}
+                    />
+                    <label htmlFor="is_active" style={styles.checkboxLabel}>Aktif</label>
+                </div>
+
+                <button
+                    type="submit"
+                    style={{ ...styles.btnSubmit, opacity: loading ? 0.6 : 1, cursor: loading ? "not-allowed" : "pointer" }}
+                    disabled={loading}
+                >
+                    {loading ? "⏳ Menyimpan..." : "✅ Tambah Produk"}
+                </button>
             </form>
         </div>
     )
@@ -168,75 +210,80 @@ function ItemForm({ onSubmit, editingItem, onCancelEdit }) {
 
 const styles = {
     container: {
-        backgroundColor: "#f8f9fa",
-        padding: "1.5rem",
-        borderRadius: "12px",
-        border: "2px solid #e0e0e0",
-        marginBottom: "1.5rem",
+        backgroundColor: "white",
+        padding: "20px",
+        borderRadius: "8px",
+        boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+        marginBottom: "20px",
     },
     title: {
-        margin: "0 0 1rem 0",
-        color: "#1F4E79",
-        fontSize: "1.2rem",
+        margin: "0 0 20px 0",
+        color: "#333",
+        fontSize: "18px",
     },
     form: {
         display: "flex",
         flexDirection: "column",
-        gap: "0.75rem",
+        gap: "15px",
     },
-    row: {
-        display: "flex",
-        gap: "1rem",
+    grid: {
+        display: "grid",
+        gridTemplateColumns: "1fr 1fr",
+        gap: "15px",
     },
     field: {
-        flex: 1,
         display: "flex",
         flexDirection: "column",
-        gap: "0.25rem",
+        gap: "5px",
     },
     label: {
-        fontSize: "0.85rem",
+        fontSize: "14px",
         fontWeight: "bold",
         color: "#555",
     },
     input: {
-        padding: "0.6rem 0.8rem",
-        border: "2px solid #ddd",
-        borderRadius: "6px",
-        fontSize: "0.95rem",
+        padding: "8px 12px",
+        border: "1px solid #ddd",
+        borderRadius: "4px",
+        fontSize: "14px",
         outline: "none",
+        fontFamily: "inherit",
     },
-    actions: {
+    checkboxField: {
         display: "flex",
-        gap: "0.75rem",
-        marginTop: "0.5rem",
+        alignItems: "center",
+        gap: "8px",
     },
-    btnSubmit: {
-        padding: "0.7rem 1.5rem",
-        backgroundColor: "#548235",
-        color: "white",
-        border: "none",
-        borderRadius: "8px",
+    checkbox: {
+        width: "18px",
+        height: "18px",
         cursor: "pointer",
-        fontSize: "0.95rem",
+    },
+    checkboxLabel: {
+        fontSize: "14px",
         fontWeight: "bold",
-    },
-    btnCancel: {
-        padding: "0.7rem 1.5rem",
-        backgroundColor: "#e0e0e0",
-        color: "#333",
-        border: "none",
-        borderRadius: "8px",
+        color: "#555",
         cursor: "pointer",
-        fontSize: "0.95rem",
     },
     error: {
         backgroundColor: "#FBE5D6",
         color: "#C00000",
-        padding: "0.6rem 1rem",
-        borderRadius: "6px",
-        marginBottom: "0.75rem",
-        fontSize: "0.9rem",
+        padding: "10px 12px",
+        borderRadius: "4px",
+        marginBottom: "10px",
+        fontSize: "14px",
+        border: "1px solid #C00000",
+    },
+    btnSubmit: {
+        padding: "10px 20px",
+        backgroundColor: "#4CAF50",
+        color: "white",
+        border: "none",
+        borderRadius: "4px",
+        cursor: "pointer",
+        fontSize: "14px",
+        fontWeight: "bold",
+        marginTop: "10px",
     },
 }
 

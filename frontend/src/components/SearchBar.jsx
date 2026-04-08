@@ -1,20 +1,15 @@
 import { useState } from "react"
 
-function SearchBar({ onSearch, sortBy, sortOrder, onSort }) {
+function SearchBar({ onSearch, activeFilter, onFilterChange }) {
     const [query, setQuery] = useState("")
-    const [minPrice, setMinPrice] = useState("")
-    const [maxPrice, setMaxPrice] = useState("")
-    const [showFilters, setShowFilters] = useState(false)
 
     const handleSubmit = (e) => {
         e.preventDefault()
-        onSearch(query, minPrice || null, maxPrice || null)
+        onSearch(query, null, null)
     }
 
     const handleClear = () => {
         setQuery("")
-        setMinPrice("")
-        setMaxPrice("")
         onSearch("", null, null)
     }
 
@@ -23,79 +18,30 @@ function SearchBar({ onSearch, sortBy, sortOrder, onSort }) {
             <div style={styles.searchRow}>
                 <input
                     type="text"
-                    placeholder="Cari item berdasarkan nama atau deskripsi..."
+                    placeholder="Cari Produk...."
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     style={styles.input}
                 />
                 <button type="submit" style={styles.btnSearch}>
-                    🔍 Cari
+                    Cari
                 </button>
-                <button
-                    type="button"
-                    onClick={() => setShowFilters(!showFilters)}
-                    style={styles.btnFilter}
+                <select
+                    value={activeFilter}
+                    onChange={(event) => onFilterChange(event.target.value)}
+                    style={styles.filterSelect}
                 >
-                    {showFilters ? "▲ Tutup Filter" : "▼ Filter Harga"}
-                </button>
-                {(query || minPrice || maxPrice) && (
+                    <option value="semua">Filter</option>
+                    <option value="snack">Snack</option>
+                    <option value="best">Best Seller</option>
+                    <option value="murah">Paling Murah</option>
+                    <option value="mahal">Paling Mahal</option>
+                </select>
+                {query && (
                     <button type="button" onClick={handleClear} style={styles.btnClear}>
-                        ✕ Clear
+                        Hapus
                     </button>
                 )}
-            </div>
-
-            {showFilters && (
-                <div style={styles.filterRow}>
-                    <div style={styles.filterField}>
-                        <label style={styles.filterLabel}>Harga Min (Rp):</label>
-                        <input
-                            type="number"
-                            value={minPrice}
-                            onChange={(e) => setMinPrice(e.target.value)}
-                            placeholder="0"
-                            style={styles.filterInput}
-                        />
-                    </div>
-                    <div style={styles.filterField}>
-                        <label style={styles.filterLabel}>Harga Max (Rp):</label>
-                        <input
-                            type="number"
-                            value={maxPrice}
-                            onChange={(e) => setMaxPrice(e.target.value)}
-                            placeholder="999999999"
-                            style={styles.filterInput}
-                        />
-                    </div>
-                    <button type="submit" style={styles.btnApplyFilter}>
-                        ✓ Terapkan
-                    </button>
-                </div>
-            )}
-
-            <div style={styles.sortRow}>
-                <div style={styles.sortField}>
-                    <label style={styles.sortLabel}>📊 Urutkan Berdasarkan:</label>
-                    <select
-                        value={sortBy}
-                        onChange={(e) => onSort(e.target.value, sortOrder)}
-                        style={styles.sortSelect}
-                    >
-                        <option value="date">Tanggal</option>
-                        <option value="name">Nama (A-Z)</option>
-                    </select>
-                </div>
-                <div style={styles.sortField}>
-                    <label style={styles.sortLabel}>↕️ Urutan:</label>
-                    <select
-                        value={sortOrder}
-                        onChange={(e) => onSort(sortBy, e.target.value)}
-                        style={styles.sortSelect}
-                    >
-                        <option value="desc">{sortBy === "date" ? "Terbaru" : "Z-A"}</option>
-                        <option value="asc">{sortBy === "date" ? "Terlama" : "A-Z"}</option>
-                    </select>
-                </div>
             </div>
         </form>
     )
@@ -105,116 +51,93 @@ const styles = {
     form: {
         display: "flex",
         flexDirection: "column",
-        gap: "0.5rem",
-        marginBottom: "1.5rem",
+        gap: "0.75rem",
+        width: "100%",
     },
     searchRow: {
         display: "flex",
-        gap: "0.5rem",
+        gap: "0.75rem",
+        flexWrap: "wrap",
     },
     input: {
         flex: 1,
-        padding: "0.75rem 1rem",
+        minWidth: "220px",
+        padding: "0.85rem 1rem",
         fontSize: "1rem",
-        border: "2px solid #ddd",
-        borderRadius: "8px",
+        border: "1px solid #E7C4A8",
+        borderRadius: "12px",
         outline: "none",
+        backgroundColor: "#FFF9F4",
+        color: "#4F370E",
     },
     btnSearch: {
-        padding: "0.75rem 1.25rem",
-        backgroundColor: "#2E75B6",
+        padding: "0.85rem 1.25rem",
+        backgroundColor: "#F57C00",
         color: "white",
         border: "none",
-        borderRadius: "8px",
+        borderRadius: "12px",
         cursor: "pointer",
-        fontSize: "0.9rem",
-    },
-    btnFilter: {
-        padding: "0.75rem 1rem",
-        backgroundColor: "#F79646",
-        color: "white",
-        border: "none",
-        borderRadius: "8px",
-        cursor: "pointer",
-        fontSize: "0.9rem",
+        fontSize: "0.95rem",
+        fontWeight: 700,
     },
     btnClear: {
-        padding: "0.75rem 1rem",
-        backgroundColor: "#f0f0f0",
-        border: "none",
-        borderRadius: "8px",
+        padding: "0.85rem 1rem",
+        backgroundColor: "#F3E1D0",
+        color: "#4F370E",
+        border: "1px solid #E7C4A8",
+        borderRadius: "12px",
         cursor: "pointer",
-        fontSize: "0.9rem",
+        fontSize: "0.95rem",
+    },
+    filterSelect: {
+        padding: "0.85rem 0.9rem",
+        border: "1px solid #E7C4A8",
+        borderRadius: "12px",
+        outline: "none",
+        backgroundColor: "#FFF9F4",
+        color: "#4F370E",
+        cursor: "pointer",
+        fontSize: "0.95rem",
+        minWidth: "140px",
     },
     filterRow: {
-        display: "flex",
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
         gap: "0.75rem",
-        flexWrap: "wrap",
-        padding: "0.75rem",
-        backgroundColor: "#f9f9f9",
-        borderRadius: "8px",
-        border: "1px solid #e0e0e0",
+        padding: "1rem",
+        backgroundColor: "#FFF7F0",
+        borderRadius: "16px",
+        border: "1px solid #F3D2B3",
     },
     filterField: {
         display: "flex",
         flexDirection: "column",
-        gap: "0.25rem",
-        flex: 1,
-        minWidth: "150px",
+        gap: "0.35rem",
     },
     filterLabel: {
-        fontSize: "0.8rem",
-        fontWeight: "bold",
-        color: "#555",
+        fontSize: "0.85rem",
+        fontWeight: 700,
+        color: "#8A5D3B",
     },
     filterInput: {
-        padding: "0.6rem 0.8rem",
-        fontSize: "0.9rem",
-        border: "2px solid #ddd",
-        borderRadius: "6px",
+        padding: "0.85rem 0.9rem",
+        fontSize: "0.95rem",
+        border: "1px solid #E7C4A8",
+        borderRadius: "12px",
         outline: "none",
+        backgroundColor: "#FFF9F4",
     },
     btnApplyFilter: {
         alignSelf: "flex-end",
-        padding: "0.6rem 1rem",
-        backgroundColor: "#548235",
+        padding: "0.85rem 1rem",
+        backgroundColor: "#D95B12",
         color: "white",
         border: "none",
-        borderRadius: "6px",
+        borderRadius: "12px",
         cursor: "pointer",
-        fontSize: "0.9rem",
-        fontWeight: "bold",
+        fontSize: "0.95rem",
+        fontWeight: 700,
         marginTop: "auto",
-    },
-    sortRow: {
-        display: "flex",
-        gap: "1rem",
-        padding: "0.75rem",
-        backgroundColor: "#f0f7ff",
-        borderRadius: "8px",
-        border: "1px solid #d1e0f0",
-    },
-    sortField: {
-        display: "flex",
-        flexDirection: "column",
-        gap: "0.25rem",
-        flex: 1,
-        minWidth: "180px",
-    },
-    sortLabel: {
-        fontSize: "0.8rem",
-        fontWeight: "bold",
-        color: "#1F4E79",
-    },
-    sortSelect: {
-        padding: "0.6rem 0.8rem",
-        fontSize: "0.9rem",
-        border: "2px solid #2E75B6",
-        borderRadius: "6px",
-        backgroundColor: "white",
-        color: "#333",
-        cursor: "pointer",
-        outline: "none",
     },
 }
 

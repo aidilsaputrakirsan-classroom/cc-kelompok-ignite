@@ -84,25 +84,27 @@ export async function getMe() {
     return handleResponse(response)
 }
 
-// ==================== ITEMS API ====================
+// ==================== PRODUCTS API ====================
 
 export async function fetchItems(
     search = "",
     skip = 0,
     limit = 20,
     minPrice = null,
-    maxPrice = null
+    maxPrice = null,
+    category = null
 ) {
     const params = new URLSearchParams()
 
     if (search) params.append("search", search)
     if (minPrice !== null) params.append("min_price", minPrice)
     if (maxPrice !== null) params.append("max_price", maxPrice)
+    if (category) params.append("category", category)
 
     params.append("skip", skip)
     params.append("limit", limit)
 
-    const response = await fetch(`${API_URL}/items?${params}`, {
+    const response = await fetch(`${API_URL}/products?${params}`, {
         headers: authHeaders(),
     })
 
@@ -110,7 +112,7 @@ export async function fetchItems(
 }
 
 export async function createItem(itemData) {
-    const response = await fetch(`${API_URL}/items`, {
+    const response = await fetch(`${API_URL}/products`, {
         method: "POST",
         headers: {
             ...authHeaders(),
@@ -123,7 +125,7 @@ export async function createItem(itemData) {
 }
 
 export async function updateItem(id, itemData) {
-    const response = await fetch(`${API_URL}/items/${id}`, {
+    const response = await fetch(`${API_URL}/products/${id}`, {
         method: "PUT",
         headers: {
             ...authHeaders(),
@@ -136,7 +138,7 @@ export async function updateItem(id, itemData) {
 }
 
 export async function deleteItem(id) {
-    const response = await fetch(`${API_URL}/items/${id}`, {
+    const response = await fetch(`${API_URL}/products/${id}`, {
         method: "DELETE",
         headers: authHeaders(),
     })

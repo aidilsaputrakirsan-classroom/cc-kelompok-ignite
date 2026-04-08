@@ -1,83 +1,54 @@
-import { useState, useEffect, useCallback } from "react"
-import { ToastContainer, toast } from "react-toastify"
+import { useEffect, useState } from "react"
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"
+import { ToastContainer } from "react-toastify"
 import "react-toastify/dist/ReactToastify.css"
-import Header from "./components/Header"
-import SearchBar from "./components/SearchBar"
-import ItemForm from "./components/ItemForm"
-import ItemList from "./components/ItemList"
 import LoginPage from "./components/LoginPage"
+import RegisterPage from "./components/RegisterPage"
+import AdminDashboard from "./pages/AdminDashboard"
+import CustomerHome from "./pages/CustomerHome"
+import ShopPage from "./pages/ShopPage"
+import AboutPage from "./pages/AboutPage"
+import CartPage from "./pages/CartPage"
+import OrdersPage from "./pages/OrdersPage"
+import TestimoniPage from "./pages/TestimoniPage"
+import ProfilePage from "./pages/ProfilePage"
+import ProtectedRoute from "./components/ProtectedRoute"
 import {
-  fetchItems, createItem, updateItem, deleteItem,
-  checkHealth, login, register, setToken, clearToken,
+  login, register, getMe, checkHealth, getToken, clearToken
 } from "./services/api"
 
 function App() {
-  // ==================== AUTH STATE ====================
   const [user, setUser] = useState(null)
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-
-  // ==================== APP STATE ====================
-  const [items, setItems] = useState([])
-  const [totalItems, setTotalItems] = useState(0)
   const [loading, setLoading] = useState(true)
   const [isConnected, setIsConnected] = useState(false)
-  const [editingItem, setEditingItem] = useState(null)
-  const [searchQuery, setSearchQuery] = useState("")
-  const [filters, setFilters] = useState({ minPrice: null, maxPrice: null })
-  const [sortBy, setSortBy] = useState("date") // "name" or "date"
-  const [sortOrder, setSortOrder] = useState("desc") // "asc" or "desc"
 
-  // ==================== LOAD DATA ====================
-  const loadItems = useCallback(async (search = "", minPrice = null, maxPrice = null) => {
-    setLoading(true)
-    try {
-      const data = await fetchItems(search, 0, 20, minPrice, maxPrice)
-      let sortedItems = [...data.items]
-
-      // Apply sorting
-      if (sortBy === "name") {
-        sortedItems.sort((a, b) => {
-          const nameA = a.name.toLowerCase()
-          const nameB = b.name.toLowerCase()
-          return sortOrder === "asc" ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA)
-        })
-      } else if (sortBy === "date") {
-        sortedItems.sort((a, b) => {
-          const dateA = new Date(a.created_at)
-          const dateB = new Date(b.created_at)
-          return sortOrder === "asc" ? dateA - dateB : dateB - dateA
-        })
-      }
-
-      setItems(sortedItems)
-      setTotalItems(data.total)
-    } catch (err) {
-      if (err.message === "UNAUTHORIZED") {
-        handleLogout()
-      }
-      console.error("Error loading items:", err)
-    } finally {
-      setLoading(false)
-    }
-  }, [sortBy, sortOrder])
 
   useEffect(() => {
     checkHealth().then(setIsConnected)
-  }, [])
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      loadItems(searchQuery, filters.minPrice, filters.maxPrice)
+    const token = getToken()
+    if (token) {
+      getMe()
+        .then(userData => {
+          setUser(userData)
+        })
+        .catch(() => {
+          clearToken()
+          setUser(null)
+        })
+        .finally(() => {
+          setLoading(false)
+        })
+    } else {
+      setLoading(false)
     }
-  }, [isAuthenticated, loadItems, searchQuery, filters])
-
-  // ==================== AUTH HANDLERS ====================
+  }, [])
 
   const handleLogin = async (email, password) => {
     try {
       const data = await login(email, password)
       setUser(data.user)
-      setIsAuthenticated(true)
+      return data.user
     } catch (err) {
       throw err
     }
@@ -86,7 +57,7 @@ function App() {
   const handleRegister = async (userData) => {
     try {
       await register(userData)
-      await handleLogin(userData.email, userData.password)
+      return true
     } catch (err) {
       throw err
     }
@@ -95,117 +66,168 @@ function App() {
   const handleLogout = () => {
     clearToken()
     setUser(null)
-    setIsAuthenticated(false)
-    setItems([])
-    setTotalItems(0)
-    setEditingItem(null)
-    setSearchQuery("")
-    setFilters({ minPrice: null, maxPrice: null })
-    setSortBy("date")
-    setSortOrder("desc")
   }
 
-  // ==================== ITEM HANDLERS ====================
-
-  const handleSubmit = async (itemData, editId) => {
-    try {
-      if (editId) {
-        await updateItem(editId, itemData)
-        setEditingItem(null)
-      } else {
-        await createItem(itemData)
-      }
-      loadItems(searchQuery, filters.minPrice, filters.maxPrice)
-    } catch (err) {
-      if (err.message === "UNAUTHORIZED") {
-        handleLogout()
-      } else {
-        const errorMsg = err instanceof Error ? err.message : String(err)
-        throw new Error(errorMsg)
-      }
-    }
-  }
-
-  const handleEdit = (item) => {
-    setEditingItem(item)
-    window.scrollTo({ top: 0, behavior: "smooth" })
-  }
-
-  const handleDelete = async (id) => {
-    const item = items.find((i) => i.id === id)
-    if (!window.confirm(`Yakin ingin menghapus "${item?.name}"?`)) return
-    try {
-      await deleteItem(id)
-      toast.success("✅ Item berhasil dihapus!", { position: "top-center" })
-      loadItems(searchQuery, filters.minPrice, filters.maxPrice)
-    } catch (err) {
-      if (err.message === "UNAUTHORIZED") {
-        handleLogout()
-      } else {
-        const errorMsg = err instanceof Error ? err.message : String(err)
-        toast.error(`❌ Gagal menghapus: ${errorMsg}`, { position: "top-center" })
-      }
-    }
-  }
-
-  const handleSearch = (query, minPrice = null, maxPrice = null) => {
-    setSearchQuery(query)
-    setFilters({ minPrice, maxPrice })
-  }
-
-  const handleSort = (newSortBy, newSortOrder) => {
-    setSortBy(newSortBy)
-    setSortOrder(newSortOrder)
-  }
-
-  // ==================== RENDER ====================
-
-  // Jika belum login, tampilkan login page
-  if (!isAuthenticated) {
+  if (loading) {
     return (
-      <>
-        <ToastContainer position="top-center" autoClose={3000} />
-        <LoginPage onLogin={handleLogin} onRegister={handleRegister} />
-      </>
+      <div style={styles.loadingContainer}>
+        <div style={styles.spinner}></div>
+        <p>Loading...</p>
+      </div>
     )
   }
 
-  // Jika sudah login, tampilkan main app
+  const authenticatedRedirect = user ? (user.role?.toLowerCase() === "admin" ? "/admin" : "/home") : "/login"
+
   return (
-    <div style={styles.app}>
-      <ToastContainer position="top-center" autoClose={3000} />
-      <div style={styles.container}>
-        <Header
-          totalItems={totalItems}
-          isConnected={isConnected}
-          user={user}
-          onLogout={handleLogout}
+    <Router>
+      <ToastContainer position="top-right" autoClose={3000} />
+
+      <Routes>
+        <Route
+          path="/login"
+          element={
+            user ? <Navigate to={authenticatedRedirect} replace /> : <LoginPage onLogin={handleLogin} />
+          }
         />
-        <ItemForm
-          onSubmit={handleSubmit}
-          editingItem={editingItem}
-          onCancelEdit={() => setEditingItem(null)}
+
+        <Route
+          path="/register"
+          element={
+            user ? <Navigate to={authenticatedRedirect} replace /> : <RegisterPage onRegister={handleRegister} />
+          }
         />
-        <SearchBar onSearch={handleSearch} sortBy={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-        <ItemList
-          items={items}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-          loading={loading}
+
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute
+              element={<AdminDashboard user={user} onLogout={handleLogout} />}
+              requiredRole="admin"
+              user={user}
+            />
+          }
         />
-      </div>
-    </div>
+
+        <Route
+          path="/home"
+          element={
+            <ProtectedRoute
+              element={<CustomerHome user={user} onLogout={handleLogout} />}
+              requiredRole="customer"
+              user={user}
+            />
+          }
+        />
+
+        <Route
+          path="/shop"
+          element={
+            <ProtectedRoute
+              element={<ShopPage user={user} onLogout={handleLogout} />}
+              requiredRole="customer"
+              user={user}
+            />
+          }
+        />
+
+        <Route
+          path="/about"
+          element={
+            <ProtectedRoute
+              element={<AboutPage user={user} onLogout={handleLogout} />}
+              requiredRole="customer"
+              user={user}
+            />
+          }
+        />
+
+        <Route
+          path="/cart"
+          element={
+            <ProtectedRoute
+              element={<CartPage user={user} onLogout={handleLogout} />}
+              requiredRole="customer"
+              user={user}
+            />
+          }
+        />
+
+        <Route
+          path="/orders"
+          element={
+            <ProtectedRoute
+              element={<OrdersPage user={user} onLogout={handleLogout} />}
+              requiredRole="customer"
+              user={user}
+            />
+          }
+        />
+
+        <Route
+          path="/testimoni"
+          element={
+            <ProtectedRoute
+              element={<TestimoniPage user={user} onLogout={handleLogout} />}
+              requiredRole="customer"
+              user={user}
+            />
+          }
+        />
+
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute
+              element={<ProfilePage user={user} onLogout={handleLogout} />}
+              requiredRole="customer"
+              user={user}
+            />
+          }
+        />
+
+        <Route
+          path="/"
+          element={<Navigate to={authenticatedRedirect} replace />}
+        />
+
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </Router>
   )
 }
 
 const styles = {
-  app: {
-    minHeight: "100vh",
-    backgroundColor: "#f0f2f5",
-    padding: "2rem",
-    fontFamily: "'Segoe UI', Arial, sans-serif",
+  loadingContainer: {
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "center",
+    alignItems: "center",
+    height: "100vh",
+    backgroundColor: "#FFF4E6",
+    fontFamily: "sans-serif",
   },
-  container: { maxWidth: "900px", margin: "0 auto" },
+  spinner: {
+    width: "50px",
+    height: "50px",
+    border: "5px solid #f3f3f3",
+    borderTop: "5px solid #F57C00",
+    borderRadius: "50%",
+    animation: "spin 1s linear infinite",
+    marginBottom: "20px",
+  },
+}
+
+if (!document.getElementById("spin-animation")) {
+  const style = document.createElement("style")
+  style.id = "spin-animation"
+  style.innerHTML = `
+    @keyframes spin {
+      0% { transform: rotate(0deg) }
+      100% { transform: rotate(360deg) }
+    }
+  `
+  document.head.appendChild(style)
 }
 
 export default App
