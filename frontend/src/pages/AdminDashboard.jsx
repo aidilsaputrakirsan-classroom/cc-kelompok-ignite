@@ -2,13 +2,30 @@ import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { clearToken } from "../services/api"
 import { toast } from "react-toastify"
-import Header from "../components/Header"
-import ItemForm from "../components/ItemForm"
-import ItemList from "../components/ItemList"
+
+const stats = [
+  { label: "TOTAL PRODUK", value: "12" },
+  { label: "PESANAN HARI INI", value: "8" },
+  { label: "PENDAPATAN", value: "Rp 4,2 Jt" },
+  { label: "MENUNGGU VERIFIKASI", value: "3" },
+]
+
+const orders = [
+  { code: "ATH 001", customer: "Andini P", total: "Rp 60rb" },
+  { code: "ATH 002", customer: "Putri R", total: "Rp 100rb" },
+]
+
+const menuItems = [
+  { label: "Dashboard", key: "dashboard" },
+  { label: "Produk", key: "products" },
+  { label: "Pesanan", key: "orders" },
+  { label: "Pembayaran", key: "payments" },
+  { label: "Pelanggan", key: "customers" },
+  { label: "Testimoni", key: "testimonials" },
+]
 
 export default function AdminDashboard({ user, onLogout }) {
-  const [activeTab, setActiveTab] = useState("products")
-  const [refreshKey, setRefreshKey] = useState(0)
+  const [activeMenu, setActiveMenu] = useState("dashboard")
   const navigate = useNavigate()
 
   const handleLogout = () => {
@@ -18,276 +35,256 @@ export default function AdminDashboard({ user, onLogout }) {
     navigate("/login", { replace: true })
   }
 
-  const handleProductUpdated = () => {
-    setRefreshKey(prev => prev + 1)
-  }
-
   return (
-    <div style={styles.container}>
-      {/* Header */}
-      <Header user={user} onLogout={handleLogout} />
-
-      {/* Main Content */}
-      <div style={styles.content}>
-        <div style={styles.sideNav}>
-          <h3 style={styles.sideNavTitle}>Admin Menu</h3>
-          
-          <button 
-            style={{
-              ...styles.navButton,
-              ...(activeTab === "products" ? styles.navButtonActive : {})
-            }}
-            onClick={() => setActiveTab("products")}
-          >
-            📦 Kelola Produk
-          </button>
-
-          <button 
-            style={{
-              ...styles.navButton,
-              ...(activeTab === "analytics" ? styles.navButtonActive : {})
-            }}
-            onClick={() => setActiveTab("analytics")}
-          >
-            📊 Analitik
-          </button>
-
-          <button 
-            style={{
-              ...styles.navButton,
-              ...(activeTab === "orders" ? styles.navButtonActive : {})
-            }}
-            onClick={() => setActiveTab("orders")}
-          >
-            📋 Pesanan
-          </button>
-
-          <button 
-            style={{
-              ...styles.navButton,
-              ...(activeTab === "profile" ? styles.navButtonActive : {})
-            }}
-            onClick={() => setActiveTab("profile")}
-          >
-            👤 Profil
-          </button>
-
-          <button 
-            style={styles.logoutButton}
-            onClick={handleLogout}
-          >
-            🚪 Logout
-          </button>
+    <div style={styles.page}>
+      <aside style={styles.sidebar}>
+        <div style={styles.sidebarHeader}>
+          <span style={styles.sidebarTitle}>ATHSNAC ADMIN</span>
         </div>
 
-        <div style={styles.mainArea}>
-          {/* Tab: Products */}
-          {activeTab === "products" && (
-            <div>
-              <h2 style={styles.tabTitle}>Kelola Produk</h2>
-              
-              <div style={styles.tabContent}>
-                <div style={styles.formSection}>
-                  <h3 style={styles.sectionTitle}>Tambah/Edit Produk</h3>
-                  <ItemForm onSuccess={handleProductUpdated} />
-                </div>
+        <nav style={styles.menu}>
+          {menuItems.map((item) => (
+            <button
+              key={item.key}
+              type="button"
+              onClick={() => setActiveMenu(item.key)}
+              style={{
+                ...styles.menuButton,
+                ...(activeMenu === item.key ? styles.menuButtonActive : {}),
+              }}
+            >
+              {item.label}
+            </button>
+          ))}
+        </nav>
 
-                <div style={styles.listSection}>
-                  <h3 style={styles.sectionTitle}>Daftar Produk</h3>
-                  <ItemList key={refreshKey} isAdmin={true} />
-                </div>
-              </div>
-            </div>
-          )}
+        <button type="button" style={styles.logoutButton} onClick={handleLogout}>
+          Logout
+        </button>
+      </aside>
 
-          {/* Tab: Analytics */}
-          {activeTab === "analytics" && (
-            <div>
-              <h2 style={styles.tabTitle}>Analitik</h2>
-              <div style={styles.emptyState}>
-                <p>📊 Fitur analitik akan segera tersedia</p>
-              </div>
-            </div>
-          )}
+      <main style={styles.main}>
+        <header style={styles.hero}>
+          <div>
+            <h1 style={styles.pageTitle}>Selamat datang, Admin!</h1>
+          </div>
+        </header>
 
-          {/* Tab: Orders */}
-          {activeTab === "orders" && (
-            <div>
-              <h2 style={styles.tabTitle}>Pesanan</h2>
-              <div style={styles.emptyState}>
-                <p>📋 Daftar pesanan akan ditampilkan di sini</p>
-              </div>
-            </div>
-          )}
+        <section style={styles.statsGrid}>
+          {stats.map((item) => (
+            <article key={item.label} style={styles.statCard}>
+              <span style={styles.statLabel}>{item.label}</span>
+              <strong style={styles.statValue}>{item.value}</strong>
+            </article>
+          ))}
+        </section>
 
-          {/* Tab: Profile */}
-          {activeTab === "profile" && (
-            <div>
-              <h2 style={styles.tabTitle}>Profil Admin</h2>
-              <div style={styles.profileCard}>
-                <div style={styles.profileItem}>
-                  <span style={styles.label}>Nama:</span>
-                  <span>{user?.name || "-"}</span>
-                </div>
-                <div style={styles.profileItem}>
-                  <span style={styles.label}>Email:</span>
-                  <span>{user?.email || "-"}</span>
-                </div>
-                <div style={styles.profileItem}>
-                  <span style={styles.label}>Role:</span>
-                  <span style={styles.badge}>🔐 {user?.role?.toUpperCase() || "-"}</span>
-                </div>
-                <div style={styles.profileItem}>
-                  <span style={styles.label}>Nomor Telepon:</span>
-                  <span>{user?.phone || "-"}</span>
-                </div>
-                <div style={styles.profileItem}>
-                  <span style={styles.label}>Alamat:</span>
-                  <span>{user?.address || "-"}</span>
-                </div>
-                <div style={styles.profileItem}>
-                  <span style={styles.label}>Terdaftar Sejak:</span>
-                  <span>{user?.created_at ? new Date(user.created_at).toLocaleDateString("id-ID") : "-"}</span>
-                </div>
-              </div>
+        <section style={styles.chartSection}>
+          <div style={styles.sectionHeader}>
+            <h2 style={styles.sectionTitle}>Pesanan 7 Hari Terakhir</h2>
+          </div>
+          <div style={styles.chartCard}>
+            <div style={styles.chartBars}>
+              {[60, 68, 75, 70, 64, 88, 92, 88].map((height, index) => (
+                <div key={index} style={{ ...styles.chartBar, height: `${height}%` }} />
+              ))}
             </div>
-          )}
-        </div>
-      </div>
+          </div>
+        </section>
+
+        <section style={styles.tableSection}>
+          <div style={styles.sectionHeader}>
+            <h2 style={styles.sectionTitle}>Pesanan Terbaru</h2>
+          </div>
+          <div style={styles.tableCard}>
+            <div style={styles.tableRowHeader}>
+              <span style={styles.tableHeading}>KODE</span>
+              <span style={styles.tableHeading}>PELANGGAN</span>
+              <span style={styles.tableHeading}>TOTAL</span>
+            </div>
+            {orders.map((order) => (
+              <div key={order.code} style={styles.tableRow}>
+                <span style={styles.tableCell}>{order.code}</span>
+                <span style={styles.tableCell}>{order.customer}</span>
+                <span style={styles.tableCell}>{order.total}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+      </main>
     </div>
   )
 }
 
 const styles = {
-  container: {
+  page: {
     minHeight: "100vh",
     display: "flex",
-    flexDirection: "column",
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#E6E0DE",
+    color: "#1F1F1F",
+    fontFamily: "Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
   },
-  content: {
+  sidebar: {
+    width: "260px",
+    backgroundColor: "#C5C0BE",
+    padding: "28px 20px",
     display: "flex",
-    flex: 1,
-    gap: "20px",
-    padding: "20px",
-    maxWidth: "1400px",
-    margin: "0 auto",
-    width: "100%",
+    flexDirection: "column",
+    gap: "14px",
   },
-  sideNav: {
-    width: "200px",
-    backgroundColor: "white",
-    borderRadius: "8px",
-    padding: "20px",
-    height: "fit-content",
-    boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+  sidebarHeader: {
+    padding: "18px 16px",
+    backgroundColor: "#E7E1E0",
+    borderRadius: "18px",
+    marginBottom: "16px",
   },
-  sideNavTitle: {
-    margin: "0 0 20px 0",
-    fontSize: "16px",
-    fontWeight: "bold",
-    color: "#333",
-  },
-  navButton: {
+  sidebarTitle: {
     display: "block",
-    width: "100%",
-    padding: "12px 16px",
-    marginBottom: "8px",
-    border: "none",
-    borderRadius: "6px",
-    backgroundColor: "#f0f0f0",
-    color: "#333",
-    cursor: "pointer",
-    fontSize: "14px",
-    textAlign: "left",
-    transition: "all 0.3s",
+    fontSize: "0.95rem",
+    fontWeight: 700,
+    letterSpacing: "0.08em",
   },
-  navButtonActive: {
-    backgroundColor: "#4CAF50",
-    color: "white",
-    fontWeight: "bold",
+  menu: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "10px",
+  },
+  menuButton: {
+    width: "100%",
+    border: "none",
+    borderRadius: "14px",
+    padding: "14px 16px",
+    backgroundColor: "transparent",
+    textAlign: "left",
+    fontSize: "0.95rem",
+    color: "#191919",
+    cursor: "pointer",
+    transition: "background-color 0.2s ease",
+  },
+  menuButtonActive: {
+    backgroundColor: "#8FD3FD",
+    color: "#111",
+    fontWeight: 700,
   },
   logoutButton: {
-    display: "block",
-    width: "100%",
-    padding: "12px 16px",
-    marginTop: "20px",
+    marginTop: "auto",
+    padding: "14px 16px",
+    borderRadius: "14px",
     border: "none",
-    borderRadius: "6px",
-    backgroundColor: "#f44336",
+    backgroundColor: "#D95B12",
     color: "white",
+    fontWeight: 700,
     cursor: "pointer",
-    fontSize: "14px",
-    fontWeight: "bold",
-    transition: "all 0.3s",
   },
-  mainArea: {
+  main: {
     flex: 1,
-    backgroundColor: "white",
-    borderRadius: "8px",
-    padding: "30px",
-    boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-  },
-  tabTitle: {
-    margin: "0 0 20px 0",
-    color: "#333",
-    fontSize: "24px",
-  },
-  tabContent: {
-    display: "grid",
-    gridTemplateColumns: "1fr 1fr",
-    gap: "30px",
-  },
-  sectionTitle: {
-    margin: "0 0 15px 0",
-    color: "#555",
-    fontSize: "18px",
-    borderBottom: "2px solid #4CAF50",
-    paddingBottom: "10px",
-  },
-  formSection: {
-    backgroundColor: "#fafafa",
-    padding: "20px",
-    borderRadius: "8px",
-  },
-  listSection: {
-    backgroundColor: "#fafafa",
-    padding: "20px",
-    borderRadius: "8px",
-  },
-  emptyState: {
-    textAlign: "center",
-    padding: "60px 20px",
-    color: "#999",
-    fontSize: "16px",
-  },
-  profileCard: {
+    padding: "32px 28px",
     display: "flex",
     flexDirection: "column",
-    gap: "15px",
-    backgroundColor: "#fafafa",
-    padding: "25px",
-    borderRadius: "8px",
-    maxWidth: "500px",
+    gap: "24px",
   },
-  profileItem: {
+  hero: {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingBottom: "12px",
-    borderBottom: "1px solid #e0e0e0",
   },
-  label: {
-    fontWeight: "bold",
-    color: "#555",
-    minWidth: "120px",
+  pageTitle: {
+    margin: 0,
+    fontSize: "2rem",
+    fontWeight: 800,
   },
-  badge: {
-    backgroundColor: "#4CAF50",
-    color: "white",
-    padding: "4px 12px",
-    borderRadius: "20px",
-    fontSize: "12px",
-    fontWeight: "bold",
+  statsGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+    gap: "20px",
+  },
+  statCard: {
+    backgroundColor: "#F0F2F2",
+    borderRadius: "18px",
+    padding: "22px",
+    minHeight: "120px",
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "space-between",
+  },
+  statLabel: {
+    color: "#8A8A8A",
+    fontSize: "0.85rem",
+    letterSpacing: "0.08em",
+    fontWeight: 700,
+    textTransform: "uppercase",
+  },
+  statValue: {
+    marginTop: "14px",
+    fontSize: "2rem",
+    fontWeight: 800,
+    color: "#141414",
+  },
+  chartSection: {
+    backgroundColor: "#F0F2F2",
+    borderRadius: "22px",
+    padding: "24px",
+  },
+  sectionHeader: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: "18px",
+  },
+  sectionTitle: {
+    margin: 0,
+    fontSize: "1.1rem",
+    fontWeight: 700,
+    color: "#1F1F1F",
+  },
+  chartCard: {
+    backgroundColor: "#EDE9E7",
+    borderRadius: "18px",
+    padding: "24px",
+  },
+  chartBars: {
+    display: "flex",
+    alignItems: "flex-end",
+    gap: "14px",
+    height: "220px",
+  },
+  chartBar: {
+    flex: 1,
+    borderRadius: "12px 12px 0 0",
+    backgroundColor: "#8FD3FD",
+  },
+  tableSection: {
+    backgroundColor: "#F0F2F2",
+    borderRadius: "22px",
+    padding: "24px",
+  },
+  tableCard: {
+    marginTop: "14px",
+    borderRadius: "18px",
+    overflow: "hidden",
+    backgroundColor: "#FFFFFF",
+  },
+  tableRowHeader: {
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr 1fr",
+    backgroundColor: "#EDF4FF",
+    padding: "18px 24px",
+    fontWeight: 700,
+    color: "#333",
+  },
+  tableHeading: {
+    textTransform: "uppercase",
+    fontSize: "0.85rem",
+    letterSpacing: "0.08em",
+  },
+  tableRow: {
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr 1fr",
+    padding: "18px 24px",
+    borderTop: "1px solid #F0F2F2",
+  },
+  tableCell: {
+    color: "#2A2A2A",
+    fontWeight: 600,
   },
 }

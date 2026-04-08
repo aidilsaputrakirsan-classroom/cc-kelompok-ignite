@@ -4,6 +4,7 @@ import { toast } from "react-toastify"
 
 function RegisterPage({ onRegister }) {
   const navigate = useNavigate()
+  const [role, setRole] = useState("customer")
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -65,7 +66,7 @@ function RegisterPage({ onRegister }) {
         phone: formData.phone.trim() || null,
         address: formData.address.trim() || null,
         password: formData.password,
-        role: "customer",
+        role: role,
       })
       toast.success("Akun berhasil dibuat. Silakan login.", { position: "top-center" })
       navigate("/login", { replace: true })
@@ -82,12 +83,38 @@ function RegisterPage({ onRegister }) {
     <div style={styles.page}>
       <div style={styles.card}>
         <div style={styles.titleBlock}>
-          <h1 style={styles.brand}>ATHSNACK</h1>
+          <h1 style={styles.brand}>ATHSNAC</h1>
           <p style={styles.heading}>Buat Akun Baru</p>
           <p style={styles.subheading}>Daftar untuk mulai belanja produk khas Balikpapan.</p>
         </div>
 
         {error && <div style={styles.error}>{error}</div>}
+
+        <div style={styles.roleSection}>
+          <label style={styles.roleLabel}>Daftar Sebagai</label>
+          <div style={styles.roleOptions}>
+            <label style={styles.radioLabel}>
+              <input
+                type="radio"
+                name="role"
+                value="customer"
+                checked={role === "customer"}
+                onChange={(e) => setRole(e.target.value)}
+              />
+              Pelanggan
+            </label>
+            <label style={styles.radioLabel}>
+              <input
+                type="radio"
+                name="role"
+                value="admin"
+                checked={role === "admin"}
+                onChange={(e) => setRole(e.target.value)}
+              />
+              Admin
+            </label>
+          </div>
+        </div>
 
         <form onSubmit={handleSubmit} style={styles.form}>
           <label style={styles.label}>
@@ -178,89 +205,121 @@ const styles = {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#FFF4E6",
+    backgroundColor: "#FAFAFA",
     padding: "2rem",
   },
   card: {
     width: "100%",
-    maxWidth: "520px",
-    backgroundColor: "#F6F1EE",
-    borderRadius: "28px",
-    padding: "3rem",
-    boxShadow: "0 25px 60px rgba(245, 124, 0, 0.12)",
+    maxWidth: "500px",
+    backgroundColor: "#FFFFFF",
+    borderRadius: "24px",
+    padding: "3rem 2.5rem",
+    boxShadow: "0 8px 24px rgba(0, 0, 0, 0.1)",
   },
   brand: {
     margin: 0,
-    color: "#2E1F14",
-    fontSize: "2.75rem",
-    letterSpacing: "0.12em",
+    color: "#F57C00",
+    fontSize: "2.5rem",
+    letterSpacing: "0.08em",
     textTransform: "uppercase",
     fontWeight: 700,
   },
   heading: {
-    margin: "18px 0 6px",
-    fontSize: "1.75rem",
-    color: "#3F2920",
+    margin: "16px 0 4px",
+    fontSize: "1.5rem",
+    color: "#222222",
   },
   subheading: {
     margin: "0 0 2rem",
-    color: "#7A5B48",
-    lineHeight: 1.6,
+    color: "#666666",
+    lineHeight: 1.5,
+    fontSize: "0.95rem",
   },
   titleBlock: {
     textAlign: "center",
     marginBottom: "1.5rem",
   },
-  bottomText: {
-    marginTop: "1.5rem",
-    fontSize: "0.95rem",
-    color: "#70503C",
-    textAlign: "center",
-  },
   form: {
     display: "grid",
     gap: "1rem",
   },
+  bottomText: {
+    marginTop: "1.5rem",
+    fontSize: "0.9rem",
+    color: "#666666",
+    textAlign: "center",
+  },
+
   label: {
-    color: "#70503C",
+    color: "#333333",
     fontWeight: 600,
-    fontSize: "0.95rem",
+    fontSize: "0.9rem",
   },
   required: {
     marginLeft: "0.25rem",
-    color: "#D95B12",
+    color: "#F57C00",
   },
   input: {
     width: "100%",
-    padding: "16px 18px",
-    borderRadius: "16px",
-    border: "1px solid #E7C4A8",
+    padding: "12px 16px",
+    borderRadius: "12px",
+    border: "1px solid #E0E0E0",
     backgroundColor: "#FFFFFF",
-    color: "#3F2920",
-    fontSize: "1rem",
+    color: "#333333",
+    fontSize: "0.95rem",
     outline: "none",
   },
   button: {
-    padding: "16px 24px",
-    borderRadius: "16px",
+    padding: "14px 24px",
+    borderRadius: "12px",
     border: "none",
     backgroundColor: "#F57C00",
-    color: "white",
+    color: "#FFFFFF",
     fontWeight: 700,
-    fontSize: "1rem",
+    fontSize: "0.95rem",
     cursor: "pointer",
+    transition: "background-color 0.3s ease",
   },
   linkText: {
-    color: "#3F5BD9",
+    color: "#F57C00",
     textDecoration: "none",
+    fontWeight: 600,
   },
   error: {
     marginBottom: "1rem",
-    padding: "14px 16px",
-    borderRadius: "14px",
-    backgroundColor: "#FDE7E1",
-    color: "#A12A25",
+    padding: "12px 16px",
+    borderRadius: "12px",
+    backgroundColor: "#FBE9E7",
+    color: "#D32F2F",
     fontWeight: 600,
+    fontSize: "0.9rem",
+  },
+  roleSection: {
+    marginBottom: "1.5rem",
+    padding: "1rem",
+    backgroundColor: "#FAFAFA",
+    borderRadius: "12px",
+    border: "1px solid #E8E8E8",
+  },
+  roleLabel: {
+    display: "block",
+    marginBottom: "0.75rem",
+    color: "#333333",
+    fontWeight: 600,
+    fontSize: "0.9rem",
+  },
+  roleOptions: {
+    display: "flex",
+    gap: "1.5rem",
+  },
+  radioLabel: {
+    display: "flex",
+    alignItems: "center",
+    gap: "0.5rem",
+    color: "#555555",
+    cursor: "pointer",
+    fontWeight: 500,
+    fontSize: "0.9rem",
   },
 }
 

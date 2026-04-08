@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import { ToastContainer } from "react-toastify"
 import "react-toastify/dist/ReactToastify.css"
 import LoginPage from "./components/LoginPage"
+import LoginChoicePage from "./components/LoginChoicePage"
 import RegisterPage from "./components/RegisterPage"
 import AdminDashboard from "./pages/AdminDashboard"
 import CustomerHome from "./pages/CustomerHome"
@@ -86,6 +87,13 @@ function App() {
       <Routes>
         <Route
           path="/login"
+          element={
+            user ? <Navigate to={authenticatedRedirect} replace /> : <LoginChoicePage />
+          }
+        />
+
+        <Route
+          path="/login/:role"
           element={
             user ? <Navigate to={authenticatedRedirect} replace /> : <LoginPage onLogin={handleLogin} />
           }
