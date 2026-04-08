@@ -1,7 +1,4 @@
-const defaultApiUrl = typeof window !== "undefined" && window.location?.origin && window.location.origin !== "null"
-    ? window.location.origin
-    : "http://localhost:8000"
-const API_URL = import.meta.env.VITE_API_URL || defaultApiUrl
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000"
 
 // ==================== TOKEN MANAGEMENT ====================
 
@@ -66,7 +63,7 @@ export async function register(userData) {
     } catch (err) {
         if (err instanceof TypeError) {
             throw new Error(
-                "Tidak dapat terhubung ke server. Pastikan backend berjalan dan alamat API benar."
+                "Gagal terhubung ke backend. Pastikan backend aktif dan alamat API sudah benar."
             )
         }
         throw err
@@ -90,7 +87,7 @@ export async function login(email, password) {
     } catch (err) {
         if (err instanceof TypeError) {
             throw new Error(
-                "Tidak dapat terhubung ke server. Pastikan backend berjalan dan alamat API benar."
+                "Gagal terhubung ke backend. Pastikan backend aktif dan alamat API sudah benar."
             )
         }
         throw err
@@ -107,7 +104,7 @@ export async function getMe() {
     } catch (err) {
         if (err instanceof TypeError) {
             throw new Error(
-                "Tidak dapat terhubung ke server. Pastikan backend berjalan dan alamat API benar."
+                "Gagal terhubung ke backend. Pastikan backend aktif dan alamat API sudah benar."
             )
         }
         throw err

@@ -65,12 +65,12 @@ function LoginPage({ onLogin }) {
 
         <form onSubmit={handleSubmit} style={styles.form}>
           <label style={styles.label}>
-            Email / No HP<span style={styles.required}>*</span>
+            Email<span style={styles.required}>*</span>
           </label>
           <input
-            type="text"
+            type="email"
             name="email"
-            placeholder="Email atau nomor HP"
+            placeholder="Masukkan email"
             value={formData.email}
             onChange={handleChange}
             style={styles.input}
