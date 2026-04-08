@@ -1,4 +1,7 @@
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000"
+const defaultApiUrl = typeof window !== "undefined" && window.location?.origin && window.location.origin !== "null"
+    ? window.location.origin
+    : "http://localhost:8000"
+const API_URL = import.meta.env.VITE_API_URL || defaultApiUrl
 
 // ==================== TOKEN MANAGEMENT ====================
 
@@ -52,36 +55,63 @@ async function handleResponse(response) {
 // ==================== AUTH API ====================
 
 export async function register(userData) {
-    const response = await fetch(`${API_URL}/auth/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(userData),
-    })
+    try {
+        const response = await fetch(`${API_URL}/auth/register`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(userData),
+        })
 
-    return handleResponse(response)
+        return handleResponse(response)
+    } catch (err) {
+        if (err instanceof TypeError) {
+            throw new Error(
+                "Tidak dapat terhubung ke server. Pastikan backend berjalan dan alamat API benar."
+            )
+        }
+        throw err
+    }
 }
 
 export async function login(email, password) {
-    const response = await fetch(`${API_URL}/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-    })
+    try {
+        const response = await fetch(`${API_URL}/auth/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password }),
+        })
 
-    const data = await handleResponse(response)
+        const data = await handleResponse(response)
 
-    // 🔥 simpan token
-    setToken(data.access_token)
+        // 🔥 simpan token
+        setToken(data.access_token)
 
-    return data
+        return data
+    } catch (err) {
+        if (err instanceof TypeError) {
+            throw new Error(
+                "Tidak dapat terhubung ke server. Pastikan backend berjalan dan alamat API benar."
+            )
+        }
+        throw err
+    }
 }
 
 export async function getMe() {
-    const response = await fetch(`${API_URL}/auth/me`, {
-        headers: authHeaders(),
-    })
+    try {
+        const response = await fetch(`${API_URL}/auth/me`, {
+            headers: authHeaders(),
+        })
 
-    return handleResponse(response)
+        return handleResponse(response)
+    } catch (err) {
+        if (err instanceof TypeError) {
+            throw new Error(
+                "Tidak dapat terhubung ke server. Pastikan backend berjalan dan alamat API benar."
+            )
+        }
+        throw err
+    }
 }
 
 // ==================== PRODUCTS API ====================
