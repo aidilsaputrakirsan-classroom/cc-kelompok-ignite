@@ -41,7 +41,7 @@ function LoginPage({ onLogin }) {
     }
 
     try {
-      await onLogin(formData.email.trim(), formData.password)
+      await onLogin(formData.email.trim(), formData.password, role)
       toast.success("Selamat datang kembali!", { position: "top-center" })
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : String(err)

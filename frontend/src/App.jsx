@@ -45,9 +45,21 @@ function App() {
     }
   }, [])
 
-  const handleLogin = async (email, password) => {
+  const handleLogin = async (email, password, expectedRole) => {
     try {
       const data = await login(email, password)
+      const actualRole = data.user?.role?.toLowerCase()
+
+      // Validasi: role user harus cocok dengan halaman login yang dipilih
+      if (expectedRole && actualRole !== expectedRole) {
+        clearToken()
+        if (expectedRole === "admin") {
+          throw new Error("Akun ini bukan akun Admin. Silakan login sebagai Pelanggan.")
+        } else {
+          throw new Error("Akun ini bukan akun Pelanggan. Silakan login sebagai Admin.")
+        }
+      }
+
       setUser(data.user)
       return data.user
     } catch (err) {

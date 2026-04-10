@@ -30,16 +30,29 @@ function authHeaders() {
 async function handleResponse(response) {
     if (response.status === 401) {
         clearToken()
-        throw new Error("UNAUTHORIZED")
     }
 
     if (!response.ok) {
         const textData = await response.text()
         try {
             const error = JSON.parse(textData)
-            const errorMsg = error.detail || error.message || JSON.stringify(error)
+            let errorMsg = ""
+            
+            if (typeof error.detail === "string") {
+                errorMsg = error.detail
+            } else if (Array.isArray(error.detail)) {
+                errorMsg = error.detail[0]?.msg || JSON.stringify(error.detail)
+            } else if (error.message) {
+                errorMsg = error.message
+            } else {
+                errorMsg = typeof error.detail === "object" ? JSON.stringify(error.detail) : (error.detail || JSON.stringify(error))
+            }
+            
             throw new Error(errorMsg)
-        } catch {
+        } catch (e) {
+            if (e instanceof Error && e.message !== "Unexpected token 'u', \"un...\" is not valid JSON") {
+                throw e
+            }
             throw new Error(textData || `Request gagal (${response.status})`)
         }
     }

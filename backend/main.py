@@ -177,11 +177,19 @@ def login(login_data: LoginRequest, db: Session = Depends(get_db)):
     Token berlaku selama 60 menit (default).
     Gunakan token di header: `Authorization: Bearer <token>`
     """
-    user = crud.authenticate_user(db=db, email=login_data.email, password=login_data.password)
+    # Perbaikan login: bedakan notifikasi "belum terdaftar" vs "password salah" (Request User)
+    user = db.query(crud.User).filter(crud.User.email == login_data.email).first()
+    
     if not user:
         raise HTTPException(
             status_code=401,
-            detail="Login gagal: email atau password salah"
+            detail="Email belum terdaftar. Silakan buat akun baru."
+        )
+    
+    if not crud.verify_password(login_data.password, user.password_hash):
+        raise HTTPException(
+            status_code=401,
+            detail="Password yang Anda masukkan salah."
         )
 
     token = create_access_token(data={"sub": str(user.id)})
