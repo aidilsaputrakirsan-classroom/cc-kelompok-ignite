@@ -1,6 +1,9 @@
+import { useNavigate } from "react-router-dom"
 import { API_URL } from "../services/api"
 
 function ItemCard({ item, onEdit, onDelete, isAdmin = false }) {
+    const navigate = useNavigate()
+    
     const formatRupiah = (num) => {
         return new Intl.NumberFormat("id-ID", {
             style: "currency",
@@ -65,9 +68,11 @@ function ItemCard({ item, onEdit, onDelete, isAdmin = false }) {
                         </button>
                     </>
                 ) : (
-                    <button onClick={() => console.log("Add to cart:", item.id)} style={styles.btnAddCart}>
-                        Tambah ke Keranjang
-                    </button>
+                    <>
+                        <button onClick={() => navigate(`/product/${item.id}`)} style={styles.btnDetail}>
+                            Lihat Detail
+                        </button>
+                    </>
                 )}
             </div>
         </div>
@@ -176,6 +181,18 @@ const styles = {
         fontSize: "0.95rem",
         fontWeight: 700,
     },
+    btnDetail: {
+        flex: 1,
+        padding: "0.85rem 1rem",
+        backgroundColor: "#F57C00",
+        color: "#FFFFFF",
+        border: "none",
+        borderRadius: "14px",
+        cursor: "pointer",
+        fontSize: "0.9rem",
+        fontWeight: 700,
+        transition: "all 0.2s",
+    },
     btnAddCart: {
         flex: 1,
         padding: "0.85rem 1rem",
@@ -184,7 +201,7 @@ const styles = {
         border: "none",
         borderRadius: "14px",
         cursor: "pointer",
-        fontSize: "0.95rem",
+        fontSize: "0.9rem",
         fontWeight: 700,
     },
 }

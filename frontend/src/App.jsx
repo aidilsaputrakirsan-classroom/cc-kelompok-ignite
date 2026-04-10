@@ -13,6 +13,8 @@ import CartPage from "./pages/CartPage"
 import OrdersPage from "./pages/OrdersPage"
 import TestimoniPage from "./pages/TestimoniPage"
 import ProfilePage from "./pages/ProfilePage"
+import ProductDetailPage from "./pages/ProductDetailPage"
+import CheckoutPage from "./pages/CheckoutPage"
 import ProtectedRoute from "./components/ProtectedRoute"
 import {
   login, register, getMe, checkHealth, getToken, clearToken
@@ -200,6 +202,28 @@ function App() {
           element={
             <ProtectedRoute
               element={<ProfilePage user={user} onLogout={handleLogout} />}
+              requiredRole="customer"
+              user={user}
+            />
+          }
+        />
+
+        <Route
+          path="/product/:id"
+          element={
+            <ProtectedRoute
+              element={<ProductDetailPage user={user} onLogout={handleLogout} />}
+              requiredRole="customer"
+              user={user}
+            />
+          }
+        />
+
+        <Route
+          path="/checkout"
+          element={
+            <ProtectedRoute
+              element={<CheckoutPage user={user} onLogout={handleLogout} />}
               requiredRole="customer"
               user={user}
             />

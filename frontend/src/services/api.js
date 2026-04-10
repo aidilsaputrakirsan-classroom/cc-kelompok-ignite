@@ -151,6 +151,14 @@ export async function fetchItems(
     return handleResponse(response)
 }
 
+export async function fetchItemDetail(id) {
+    const response = await fetch(`${API_URL}/products/${id}`, {
+        headers: authHeaders(),
+    })
+
+    return handleResponse(response)
+}
+
 export async function createItem(itemData) {
     const response = await fetch(`${API_URL}/products`, {
         method: "POST",
@@ -183,6 +191,68 @@ export async function deleteItem(id) {
         headers: authHeaders(),
     })
 
+    return handleResponse(response)
+}
+
+// ==================== CART API ====================
+
+export async function fetchCart() {
+    const response = await fetch(`${API_URL}/cart`, {
+        headers: authHeaders(),
+    })
+    return handleResponse(response)
+}
+
+export async function addToCart(productId, quantity = 1) {
+    const response = await fetch(`${API_URL}/cart/items`, {
+        method: "POST",
+        headers: {
+            ...authHeaders(),
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ product_id: productId, quantity }),
+    })
+    return handleResponse(response)
+}
+
+export async function updateCartItem(itemId, quantity) {
+    const response = await fetch(`${API_URL}/cart/items/${itemId}`, {
+        method: "PUT",
+        headers: {
+            ...authHeaders(),
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ quantity }),
+    })
+    return handleResponse(response)
+}
+
+export async function removeFromCart(itemId) {
+    const response = await fetch(`${API_URL}/cart/items/${itemId}`, {
+        method: "DELETE",
+        headers: authHeaders(),
+    })
+    return handleResponse(response)
+}
+
+// ==================== ORDERS API ====================
+
+export async function createOrder(orderData) {
+    const response = await fetch(`${API_URL}/orders`, {
+        method: "POST",
+        headers: {
+            ...authHeaders(),
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(orderData),
+    })
+    return handleResponse(response)
+}
+
+export async function fetchMyOrders() {
+    const response = await fetch(`${API_URL}/orders/my-orders`, {
+        headers: authHeaders(),
+    })
     return handleResponse(response)
 }
 
