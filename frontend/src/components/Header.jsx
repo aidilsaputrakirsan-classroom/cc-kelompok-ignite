@@ -56,20 +56,32 @@ function Header({ user, onLogout, totalItems = 0, onCartClick }) {
                     Produk
                 </Link>
             </nav>
+
             <div style={styles.actionGroup}>
                 {user && (
-                  <button onClick={handleCartClick} style={styles.cartButton} title="Keranjang Belanja">
-                    <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor" style={styles.cartIcon}>
-                      <path d="M7 6h10l-1.8 8H8.8L7 6zm12.5-2H5.4L4.2 2H1v2h2.2l2.7 10.2A2 2 0 0 0 7.8 16h8.4a2 2 0 0 0 2-1.8L19.8 4H21V2zm-4.5 16a1.5 1.5 0 1 1 .001-3.001A1.5 1.5 0 0 1 17 18zm-8 0a1.5 1.5 0 1 1 .001-3.001A1.5 1.5 0 0 1 9 18z" />
-                      <path d="M18 21a3 3 0 1 1 0-6 3 3 0 0 1 0 6zm0-4.5v1.5h1.5V18H18v1.5h-1.5V18H15v-1.5h1.5V15h1.5v1.5H18z" fill="white" />
-                    </svg>
-                    {totalItems > 0 && <span style={styles.cartCount}>{totalItems}</span>}
-                  </button>
+                    <button onClick={handleCartClick} style={styles.cartButton} title="Keranjang Belanja">
+                        <svg
+                            viewBox="0 0 24 24"
+                            width="64"
+                            height="64"
+                            fill="currentColor"
+                            style={styles.cartIcon}
+                        >
+                            <path d="M7 4H3v2h2l3.6 7.59-1.35 2.44C6.52 17.37 7.48 19 9 19h9v-2H9.42c-.14 0-.25-.11-.25-.25l.03-.12L10.1 15h6.45c.75 0 1.41-.41 1.75-1.03L21 8H7.42L6.27 6H7V4z"/>
+                            <circle cx="10" cy="21" r="1.5"/>
+                            <circle cx="18" cy="21" r="1.5"/>
+                        </svg>
+
+                        {totalItems > 0 && (
+                            <span style={styles.cartCount}>{totalItems}</span>
+                        )}
+                    </button>
                 )}
+
                 {user ? (
                     <button onClick={handleProfileClick} style={styles.profileIconButton} title="Profil Pelanggan">
                         <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" style={styles.profileIcon}>
-                          <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
                         </svg>
                     </button>
                 ) : (
@@ -124,7 +136,6 @@ const styles = {
         height: "56px",
         padding: "0 1rem",
         borderRadius: "18px",
-        transition: "transform 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease",
     },
     navLinkHover: {
         backgroundColor: "rgba(255,255,255,0.28)",
@@ -148,12 +159,11 @@ const styles = {
         backgroundColor: "rgba(255,255,255,0.18)",
         color: "white",
         cursor: "pointer",
-        transition: "transform 0.15s ease, background-color 0.15s ease",
     },
+    // ✅ SUDAH DIBESARKAN
     cartIcon: {
-        display: "block",
-        width: "28px",
-        height: "28px",
+        width: "64px",
+        height: "64px",
     },
     cartCount: {
         position: "absolute",
@@ -171,16 +181,6 @@ const styles = {
         fontWeight: 700,
         padding: "0 5px",
     },
-    actionButton: {
-        padding: "0.75rem 1.3rem",
-        backgroundColor: "rgba(255,255,255,0.2)",
-        color: "white",
-        borderRadius: "14px",
-        border: "none",
-        cursor: "pointer",
-        fontWeight: 700,
-        transition: "background-color 0.2s ease",
-    },
     profileIconButton: {
         width: "56px",
         height: "56px",
@@ -192,7 +192,6 @@ const styles = {
         border: "1px solid rgba(255,255,255,0.35)",
         cursor: "pointer",
         color: "white",
-        transition: "transform 0.15s ease, background-color 0.15s ease",
         padding: 0,
     },
     profileIcon: {
@@ -207,7 +206,6 @@ const styles = {
         borderRadius: "14px",
         textDecoration: "none",
         fontWeight: 700,
-        transition: "background-color 0.2s ease",
     },
 }
 

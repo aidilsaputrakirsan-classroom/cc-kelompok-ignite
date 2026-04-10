@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react"
-import { fetchItems, createItem, updateItem, deleteItem } from "../services/api"
+import { fetchItems, createItem, updateItem, deleteItem, uploadImage, API_URL } from "../services/api"
 import { toast } from "react-toastify"
 
 // ── debounce hook ──────────────────────────────────────────
@@ -13,16 +13,22 @@ function useDebounce(value, delay) {
 }
 
 // ── helpers ────────────────────────────────────────────────
-const CATEGORIES = ["makanan", "minuman", "snack", "lainnya"]
+const CATEGORIES = ["Snack", "Makanan", "Lainnya"]
 
 const EMPTY_FORM = {
   name: "",
-  category: "makanan",
+  category: "Makanan",
   price: "",
   stock: "",
   description: "",
   image_url: "",
   is_active: true,
+}
+
+function getFullImageUrl(url) {
+  if (!url) return null
+  if (url.startsWith("http")) return url
+  return `${API_URL}${url.startsWith("/") ? "" : "/"}${url}`
 }
 
 function formatRupiah(amount) {
@@ -46,6 +52,8 @@ export default function AdminProducts() {
   const [modalOpen, setModalOpen] = useState(false)
   const [editId, setEditId] = useState(null)
   const [form, setForm] = useState(EMPTY_FORM)
+  const [imageFile, setImageFile] = useState(null)
+  const [previewUrl, setPreviewUrl] = useState("")
   const [submitting, setSubmitting] = useState(false)
   const [errors, setErrors] = useState({})
 
@@ -75,6 +83,8 @@ export default function AdminProducts() {
   const openCreate = () => {
     setEditId(null)
     setForm(EMPTY_FORM)
+    setImageFile(null)
+    setPreviewUrl("")
     setErrors({})
     setModalOpen(true)
   }
@@ -83,13 +93,15 @@ export default function AdminProducts() {
     setEditId(p.id)
     setForm({
       name: p.name ?? "",
-      category: p.category ?? "makanan",
+      category: p.category ?? "Makanan",
       price: String(p.price ?? ""),
       stock: String(p.stock ?? ""),
       description: p.description ?? "",
       image_url: p.image_url ?? "",
       is_active: p.is_active ?? true,
     })
+    setImageFile(null)
+    setPreviewUrl(p.image_url ? getFullImageUrl(p.image_url) : "")
     setErrors({})
     setModalOpen(true)
   }
@@ -98,6 +110,8 @@ export default function AdminProducts() {
     setModalOpen(false)
     setEditId(null)
     setForm(EMPTY_FORM)
+    setImageFile(null)
+    setPreviewUrl("")
     setErrors({})
   }
 
@@ -107,12 +121,11 @@ export default function AdminProducts() {
     setErrors((prev) => ({ ...prev, [name]: "" }))
   }
 
-  const handleImageUploadLocal = (e) => {
+  const handleImageChange = (e) => {
     const file = e.target.files[0]
     if (file) {
-      // Create a short temporary URL for the browser session
-      const objectUrl = URL.createObjectURL(file)
-      setForm((prev) => ({ ...prev, image_url: objectUrl }))
+      setImageFile(file)
+      setPreviewUrl(URL.createObjectURL(file))
     }
   }
 
@@ -135,13 +148,21 @@ export default function AdminProducts() {
 
     setSubmitting(true)
     try {
+      let finalImageUrl = form.image_url
+
+      if (imageFile) {
+        // Upload image to backend
+        const res = await uploadImage(imageFile)
+        finalImageUrl = res.url // e.g., "/uploads/filename.jpg"
+      }
+
       const payload = {
         name: form.name.trim(),
         category: form.category,
         price: parseFloat(form.price),
         stock: parseInt(form.stock, 10),
         description: form.description.trim() || null,
-        image_url: form.image_url.trim() || null,
+        image_url: finalImageUrl || null,
         is_active: form.is_active,
       }
 
@@ -235,7 +256,7 @@ export default function AdminProducts() {
               <div style={{ width: "80px" }}>
                 {p.image_url ? (
                   <img
-                    src={p.image_url}
+                    src={getFullImageUrl(p.image_url)}
                     alt={p.name}
                     style={s.productImg}
                     onError={(e) => { e.target.style.display = "none"; e.target.nextSibling.style.display = "flex" }}
@@ -389,22 +410,23 @@ export default function AdminProducts() {
                 />
               </div>
 
-              {/* image upload (frontend-only logic) */}
+              {/* image upload logic */}
               <div style={s.fieldGroup}>
-                <label style={s.label} htmlFor="f-img">Foto Produk (Upload Local)</label>
+                <label style={s.label} htmlFor="f-img">Foto Produk</label>
                 <input
                   id="f-img"
                   style={s.input}
+                  name="imageFile"
                   type="file"
                   accept="image/*"
-                  onChange={handleImageUploadLocal}
+                  onChange={handleImageChange}
                 />
                 <p style={{ margin: "2px 0 0", fontSize: "0.75rem", color: "#70503C" }}>
-                  *Foto produk akan disimpan lokal tanpa merubah server konfigurasi.
+                  *Format yang valid: JPG, PNG, WEBP.
                 </p>
-                {form.image_url && (
+                {previewUrl && (
                   <img
-                    src={form.image_url}
+                    src={previewUrl}
                     alt="preview"
                     style={s.imgPreview}
                     onError={(e) => { e.target.style.display = "none" }}

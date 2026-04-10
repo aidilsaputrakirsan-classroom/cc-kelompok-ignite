@@ -1,14 +1,17 @@
 import os
-from datetime import datetime  # Perbaikan: Tambah import datetime
+import shutil
+import uuid
+from datetime import datetime
 from dotenv import load_dotenv
-from fastapi import FastAPI, Depends, HTTPException, Query
+from fastapi import FastAPI, Depends, HTTPException, Query, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 
 from database import engine, get_db
 from models import Base, User
 from schemas import (
-    UserCreate, UserResponse, LoginRequest, TokenResponse,
+    UserCreate, UserResponse, UserListResponse, LoginRequest, TokenResponse,
     ProductCreate, ProductUpdate, ProductResponse, ProductListResponse, ProductStatsResponse,
     CartItemCreate, CartItemUpdate, CartItemResponse, CartResponse,
     OrderCreate, OrderItemResponse, OrderResponse, OrderListResponse,
@@ -45,6 +48,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Setup direktori uploads
+UPLOAD_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "uploads")
+if not os.path.exists(UPLOAD_DIR):
+    os.makedirs(UPLOAD_DIR)
+
+# Mount folder direktori 
+app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 
 
 # ==================== 1. ROOT & HEALTH CHECK ====================
@@ -109,6 +120,32 @@ def team_info():
 
 # ==================== 2. AUTH ENDPOINTS (PUBLIC) ====================
 
+@app.post("/upload-image", tags=["System"])
+def upload_image(file: UploadFile = File(...)):
+    """
+    Upload file gambar dan simpan ke dalam server backend.
+    Mengembalikan URL relatif untuk disimpan ke DB.
+    """
+    try:
+        # Validasi ekstensi
+        ext = file.filename.split(".")[-1].lower()
+        if ext not in ["jpg", "jpeg", "png", "webp"]:
+            raise HTTPException(status_code=400, detail="Format file tidak didukung (harus JPG/PNG/WEBP)")
+            
+        # Membuat nama file unik
+        unique_filename = f"{uuid.uuid4().hex}.{ext}"
+        filepath = os.path.join(UPLOAD_DIR, unique_filename)
+        
+        # Simpan file secara nyata
+        with open(filepath, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+            
+        # Mengembalikan url rute mount backend kita
+        return {"url": f"/uploads/{unique_filename}"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.post("/auth/register", response_model=UserResponse, status_code=201, tags=["Authentication"])
 def register(user_data: UserCreate, db: Session = Depends(get_db)):
     """
@@ -159,6 +196,20 @@ def login(login_data: LoginRequest, db: Session = Depends(get_db)):
 def get_me(current_user: User = Depends(get_current_user)):
     """Ambil profil user yang sedang login. **Membutuhkan autentikasi.**"""
     return current_user
+
+
+@app.get("/users", response_model=UserListResponse, tags=["System"])
+def list_users(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=1000),
+    search: str = Query(None),
+    db: Session = Depends(get_db),
+    current_admin: User = Depends(get_current_admin),
+):
+    """
+    Ambil daftar pelanggan (hanya admin).
+    """
+    return crud.get_users(db=db, skip=skip, limit=limit, search=search)
 
 
 # ==================== 3. PRODUCT ENDPOINTS ====================
@@ -645,6 +696,20 @@ def list_testimonials(
     - Hanya menampilkan testimonial dengan is_visible=True
     """
     return crud.get_testimonials(db=db, product_id=product_id, user_id=user_id, skip=skip, limit=limit, visible_only=True)
+
+
+@app.get("/admin/testimonials", response_model=TestimonialListResponse, tags=["System"])
+def list_all_testimonials(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=1000),
+    db: Session = Depends(get_db),
+    current_admin: User = Depends(get_current_admin),
+):
+    """
+    Ambil seluruh daftar testimonials (untuk Admin).
+    Termasuk yang disembunyikan (is_visible=False).
+    """
+    return crud.get_testimonials(db=db, skip=skip, limit=limit, visible_only=False)
 
 
 @app.get("/testimonials/{testimonial_id}", response_model=TestimonialResponse, tags=["Testimonials"])

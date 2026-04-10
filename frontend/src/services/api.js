@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000"
+export const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000"
 
 // ==================== TOKEN MANAGEMENT ====================
 
@@ -190,9 +190,69 @@ export async function fetchAllOrders(skip = 0, limit = 100) {
     return handleResponse(response)
 }
 
+export async function updateOrderStatus(orderId, status) {
+    const response = await fetch(`${API_URL}/orders/${orderId}?status=${status}`, {
+        method: "PUT",
+        headers: authHeaders(),
+    })
+    return handleResponse(response)
+}
+
+export async function deleteOrder(orderId) {
+    const response = await fetch(`${API_URL}/orders/${orderId}`, {
+        method: "DELETE",
+        headers: authHeaders(),
+    })
+    return handleResponse(response)
+}
+
 export async function fetchAllPayments(skip = 0, limit = 100) {
     const params = new URLSearchParams({ skip, limit })
     const response = await fetch(`${API_URL}/payments?${params}`, {
+        headers: authHeaders(),
+    })
+    return handleResponse(response)
+}
+
+export async function fetchAllCustomers(search = "", skip = 0, limit = 100) {
+    const params = new URLSearchParams()
+    if (search) params.append("search", search)
+    params.append("skip", skip)
+    params.append("limit", limit)
+
+    const response = await fetch(`${API_URL}/users?${params}`, {
+        headers: authHeaders(),
+    })
+    return handleResponse(response)
+}
+
+export async function fetchAllTestimonials(skip = 0, limit = 100) {
+    const params = new URLSearchParams({ skip, limit })
+    const response = await fetch(`${API_URL}/admin/testimonials?${params}`, {
+        headers: authHeaders(),
+    })
+    return handleResponse(response)
+}
+
+export async function toggleTestimonialVisibility(testimonialId) {
+    const response = await fetch(`${API_URL}/testimonials/${testimonialId}/toggle-visibility`, {
+        method: "PUT",
+        headers: authHeaders(),
+    })
+    return handleResponse(response)
+}
+
+export async function deleteTestimonial(testimonialId) {
+    const response = await fetch(`${API_URL}/testimonials/${testimonialId}`, {
+        method: "DELETE",
+        headers: authHeaders(),
+    })
+    return response.status === 204 ? true : handleResponse(response)
+}
+
+export async function updatePaymentStatus(paymentId, status) {
+    const response = await fetch(`${API_URL}/payments/${paymentId}?payment_status=${status}`, {
+        method: "PUT",
         headers: authHeaders(),
     })
     return handleResponse(response)
@@ -208,4 +268,18 @@ export async function checkHealth() {
     } catch {
         return false
     }
+}
+
+// ==================== FILE UPLOAD ====================
+
+export async function uploadImage(file) {
+    const formData = new FormData()
+    formData.append("file", file)
+
+    const response = await fetch(`${API_URL}/upload-image`, {
+        method: "POST",
+        body: formData,
+    })
+
+    return handleResponse(response)
 }

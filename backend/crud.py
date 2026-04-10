@@ -41,6 +41,27 @@ def authenticate_user(db: Session, email: str, password: str) -> User | None:
     return user
 
 
+def get_users(db: Session, skip: int = 0, limit: int = 100, search: str = None, role: str = "customer"):
+    """Ambil daftar user dengan pagination dan filter role."""
+    query = db.query(User)
+    
+    if role:
+        query = query.filter(User.role == role)
+        
+    if search:
+        query = query.filter(
+            or_(
+                User.name.ilike(f"%{search}%"),
+                User.email.ilike(f"%{search}%")
+            )
+        )
+        
+    total = query.count()
+    users = query.order_by(User.created_at.desc()).offset(skip).limit(limit).all()
+    
+    return {"total": total, "users": users}
+
+
 # ==================== PRODUCT CRUD ====================
 
 def create_product(db: Session, product_data: ProductCreate) -> Product:
@@ -427,7 +448,20 @@ def get_testimonials(db: Session, product_id: int = None, user_id: int = None, s
     Args:
         visible_only: Jika True, hanya tampilkan testimonial dengan is_visible=True
     """
-    query = db.query(Testimonial)
+    # Menggunakan query join agar mendapatkan Nama User dan Nama Produk (Perbaikan: Tambah user_name, product_name)
+    query = db.query(
+        Testimonial.id,
+        Testimonial.order_id,
+        Testimonial.product_id,
+        Testimonial.user_id,
+        User.name.label("user_name"),
+        Product.name.label("product_name"),
+        Testimonial.rating,
+        Testimonial.comment,
+        Testimonial.is_visible,
+        Testimonial.created_at,
+        Testimonial.updated_at
+    ).join(User, Testimonial.user_id == User.id).join(Product, Testimonial.product_id == Product.id)
     
     if product_id:
         query = query.filter(Testimonial.product_id == product_id)
@@ -436,7 +470,7 @@ def get_testimonials(db: Session, product_id: int = None, user_id: int = None, s
         query = query.filter(Testimonial.user_id == user_id)
     
     if visible_only:
-        query = query.filter(Testimonial.is_visible == True)  # Filter hanya yang visible
+        query = query.filter(Testimonial.is_visible == True)
     
     total = query.count()
     testimonials = query.order_by(Testimonial.created_at.desc()).offset(skip).limit(limit).all()

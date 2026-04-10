@@ -158,6 +158,11 @@ class TokenResponse(BaseModel):
     user: UserResponse
 
 
+class UserListResponse(BaseModel):
+    total: int
+    users: list[UserResponse]
+
+
 # ================= ORDER =================
 
 class OrderItemCreate(BaseModel):
@@ -270,6 +275,8 @@ class TestimonialResponse(BaseModel):
     order_id: Optional[int] = None  # Restore: order_id
     product_id: int
     user_id: int
+    user_name: Optional[str] = None  # Perbaikan: Tambah user_name
+    product_name: Optional[str] = None  # Perbaikan: Tambah product_name
     rating: int
     comment: Optional[str] = None
     is_visible: bool = True  # Kontrol tampilan

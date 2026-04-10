@@ -3,6 +3,10 @@ import { useNavigate } from "react-router-dom"
 import { clearToken, fetchProductStats, fetchAllOrders, fetchAllPayments } from "../services/api"
 import { toast } from "react-toastify"
 import AdminProducts from "./AdminProducts"
+import AdminOrders from "./AdminOrders"
+import AdminPayments from "./AdminPayments"
+import AdminCustomers from "./AdminCustomers"
+import AdminTestimonials from "./AdminTestimonials"
 
 const menuItems = [
   { label: "Dashboard", key: "dashboard" },
@@ -258,6 +262,10 @@ export default function AdminDashboard({ user, onLogout }) {
         )}
 
         {activeMenu === "products" && <AdminProducts />}
+        {activeMenu === "orders" && <AdminOrders />}
+        {activeMenu === "payments" && <AdminPayments />}
+        {activeMenu === "customers" && <AdminCustomers />}
+        {activeMenu === "testimonials" && <AdminTestimonials />}
 
         {activeMenu !== "dashboard" && activeMenu !== "products" && (
           <div style={styles.loadingBox}>
