@@ -34,13 +34,13 @@ async function handleResponse(response) {
     }
 
     if (!response.ok) {
+        const textData = await response.text()
         try {
-            const error = await response.json()
+            const error = JSON.parse(textData)
             const errorMsg = error.detail || error.message || JSON.stringify(error)
             throw new Error(errorMsg)
         } catch {
-            const text = await response.text()
-            throw new Error(text || `Request gagal (${response.status})`)
+            throw new Error(textData || `Request gagal (${response.status})`)
         }
     }
 
@@ -170,6 +170,31 @@ export async function deleteItem(id) {
         headers: authHeaders(),
     })
 
+    return handleResponse(response)
+}
+
+// ==================== ADMIN STATS API ====================
+
+export async function fetchProductStats() {
+    const response = await fetch(`${API_URL}/products/stats`, {
+        headers: authHeaders(),
+    })
+    return handleResponse(response)
+}
+
+export async function fetchAllOrders(skip = 0, limit = 100) {
+    const params = new URLSearchParams({ skip, limit })
+    const response = await fetch(`${API_URL}/orders/admin/all?${params}`, {
+        headers: authHeaders(),
+    })
+    return handleResponse(response)
+}
+
+export async function fetchAllPayments(skip = 0, limit = 100) {
+    const params = new URLSearchParams({ skip, limit })
+    const response = await fetch(`${API_URL}/payments?${params}`, {
+        headers: authHeaders(),
+    })
     return handleResponse(response)
 }
 

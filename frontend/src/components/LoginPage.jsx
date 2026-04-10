@@ -11,7 +11,7 @@ function LoginPage({ onLogin }) {
 
   const isAdmin = role === "admin"
   const heading = isAdmin ? "Login Admin" : "Selamat Datang Kembali"
-  const subheading = isAdmin ? "Masuk ke dashboard admin ATHSNAC." : "Masuk ke akun ATHSNAC kamu."
+  const subheading = isAdmin ? "Masuk ke dashboard admin ATHSNAC" : "Masuk ke akun ATHSNAC kamu"
 
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
