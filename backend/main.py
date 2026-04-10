@@ -112,13 +112,17 @@ def team_info():
 @app.post("/auth/register", response_model=UserResponse, status_code=201, tags=["Authentication"])
 def register(user_data: UserCreate, db: Session = Depends(get_db)):
     """
-    Registrasi user baru.
+    Registrasi user baru sebagai CUSTOMER.
+    
+    Customer harus mendaftar melalui form ini. Admin account sudah disediakan di database.
     
     - **email**: Email unik (akan digunakan untuk login)
     - **name**: Nama lengkap
     - **password**: Minimal 8 karakter (harus mengandung angka)
-    - **role**: "customer" (default) atau "admin"
     """
+    # Force role menjadi "customer" - admin tidak bisa register via form
+    user_data.role = "customer"
+    
     user = crud.create_user(db=db, user_data=user_data)
     if not user:
         raise HTTPException(
