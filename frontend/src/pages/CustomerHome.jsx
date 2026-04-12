@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom"
 import Header from "../components/Header"
+import ItemList from "../components/ItemList"
 
 const testimonials = [
   {
@@ -45,7 +46,7 @@ export default function CustomerHome({ user, onLogout }) {
             <h2 style={styles.featureTitle}>Produk Unggulan</h2>
             <div style={styles.divider} />
           </div>
-          <div style={styles.emptySection} />
+          <ItemList isAdmin={false} />
         </section>
 
         <section id="testimoni" style={styles.testimonialSection}>

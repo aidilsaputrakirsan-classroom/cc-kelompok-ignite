@@ -13,6 +13,8 @@ import CartPage from "./pages/CartPage"
 import OrdersPage from "./pages/OrdersPage"
 import TestimoniPage from "./pages/TestimoniPage"
 import ProfilePage from "./pages/ProfilePage"
+import ProductDetailPage from "./pages/ProductDetailPage"
+import CheckoutPage from "./pages/CheckoutPage"
 import ProtectedRoute from "./components/ProtectedRoute"
 import {
   login, register, getMe, checkHealth, getToken, clearToken
@@ -45,9 +47,21 @@ function App() {
     }
   }, [])
 
-  const handleLogin = async (email, password) => {
+  const handleLogin = async (email, password, expectedRole) => {
     try {
       const data = await login(email, password)
+      const actualRole = data.user?.role?.toLowerCase()
+
+      // Validasi: role user harus cocok dengan halaman login yang dipilih
+      if (expectedRole && actualRole !== expectedRole) {
+        clearToken()
+        if (expectedRole === "admin") {
+          throw new Error("Akun ini bukan akun Admin. Silakan login sebagai Pelanggan.")
+        } else {
+          throw new Error("Akun ini bukan akun Pelanggan. Silakan login sebagai Admin.")
+        }
+      }
+
       setUser(data.user)
       return data.user
     } catch (err) {
@@ -188,6 +202,28 @@ function App() {
           element={
             <ProtectedRoute
               element={<ProfilePage user={user} onLogout={handleLogout} />}
+              requiredRole="customer"
+              user={user}
+            />
+          }
+        />
+
+        <Route
+          path="/product/:id"
+          element={
+            <ProtectedRoute
+              element={<ProductDetailPage user={user} onLogout={handleLogout} />}
+              requiredRole="customer"
+              user={user}
+            />
+          }
+        />
+
+        <Route
+          path="/checkout"
+          element={
+            <ProtectedRoute
+              element={<CheckoutPage user={user} onLogout={handleLogout} />}
               requiredRole="customer"
               user={user}
             />

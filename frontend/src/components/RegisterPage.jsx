@@ -4,7 +4,6 @@ import { toast } from "react-toastify"
 
 function RegisterPage({ onRegister }) {
   const navigate = useNavigate()
-  const [role, setRole] = useState("customer")
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -66,7 +65,7 @@ function RegisterPage({ onRegister }) {
         phone: formData.phone.trim() || null,
         address: formData.address.trim() || null,
         password: formData.password,
-        role: role,
+        role: "customer",
       })
       toast.success("Akun berhasil dibuat. Silakan login.", { position: "top-center" })
       navigate("/login", { replace: true })
@@ -89,32 +88,6 @@ function RegisterPage({ onRegister }) {
         </div>
 
         {error && <div style={styles.error}>{error}</div>}
-
-        <div style={styles.roleSection}>
-          <label style={styles.roleLabel}>Daftar Sebagai</label>
-          <div style={styles.roleOptions}>
-            <label style={styles.radioLabel}>
-              <input
-                type="radio"
-                name="role"
-                value="customer"
-                checked={role === "customer"}
-                onChange={(e) => setRole(e.target.value)}
-              />
-              Pelanggan
-            </label>
-            <label style={styles.radioLabel}>
-              <input
-                type="radio"
-                name="role"
-                value="admin"
-                checked={role === "admin"}
-                onChange={(e) => setRole(e.target.value)}
-              />
-              Admin
-            </label>
-          </div>
-        </div>
 
         <form onSubmit={handleSubmit} style={styles.form}>
           <label style={styles.label}>
@@ -292,33 +265,6 @@ const styles = {
     backgroundColor: "#FBE9E7",
     color: "#D32F2F",
     fontWeight: 600,
-    fontSize: "0.9rem",
-  },
-  roleSection: {
-    marginBottom: "1.5rem",
-    padding: "1rem",
-    backgroundColor: "#FAFAFA",
-    borderRadius: "12px",
-    border: "1px solid #E8E8E8",
-  },
-  roleLabel: {
-    display: "block",
-    marginBottom: "0.75rem",
-    color: "#333333",
-    fontWeight: 600,
-    fontSize: "0.9rem",
-  },
-  roleOptions: {
-    display: "flex",
-    gap: "1.5rem",
-  },
-  radioLabel: {
-    display: "flex",
-    alignItems: "center",
-    gap: "0.5rem",
-    color: "#555555",
-    cursor: "pointer",
-    fontWeight: 500,
     fontSize: "0.9rem",
   },
 }

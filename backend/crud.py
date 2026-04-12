@@ -41,6 +41,27 @@ def authenticate_user(db: Session, email: str, password: str) -> User | None:
     return user
 
 
+def get_users(db: Session, skip: int = 0, limit: int = 100, search: str = None, role: str = "customer"):
+    """Ambil daftar user dengan pagination dan filter role."""
+    query = db.query(User)
+    
+    if role:
+        query = query.filter(User.role == role)
+        
+    if search:
+        query = query.filter(
+            or_(
+                User.name.ilike(f"%{search}%"),
+                User.email.ilike(f"%{search}%")
+            )
+        )
+        
+    total = query.count()
+    users = query.order_by(User.created_at.desc()).offset(skip).limit(limit).all()
+    
+    return {"total": total, "users": users}
+
+
 # ==================== PRODUCT CRUD ====================
 
 def create_product(db: Session, product_data: ProductCreate) -> Product:
@@ -204,6 +225,7 @@ def update_cart_item(db: Session, item_id: int, item_data: CartItemUpdate) -> Ca
         return None
     
     db_item.quantity = item_data.quantity
+    db_item.subtotal = db_item.price_at_time * item_data.quantity  # Perbaikan: Update subtotal
     db.commit()
     db.refresh(db_item)
     return db_item
@@ -239,55 +261,62 @@ def clear_cart(db: Session, cart_id: int) -> bool:
 
 def create_order(db: Session, user_id: int, order_data: OrderCreate) -> Order:
     """Buat order baru dari cart atau data pemesanan."""
-    # Generate order_code unik (Perbaikan: order_code bukan order_number)
-    order_code = f"ORD-{datetime.now().strftime('%Y%m%d')}-{uuid.uuid4().hex[:8].upper()}"
-    
-    # Hitung total amount dari items
-    total_amount = 0.0
-    order_items = []
-    
-    for item_data in order_data.items:
-        product = db.query(Product).filter(Product.id == item_data.product_id).first()
-        if not product:
-            raise ValueError(f"Product {item_data.product_id} tidak ditemukan")
+    try:
+        # Generate order_code unik (Perbaikan: order_code bukan order_number)
+        order_code = f"ORD-{datetime.now().strftime('%Y%m%d')}-{uuid.uuid4().hex[:8].upper()}"
         
-        if product.stock < item_data.quantity:
-            raise ValueError(f"Stock {product.name} tidak cukup")
+        # Hitung total amount dari items
+        total_amount = 0.0
+        order_items = []
         
-        # Kurangi stock
-        product.stock -= item_data.quantity
+        for item_data in order_data.items:
+            product = db.query(Product).filter(Product.id == item_data.product_id).first()
+            if not product:
+                raise ValueError(f"Produk dengan ID {item_data.product_id} tidak ditemukan")
+            
+            if product.stock < item_data.quantity:
+                raise ValueError(f"Stok {product.name} tidak cukup. Stok tersedia: {product.stock}, diminta: {item_data.quantity}")
+            
+            # Kurangi stock
+            product.stock -= item_data.quantity
+            
+            # Hitung total dan subtotal
+            item_subtotal = product.price * item_data.quantity  # Perbaikan: Tambah subtotal
+            total_amount += item_subtotal
+            
+            # Simpan order item
+            order_items.append(OrderItem(
+                product_id=item_data.product_id,
+                quantity=item_data.quantity,
+                price_at_time=product.price,
+                subtotal=item_subtotal  # Perbaikan: Tambah subtotal
+            ))
         
-        # Hitung total dan subtotal
-        item_subtotal = product.price * item_data.quantity  # Perbaikan: Tambah subtotal
-        total_amount += item_subtotal
+        # Buat order (Perbaikan: order_code, shipping_address, recipient_phone, receipt_name)
+        db_order = Order(
+            user_id=user_id,
+            order_code=order_code,
+            receipt_name=order_data.receipt_name,
+            recipient_phone=order_data.recipient_phone,
+            shipping_address=order_data.shipping_address,
+            notes=order_data.notes,
+            total_amount=total_amount,
+            status="pending"
+        )
         
-        # Simpan order item
-        order_items.append(OrderItem(
-            product_id=item_data.product_id,
-            quantity=item_data.quantity,
-            price_at_time=product.price,
-            subtotal=item_subtotal  # Perbaikan: Tambah subtotal
-        ))
-    
-    # Buat order (Perbaikan: order_code, shipping_address, recipient_phone, receipt_name)
-    db_order = Order(
-        user_id=user_id,
-        order_code=order_code,
-        receipt_name=order_data.receipt_name,
-        recipient_phone=order_data.recipient_phone,
-        shipping_address=order_data.shipping_address,
-        notes=order_data.notes,
-        total_amount=total_amount,
-        status="pending"
-    )
-    
-    # Add items ke order
-    db_order.items = order_items
-    db.add(db_order)
-    db.commit()
-    db.refresh(db_order)
-    
-    return db_order
+        # Add items ke order
+        db_order.items = order_items
+        db.add(db_order)
+        db.flush()  # Flush untuk validation sebelum commit
+        db.commit()
+        db.refresh(db_order)
+        
+        print(f"✓ Order berhasil dibuat: {order_code} untuk user {user_id}")
+        return db_order
+    except Exception as e:
+        db.rollback()
+        print(f"✗ Error saat create order: {str(e)}")
+        raise
 
 
 def get_orders(db: Session, user_id: int = None, skip: int = 0, limit: int = 20):
@@ -337,20 +366,27 @@ def delete_order(db: Session, order_id: int) -> bool:
 # ==================== PAYMENT CRUD ====================
 
 def create_payment(db: Session, payment_data: PaymentCreate) -> Payment:
-    """Buat record pembayaran baru."""
-    # Perbaikan: Tidak perlu receipt_id (bukan di ERD)
-    db_payment = Payment(
-        order_id=payment_data.order_id,
-        payment_method=payment_data.payment_method,
-        amount=payment_data.amount,
-        proof_url=payment_data.proof_url,
-        paid_at=payment_data.paid_at,  # Perbaikan: Tambah paid_at
-        payment_status="pending"
-    )
-    db.add(db_payment)
-    db.commit()
-    db.refresh(db_payment)
-    return db_payment
+    """Buat record pembayaran baru dengan status 'pending'.
+    
+    paid_at akan diset otomatis saat admin verify payment.
+    """
+    try:
+        db_payment = Payment(
+            order_id=payment_data.order_id,
+            payment_method=payment_data.payment_method,
+            amount=payment_data.amount,
+            proof_url=payment_data.proof_url,
+            # paid_at TIDAK boleh diset di sini, hanya saat admin verify
+            payment_status="pending"
+        )
+        db.add(db_payment)
+        db.commit()
+        db.refresh(db_payment)
+        return db_payment
+    except Exception as e:
+        db.rollback()
+        print(f"Error saat create_payment: {str(e)}")
+        raise
 
 
 def get_payments(db: Session, order_id: int = None, user_id: int = None, skip: int = 0, limit: int = 20):
@@ -376,21 +412,38 @@ def get_payment(db: Session, payment_id: int) -> Payment | None:
     return db.query(Payment).filter(Payment.id == payment_id).first()
 
 
-def update_payment_status(db: Session, payment_id: int, payment_status: str, verified_by: int = None, verified_at: datetime = None) -> Payment | None:  # Perbaikan: verified_by INT
-    """Update status pembayaran dan verify."""
-    db_payment = db.query(Payment).filter(Payment.id == payment_id).first()
-    if db_payment:
+def update_payment_status(db: Session, payment_id: int, payment_status: str, verified_by: int = None, verified_at: datetime = None) -> Payment | None:
+    """Update status pembayaran, set verified_by dan paid_at saat completed."""
+    try:
+        db_payment = db.query(Payment).filter(Payment.id == payment_id).first()
+        if not db_payment:
+            print(f"Payment ID {payment_id} tidak ditemukan")
+            return None
+        
+        # Update status
         db_payment.payment_status = payment_status
-        if verified_by is not None:  # Perbaikan: verified_by INT
+        
+        # Set verified_by jika ada (biasanya admin yang verify)
+        if verified_by is not None:
             db_payment.verified_by = verified_by
-        if verified_at:  # Perbaikan: Tambah verified_at
+        
+        # Set verified_at jika ada
+        if verified_at:
             db_payment.verified_at = verified_at
+        
+        # Jika status berhasil dibayar, set paid_at
         if payment_status == "completed":
-            db_payment.paid_at = datetime.now()  # Set paid_at saat completed
+            db_payment.paid_at = datetime.now()
+        
         db_payment.updated_at = datetime.now()
         db.commit()
         db.refresh(db_payment)
-    return db_payment
+        print(f"Payment ID {payment_id} diupdate ke status: {payment_status}")
+        return db_payment
+    except Exception as e:
+        db.rollback()
+        print(f"Error saat update_payment_status: {str(e)}")
+        raise
 
 
 def delete_payment(db: Session, payment_id: int) -> bool:
@@ -427,7 +480,20 @@ def get_testimonials(db: Session, product_id: int = None, user_id: int = None, s
     Args:
         visible_only: Jika True, hanya tampilkan testimonial dengan is_visible=True
     """
-    query = db.query(Testimonial)
+    # Menggunakan query join agar mendapatkan Nama User dan Nama Produk (Perbaikan: Tambah user_name, product_name)
+    query = db.query(
+        Testimonial.id,
+        Testimonial.order_id,
+        Testimonial.product_id,
+        Testimonial.user_id,
+        User.name.label("user_name"),
+        Product.name.label("product_name"),
+        Testimonial.rating,
+        Testimonial.comment,
+        Testimonial.is_visible,
+        Testimonial.created_at,
+        Testimonial.updated_at
+    ).join(User, Testimonial.user_id == User.id).join(Product, Testimonial.product_id == Product.id)
     
     if product_id:
         query = query.filter(Testimonial.product_id == product_id)
@@ -436,7 +502,7 @@ def get_testimonials(db: Session, product_id: int = None, user_id: int = None, s
         query = query.filter(Testimonial.user_id == user_id)
     
     if visible_only:
-        query = query.filter(Testimonial.is_visible == True)  # Filter hanya yang visible
+        query = query.filter(Testimonial.is_visible == True)
     
     total = query.count()
     testimonials = query.order_by(Testimonial.created_at.desc()).offset(skip).limit(limit).all()

@@ -158,6 +158,11 @@ class TokenResponse(BaseModel):
     user: UserResponse
 
 
+class UserListResponse(BaseModel):
+    total: int
+    users: list[UserResponse]
+
+
 # ================= ORDER =================
 
 class OrderItemCreate(BaseModel):
@@ -223,9 +228,8 @@ class OrderListResponse(BaseModel):
 class PaymentCreate(BaseModel):
     order_id: int = Field(..., gt=0)
     payment_method: str = Field(..., examples=["credit_card", "bank_transfer", "e_wallet", "cash"])
-    amount: float = Field(..., gt=0)
-    proof_url: Optional[str] = Field(None, examples=["https://example.com/receipt.jpg"])
-    paid_at: Optional[datetime] = Field(None)  # Perbaikan: Tambah paid_at
+    amount: float = Field(..., gt=0, description="Jumlah pembayaran harus sesuai dengan total_amount order")
+    proof_url: Optional[str] = Field(None, examples=["https://example.com/receipt.jpg"], description="Screenshot bukti transfer atau receipt")
 
 
 class PaymentUpdate(BaseModel):
@@ -270,6 +274,8 @@ class TestimonialResponse(BaseModel):
     order_id: Optional[int] = None  # Restore: order_id
     product_id: int
     user_id: int
+    user_name: Optional[str] = None  # Perbaikan: Tambah user_name
+    product_name: Optional[str] = None  # Perbaikan: Tambah product_name
     rating: int
     comment: Optional[str] = None
     is_visible: bool = True  # Kontrol tampilan
