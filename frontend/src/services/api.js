@@ -37,7 +37,7 @@ async function handleResponse(response) {
         try {
             const error = JSON.parse(textData)
             let errorMsg = ""
-            
+
             if (typeof error.detail === "string") {
                 errorMsg = error.detail
             } else if (Array.isArray(error.detail)) {
@@ -47,7 +47,7 @@ async function handleResponse(response) {
             } else {
                 errorMsg = typeof error.detail === "object" ? JSON.stringify(error.detail) : (error.detail || JSON.stringify(error))
             }
-            
+
             throw new Error(errorMsg)
         } catch (e) {
             if (e instanceof Error && e.message !== "Unexpected token 'u', \"un...\" is not valid JSON") {
@@ -249,8 +249,9 @@ export async function createOrder(orderData) {
     return handleResponse(response)
 }
 
-export async function fetchMyOrders() {
-    const response = await fetch(`${API_URL}/orders/my-orders`, {
+export async function fetchMyOrders(skip = 0, limit = 20) {
+    const params = new URLSearchParams({ skip, limit })
+    const response = await fetch(`${API_URL}/orders?${params}`, {
         headers: authHeaders(),
     })
     return handleResponse(response)
@@ -284,6 +285,75 @@ export async function updateOrderStatus(orderId, status) {
 export async function deleteOrder(orderId) {
     const response = await fetch(`${API_URL}/orders/${orderId}`, {
         method: "DELETE",
+        headers: authHeaders(),
+    })
+    return handleResponse(response)
+}
+
+export async function getOrderDetail(orderId) {
+    const response = await fetch(`${API_URL}/orders/${orderId}`, {
+        headers: authHeaders(),
+    })
+    return handleResponse(response)
+}
+
+export async function getOrderItems(orderId) {
+    const response = await fetch(`${API_URL}/orders/${orderId}/items`, {
+        headers: authHeaders(),
+    })
+    return handleResponse(response)
+}
+
+export async function confirmOrder(orderId) {
+    const response = await fetch(`${API_URL}/orders/${orderId}/confirm`, {
+        method: "PUT",
+        headers: authHeaders(),
+    })
+    return handleResponse(response)
+}
+
+export async function completePayment(orderId) {
+    const response = await fetch(`${API_URL}/orders/${orderId}/complete-payment`, {
+        method: "PUT",
+        headers: authHeaders(),
+    })
+    return handleResponse(response)
+}
+
+export async function createPayment(paymentData) {
+    const response = await fetch(`${API_URL}/payments`, {
+        method: "POST",
+        headers: {
+            ...authHeaders(),
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(paymentData),
+    })
+    return handleResponse(response)
+}
+
+export async function getPaymentsByOrder(orderId) {
+    const params = new URLSearchParams({ order_id: orderId })
+    const response = await fetch(`${API_URL}/payments?${params}`, {
+        headers: authHeaders(),
+    })
+    return handleResponse(response)
+}
+
+export async function createTestimonial(testimonialData) {
+    const response = await fetch(`${API_URL}/testimonials`, {
+        method: "POST",
+        headers: {
+            ...authHeaders(),
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(testimonialData),
+    })
+    return handleResponse(response)
+}
+
+export async function getMyTestimonials() {
+    const response = await fetch(`${API_URL}/testimonials/my-testimonials`, {
         headers: authHeaders(),
     })
     return handleResponse(response)
