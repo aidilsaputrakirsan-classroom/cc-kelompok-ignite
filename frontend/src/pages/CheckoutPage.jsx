@@ -41,6 +41,25 @@ export default function CheckoutPage({ user, onLogout }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+
+    // Validasi form data
+    if (!formData.receipt_name.trim()) {
+      toast.error("Nama penerima harus diisi", { id: "checkout" })
+      return
+    }
+    if (!formData.recipient_phone.trim()) {
+      toast.error("Nomor telepon harus diisi", { id: "checkout" })
+      return
+    }
+    if (!formData.shipping_address.trim()) {
+      toast.error("Alamat pengiriman harus diisi", { id: "checkout" })
+      return
+    }
+    if (selectedItems.length === 0) {
+      toast.error("Tidak ada produk untuk dipesan", { id: "checkout" })
+      return
+    }
+
     try {
       const orderData = {
         ...formData,
@@ -49,18 +68,24 @@ export default function CheckoutPage({ user, onLogout }) {
           quantity: item.quantity
         }))
       }
-      
-      // Since backend order creation might expect specific format, confirm api.js has it
-      // For now, mock success if api.createOrder fails to avoid UI break during modernization
+
+      console.log("Submitting order:", orderData)
       toast.loading("Memproses pesanan...", { id: "checkout" })
-      
-      // Real call (assumes api.createOrder is added as per plan)
-      // await createOrder(orderData) 
-      
+
+      // Submit order ke backend
+      const result = await createOrder(orderData)
+      console.log("Order created successfully:", result)
+
       toast.success("Pesanan berhasil dibuat!", { id: "checkout" })
-      navigate("/orders")
+
+      // Redirect ke orders page untuk lihat detail pesanan
+      setTimeout(() => {
+        navigate("/orders", { state: { orderId: result?.id } })
+      }, 1000)
     } catch (err) {
-      toast.error(err.message || "Gagal membuat pesanan", { id: "checkout" })
+      console.error("Checkout error:", err)
+      const errorMsg = err?.message || err?.detail || "Gagal membuat pesanan"
+      toast.error(errorMsg, { id: "checkout" })
     }
   }
 
@@ -69,13 +94,13 @@ export default function CheckoutPage({ user, onLogout }) {
       <Header user={user} onLogout={onLogout} />
       <main style={styles.main}>
         <h1 style={styles.title}>Konfirmasi Pesanan</h1>
-        
+
         <div style={styles.container}>
           <form onSubmit={handleSubmit} style={styles.formSection}>
             <h2 style={styles.sectionTitle}>Informasi Pengiriman</h2>
             <div style={styles.inputGroup}>
               <label style={styles.label}>Nama Penerima</label>
-              <input 
+              <input
                 name="receipt_name"
                 value={formData.receipt_name}
                 onChange={handleChange}
@@ -86,7 +111,7 @@ export default function CheckoutPage({ user, onLogout }) {
             </div>
             <div style={styles.inputGroup}>
               <label style={styles.label}>Nomor Telepon</label>
-              <input 
+              <input
                 name="recipient_phone"
                 value={formData.recipient_phone}
                 onChange={handleChange}
@@ -97,7 +122,7 @@ export default function CheckoutPage({ user, onLogout }) {
             </div>
             <div style={styles.inputGroup}>
               <label style={styles.label}>Alamat Lengkap</label>
-              <textarea 
+              <textarea
                 name="shipping_address"
                 value={formData.shipping_address}
                 onChange={handleChange}
@@ -108,7 +133,7 @@ export default function CheckoutPage({ user, onLogout }) {
             </div>
             <div style={styles.inputGroup}>
               <label style={styles.label}>Catatan (Opsional)</label>
-              <input 
+              <input
                 name="notes"
                 value={formData.notes}
                 onChange={handleChange}

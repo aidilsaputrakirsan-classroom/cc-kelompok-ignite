@@ -9,12 +9,12 @@ from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 
 from database import engine, get_db
-from models import Base, User
+from models import Base, User, OrderItem, Product, Payment
 from schemas import (
     UserCreate, UserResponse, UserListResponse, LoginRequest, TokenResponse,
     ProductCreate, ProductUpdate, ProductResponse, ProductListResponse, ProductStatsResponse,
     CartItemCreate, CartItemUpdate, CartItemResponse, CartResponse,
-    OrderCreate, OrderItemResponse, OrderResponse, OrderListResponse,
+    OrderCreate, OrderItemCreate, OrderItemResponse, OrderResponse, OrderListResponse,
     PaymentCreate, PaymentUpdate, PaymentResponse, PaymentListResponse,
     TestimonialCreate, TestimonialResponse, TestimonialListResponse,
 )
@@ -269,6 +269,45 @@ def get_product(product_id: int, db: Session = Depends(get_db)):
     return product
 
 
+@app.post("/products/{product_id}/order-now", response_model=OrderResponse, status_code=201, tags=["Products"])
+def order_product_now(
+    product_id: int,
+    quantity: int = Query(1, ge=1),
+    receipt_name: str = Query(..., min_length=2, max_length=100),
+    recipient_phone: str = Query(..., min_length=10, max_length=20),
+    shipping_address: str = Query(..., min_length=5),
+    notes: str = Query(None),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_customer),
+):
+    """
+    PESAN SEKARANG - Buat order langsung dari detail produk.
+    
+    **Membutuhkan autentikasi sebagai customer.**
+    
+    Alur: Detail Produk > Pesan Sekarang > Checkout > Konfirmasi > Payment > Testimonial
+    
+    - **product_id**: ID produk yang ingin dipesan
+    - **quantity**: Jumlah produk (default: 1)
+    - **receipt_name**: Nama penerima
+    - **recipient_phone**: Nomor telepon penerima
+    - **shipping_address**: Alamat pengiriman
+    - **notes**: Catatan pesanan (optional)
+    """
+    try:
+        # Buat order dengan single item
+        order_data = OrderCreate(
+            items=[OrderItemCreate(product_id=product_id, quantity=quantity)],
+            receipt_name=receipt_name,
+            recipient_phone=recipient_phone,
+            shipping_address=shipping_address,
+            notes=notes
+        )
+        return crud.create_order(db=db, user_id=current_user.id, order_data=order_data)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
 @app.post("/products", response_model=ProductResponse, status_code=201, tags=["Products"])
 def create_product(
     product_data: ProductCreate,
@@ -337,7 +376,7 @@ def get_cart(
     
     # Hitung total dari items
     total_items = sum(item.quantity for item in cart.items) if cart.items else 0
-    total_price = sum(item.quantity * item.price for item in cart.items) if cart.items else 0
+    total_price = sum(item.subtotal for item in cart.items) if cart.items else 0
     
     return {
         "id": cart.id,
@@ -440,9 +479,18 @@ def create_order(
     - **notes**: Catatan pesanan (optional)
     """
     try:
-        return crud.create_order(db=db, user_id=current_user.id, order_data=order)
+        # Validate items tidak kosong
+        if not order.items or len(order.items) == 0:
+            raise ValueError("Pesanan harus berisi minimal 1 produk")
+        
+        result = crud.create_order(db=db, user_id=current_user.id, order_data=order)
+        return result
     except ValueError as e:
+        print(f"Validation error: {str(e)}")
         raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        print(f"Unexpected error in create_order: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Gagal membuat pesanan: {str(e)}")
 
 
 @app.get("/orders", response_model=OrderListResponse, tags=["Orders"])
@@ -505,6 +553,51 @@ def get_order(
     return order
 
 
+@app.get("/orders/{order_id}/items", tags=["Orders"])
+def get_order_items(
+    order_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Ambil daftar items dalam order dengan detail produk.
+    
+    **Membutuhkan autentikasi.**
+    
+    Response berisi:
+    - item details (quantity, price, subtotal)
+    - product details (name, image, price)
+    """
+    order = crud.get_order(db=db, order_id=order_id)
+    if not order:
+        raise HTTPException(status_code=404, detail=f"Order {order_id} tidak ditemukan")
+    
+    # Validasi: hanya pemilik atau admin bisa lihat
+    if order.user_id != current_user.id and current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Anda tidak memiliki akses ke order ini")
+    
+    # Get order items dengan product details
+    items = db.query(OrderItem, Product).join(Product).filter(OrderItem.order_id == order_id).all()
+    
+    result = []
+    for item, product in items:
+        result.append({
+            "item_id": item.id,
+            "product_id": item.product_id,
+            "product_name": product.name,
+            "product_image": product.image_url,
+            "quantity": item.quantity,
+            "price_at_time": item.price_at_time,
+            "subtotal": item.subtotal,
+        })
+    
+    return {
+        "order_id": order_id,
+        "total_items": len(result),
+        "items": result
+    }
+
+
 @app.put("/orders/{order_id}", response_model=OrderResponse, tags=["Orders"])
 def update_order_status(
     order_id: int,
@@ -522,6 +615,70 @@ def update_order_status(
     updated = crud.update_order_status(db=db, order_id=order_id, status=status)
     if not updated:
         raise HTTPException(status_code=404, detail=f"Order {order_id} tidak ditemukan")
+    return updated
+
+
+@app.put("/orders/{order_id}/confirm", response_model=OrderResponse, tags=["Orders"])
+def confirm_order(
+    order_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_customer),
+):
+    """
+    KONFIRMASI PESANAN - Ubah status dari 'pending' ke 'processing'.
+    
+    **Membutuhkan autentikasi sebagai customer.**
+    
+    Alur: Order dibuat (pending) > Konfirmasi Pesanan (processing) > Payment > Delivered > Testimonial
+    
+    Customer melakukan konfirmasi sebelum melanjutkan ke payment.
+    """
+    order = crud.get_order(db=db, order_id=order_id)
+    if not order:
+        raise HTTPException(status_code=404, detail=f"Order {order_id} tidak ditemukan")
+    
+    # Validasi: hanya pemilik order bisa konfirmasi
+    if order.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Anda tidak memiliki akses ke order ini")
+    
+    # Validasi: hanya order dengan status 'pending' yang bisa dikonfirmasi
+    if order.status != "pending":
+        raise HTTPException(status_code=400, detail=f"Order hanya bisa dikonfirmasi dari status 'pending', status saat ini: {order.status}")
+    
+    # Update status ke 'processing'
+    updated = crud.update_order_status(db=db, order_id=order_id, status="processing")
+    return updated
+
+
+@app.put("/orders/{order_id}/complete-payment", response_model=OrderResponse, tags=["Orders"])
+def complete_payment_order(
+    order_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_customer),
+):
+    """
+    PEMBAYARAN SELESAI - Ubah status dari 'processing' ke 'delivered' setelah payment sukses.
+    
+    **Membutuhkan autentikasi sebagai customer.**
+    
+    Alur: Processing > Payment Sukses > Delivered > Bisa Testimonial
+    
+    Call endpoint ini setelah payment berhasil, sehingga customer bisa menambahkan testimonial.
+    """
+    order = crud.get_order(db=db, order_id=order_id)
+    if not order:
+        raise HTTPException(status_code=404, detail=f"Order {order_id} tidak ditemukan")
+    
+    # Validasi: hanya pemilik order bisa complete payment
+    if order.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Anda tidak memiliki akses ke order ini")
+    
+    # Validasi: hanya order dengan status 'processing' atau 'shipped' yang bisa di-complete
+    if order.status not in ["processing", "shipped"]:
+        raise HTTPException(status_code=400, detail=f"Order hanya bisa di-complete dari status 'processing' atau 'shipped', status saat ini: {order.status}")
+    
+    # Update status ke 'delivered'
+    updated = crud.update_order_status(db=db, order_id=order_id, status="delivered")
     return updated
 
 
@@ -555,21 +712,59 @@ def create_payment(
     
     **Membutuhkan autentikasi sebagai customer.**
     
+    Alur: Order dibuat (pending) > Dikonfirmasi (processing) > Buat Payment (pending) > Admin verifikasi > Marked as delivered > Testimonial
+    
     - **order_id**: ID order yang dibayar
     - **payment_method**: Metode pembayaran (credit_card, bank_transfer, e_wallet, cash)
-    - **amount**: Jumlah pembayaran
-    - **proof_url**: URL bukti pembayaran (optional)
+    - **amount**: Jumlah pembayaran (harus sesuai total_amount order)
+    - **proof_url**: URL bukti pembayaran (optional - screenshot transfer/receipt)
+    
+    **Catatan**: paid_at akan diset otomatis oleh admin saat verifikasi pembayaran.
     """
-    # Validasi order ada dan milik customer (current_user sudah dipastikan customer)
-    order = crud.get_order(db=db, order_id=payment.order_id)
-    if not order:
-        raise HTTPException(status_code=404, detail=f"Order {payment.order_id} tidak ditemukan")
-    
-    # Customer hanya bisa bayar order milik mereka sendiri
-    if order.user_id != current_user.id:
-        raise HTTPException(status_code=403, detail="Anda tidak memiliki akses ke order ini")
-    
-    return crud.create_payment(db=db, payment_data=payment)
+    try:
+        # Validasi order ada dan milik customer
+        order = crud.get_order(db=db, order_id=payment.order_id)
+        if not order:
+            raise HTTPException(status_code=404, detail=f"Order {payment.order_id} tidak ditemukan")
+        
+        # Customer hanya bisa bayar order milik mereka sendiri
+        if order.user_id != current_user.id:
+            raise HTTPException(status_code=403, detail="Anda tidak memiliki akses ke order ini")
+        
+        # Validasi order status - hanya pending atau processing yang bisa dibayar
+        if order.status not in ["pending", "processing"]:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Order dengan status '{order.status}' tidak bisa dibayar. Status harus 'pending' atau 'processing'."
+            )
+        
+        # Validasi amount match dengan total_amount order
+        if abs(payment.amount - order.total_amount) > 0.01:  # tolerance for floating point
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Jumlah pembayaran tidak sesuai. Expected: Rp {order.total_amount}, Got: Rp {payment.amount}"
+            )
+        
+        # Validasi tidak boleh ada payment yang sudah 'completed' untuk order ini
+        from models import Payment as PaymentModel
+        existing_completed = db.query(PaymentModel).filter(
+            PaymentModel.order_id == payment.order_id,
+            PaymentModel.payment_status == "completed"
+        ).first()
+        if existing_completed:
+            raise HTTPException(
+                status_code=400, 
+                detail="Order ini sudah memiliki pembayaran yang terkonfirmasi. Tidak bisa membuat pembayaran baru."
+            )
+        
+        result = crud.create_payment(db=db, payment_data=payment)
+        print(f"✓ Payment dibuat: {result.id} untuk order {payment.order_id} sebesar Rp {payment.amount}")
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"✗ Error saat create payment: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Gagal membuat pembayaran: {str(e)}")
 
 
 @app.get("/payments", response_model=PaymentListResponse, tags=["Payments"])
@@ -629,18 +824,47 @@ def update_payment_status(
     
     **Membutuhkan autentikasi admin.**
     
+    Admin dapat:
+    - **completed**: Verifikasi pembayaran ✓ (customer bisa mark order as delivered)
+    - **failed**: Pembayaran ditolak ✗
+    - **refunded**: Pembayaran dikembalikan
+    
     Status yang valid: pending, completed, failed, refunded
     """
-    updated = crud.update_payment_status(
-        db=db, 
-        payment_id=payment_id, 
-        payment_status=payment_status,
-        verified_by=current_user.id,  # Perbaikan: verified_by INT (user_id), bukan email
-        verified_at=datetime.now()  # Perbaikan: Tambah verified_at
-    )
-    if not updated:
-        raise HTTPException(status_code=404, detail=f"Payment {payment_id} tidak ditemukan")
-    return updated
+    try:
+        # Get payment untuk validasi
+        from models import Payment as PaymentModel
+        payment = db.query(PaymentModel).filter(PaymentModel.id == payment_id).first()
+        if not payment:
+            raise HTTPException(status_code=404, detail=f"Payment {payment_id} tidak ditemukan")
+        
+        # Validasi status transition
+        valid_status = ["pending", "completed", "failed", "refunded"]
+        if payment_status not in valid_status:
+            raise HTTPException(status_code=400, detail=f"Status tidak valid. Valid: {', '.join(valid_status)}")
+        
+        # Validasi transisi status
+        if payment.payment_status == "completed" and payment_status != "refunded":
+            raise HTTPException(status_code=400, detail="Payment yang sudah 'completed' hanya bisa di-refund")
+        
+        # Update payment
+        updated = crud.update_payment_status(
+            db=db, 
+            payment_id=payment_id, 
+            payment_status=payment_status,
+            verified_by=current_user.id,
+            verified_at=datetime.now()
+        )
+        
+        if updated.payment_status == "completed":
+            print(f"✓ Payment {payment_id} verified sebagai 'completed' oleh admin {current_user.id}")
+        
+        return updated
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"✗ Error saat update payment status: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Gagal update payment: {str(e)}")
 
 
 @app.delete("/payments/{payment_id}", status_code=204, tags=["Payments"])
@@ -673,10 +897,29 @@ def create_testimonial(
     
     **Membutuhkan autentikasi sebagai customer.**
     
-    - **product_id**: ID produk yang di-review
-    - **rating**: Rating 1-5 bintang
+    Alur: Order Delivered > Bisa Menambahkan Testimonial
+    
+    - **product_id**: ID produk yang di-review (required)
+    - **order_id**: ID order (required jika ingin link dengan pesanan tertentu)
+    - **rating**: Rating 1-5 bintang (required)
     - **comment**: Komentar/review (optional)
+    
+    Validasi: Jika order_id dikirim, order harus sudah 'delivered'. Jika tidak ada order_id, testimonial bisa dibuat langsung untuk produk.
     """
+    # Validasi: jika order_id ada, order harus sudah delivered dan milik customer
+    if testimonial.order_id:
+        order = crud.get_order(db=db, order_id=testimonial.order_id)
+        if not order:
+            raise HTTPException(status_code=404, detail=f"Order {testimonial.order_id} tidak ditemukan")
+        
+        # Validasi: order harus milik customer
+        if order.user_id != current_user.id:
+            raise HTTPException(status_code=403, detail="Anda tidak memiliki akses ke order ini")
+        
+        # Validasi: order harus sudah delivered
+        if order.status != "delivered":
+            raise HTTPException(status_code=400, detail=f"Testimonial hanya bisa dibuat setelah order 'delivered'. Status saat ini: {order.status}")
+    
     return crud.create_testimonial(db=db, user_id=current_user.id, testimonial_data=testimonial)
 
 
