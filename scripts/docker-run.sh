@@ -35,9 +35,9 @@ case $ACTION in
     docker run -d \
       --name backend \
       --network cloudnet \
-      --env-file backend/.env.docker \
+      --env-file .env.docker \
       -p 8000:8000 \
-      cloudapp-backend:v2
+      cloudapp-backend:v1
     
     # Frontend
     echo "⚛️ Starting frontend..."
