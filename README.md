@@ -50,9 +50,6 @@ ATHSNAC (E-Commerce UMKM RAZ'Q) adalah platform e-commerce berbasis website yang
     - [7. Pydantic — Validasi Data](#7-pydantic--validasi-data-1)
     - [8. FastAPI](#8-fastapi-1)
   - [| **Type hints** | Memanfaatkan type hints Python untuk validasi dan dokumentasi |](#-type-hints--memanfaatkan-type-hints-python-untuk-validasi-dan-dokumentasi-)
-  - [📡 Dokumentasi API](#-dokumentasi-api)
-    - [Base URL](#base-url)
-  - [📊 Tabel Ringkasan Endpoint](#-tabel-ringkasan-endpoint)
   - [🏗️ Panduan Membangun Frontend React](#️-panduan-membangun-frontend-react)
   - [📚 Dasar Teori](#-dasar-teori-2)
     - [1. React](#1-react)
@@ -60,8 +57,19 @@ ATHSNAC (E-Commerce UMKM RAZ'Q) adalah platform e-commerce berbasis website yang
     - [3. Fetch API](#3-fetch-api)
     - [4. Separation of Concerns pada Frontend](#4-separation-of-concerns-pada-frontend)
   - [✅ Fitur UI yang Dibangun](#-fitur-ui-yang-dibangun)
+  - [📡 Dokumentasi API](#-dokumentasi-api)
+    - [Base URL](#base-url)
+  - [📊 Tabel Ringkasan Endpoint](#-tabel-ringkasan-endpoint)
     - [Alur Autentikasi](#alur-autentikasi)
     - [Contoh Response Login](#contoh-response-login)
+  - [🔑 Authentication](#-authentication)
+    - [Konsep JWT](#konsep-jwt)
+    - [1. **Register (Daftar Akun Baru)**](#1-register-daftar-akun-baru)
+    - [2. **Login (Dapatkan Token)**](#2-login-dapatkan-token)
+    - [3. **Get Current User (Verifikasi Token)**](#3-get-current-user-verifikasi-token)
+    - [4. **Cara Menggunakan Token di Request**](#4-cara-menggunakan-token-di-request)
+    - [5. **Role-Based Access Control (RBAC)**](#5-role-based-access-control-rbac)
+    - [6. **Token Security Best Practices**](#6-token-security-best-practices)
   - [📂 Dokumentasi](#-dokumentasi)
   - [| `docs/images/` | Lead QA \& Docs | Screenshot hasil pengujian API dan UI |](#-docsimages--lead-qa--docs--screenshot-hasil-pengujian-api-dan-ui-)
   - [📅 Roadmap](#-roadmap)
@@ -769,44 +777,6 @@ Contoh: jika client mengirim `price: -500` atau `price: "lima ratus"`, Pydantic 
 | **Type hints** | Memanfaatkan type hints Python untuk validasi dan dokumentasi |
 ---
 
-## 📡 Dokumentasi API
-Lihat dokumentasi lengkap di: [`docs/api-test-docs.md`](docs/api-test-docs.md)
-### Base URL
-```
-http://localhost:8000
-```
-## 📊 Tabel Ringkasan Endpoint
-
-| Modul | Method | Endpoint | Deskripsi | Status Sukses | Status Error |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| SYSTEM | `GET` | `/` | Root endpoint (Identitas aplikasi) | `200` | `-` |
-| SYSTEM | `GET` | `/health` | Health check (Status server & versi) | `200` | `-` |
-| SYSTEM | `GET` | `/team` | Informasi profil anggota Tim Ignite | `200` | `-` |
-| AUTH | `POST` | `/auth/register` | Registrasi akun baru (Admin/Customer) | `201` | `400, 422` |
-| AUTH | `POST` | `/auth/login` | Login untuk mendapatkan JWT Token | `200` | `401` |
-| AUTH | `GET` | `/auth/me` | Ambil profil user yang sedang login | `200` | `401` |
-| PRODUCTS | `POST` | `/products` | Buat produk baru (Admin Only) | `201` | `401, 422` |
-| PRODUCTS | `GET` | `/products` | Daftar produk (+ search & filter) | `200` | `-` |
-| PRODUCTS | `GET` | `/products/stats` | Statistik inventori & total nilai stok | `200` | `401` |
-| PRODUCTS | `GET` | `/products/{id}` | Detail produk spesifik | `200` | `404` |
-| PRODUCTS | `PUT` | `/products/{id}` | Update data/stok produk (Admin Only) | `200` | `404` |
-| PRODUCTS | `DELETE` | `/products/{id}` | Hapus produk secara permanen | `204` | `404` |
-| CART | `GET` | `/cart` | Lihat isi keranjang belanja aktif | `200` | `401` |
-| CART | `POST` | `/cart/items` | Tambah produk ke keranjang | `201` | `401, 422` |
-| CART | `PUT` | `/cart/items/{id}` | Update kuantitas item di keranjang | `200` | `404` |
-| CART | `DELETE` | `/cart/items/{id}` | Hapus item dari keranjang | `204` | `404` |
-| ORDERS | `POST` | `/orders` | Checkout/Buat pesanan baru | `201` | `401, 422` |
-| ORDERS | `GET` | `/orders` | Riwayat pesanan milik customer | `200` | `401` |
-| ORDERS | `GET` | `/orders/admin/all` | Lihat semua pesanan masuk (Admin Only) | `200` | `403` |
-| ORDERS | `PUT` | `/orders/{id}` | Update status pengiriman (Admin Only) | `200` | `404` |
-| PAYMENTS | `POST` | `/payments` | Upload bukti pembayaran | `201` | `401` |
-| PAYMENTS | `GET` | `/payments` | Daftar pembayaran (Isolasi User/Admin) | `200` | `401` |
-| PAYMENTS | `PUT` | `/payments/{id}` | Verifikasi pembayaran oleh Admin | `200` | `404` |
-| TESTIMONIALS | `POST` | `/testimonials` | Buat ulasan produk | `201` | `422` |
-| TESTIMONIALS | `GET` | `/testimonials` | Daftar testimoni publik | `200` | `-` |
-| TESTIMONIALS | `PUT` | `/testimonials/{id}` | Update ulasan (Pemilik Only) | `200` | `403, 404` |
-| TESTIMONIALS | `PUT` | `/testimonials/{id}/toggle-visibility` | Sembunyikan/Tampilkan ulasan (Admin) | `200` | `403` |
-
 ## 🏗️ Panduan Membangun Frontend React
 ## 📚 Dasar Teori
 
@@ -968,6 +938,44 @@ Berikut daftar fitur UI berdasarkan halaman dan komponen yang sudah diimplementa
 
 ---
  
+## 📡 Dokumentasi API
+Lihat dokumentasi lengkap di: [`docs/api-test-docs.md`](docs/api-test-docs.md)
+### Base URL
+```
+http://localhost:8000
+```
+## 📊 Tabel Ringkasan Endpoint
+
+| Modul | Method | Endpoint | Deskripsi | Status Sukses | Status Error |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| SYSTEM | `GET` | `/` | Root endpoint (Identitas aplikasi) | `200` | `-` |
+| SYSTEM | `GET` | `/health` | Health check (Status server & versi) | `200` | `-` |
+| SYSTEM | `GET` | `/team` | Informasi profil anggota Tim Ignite | `200` | `-` |
+| AUTH | `POST` | `/auth/register` | Registrasi akun baru (Admin/Customer) | `201` | `400, 422` |
+| AUTH | `POST` | `/auth/login` | Login untuk mendapatkan JWT Token | `200` | `401` |
+| AUTH | `GET` | `/auth/me` | Ambil profil user yang sedang login | `200` | `401` |
+| PRODUCTS | `POST` | `/products` | Buat produk baru (Admin Only) | `201` | `401, 422` |
+| PRODUCTS | `GET` | `/products` | Daftar produk (+ search & filter) | `200` | `-` |
+| PRODUCTS | `GET` | `/products/stats` | Statistik inventori & total nilai stok | `200` | `401` |
+| PRODUCTS | `GET` | `/products/{id}` | Detail produk spesifik | `200` | `404` |
+| PRODUCTS | `PUT` | `/products/{id}` | Update data/stok produk (Admin Only) | `200` | `404` |
+| PRODUCTS | `DELETE` | `/products/{id}` | Hapus produk secara permanen | `204` | `404` |
+| CART | `GET` | `/cart` | Lihat isi keranjang belanja aktif | `200` | `401` |
+| CART | `POST` | `/cart/items` | Tambah produk ke keranjang | `201` | `401, 422` |
+| CART | `PUT` | `/cart/items/{id}` | Update kuantitas item di keranjang | `200` | `404` |
+| CART | `DELETE` | `/cart/items/{id}` | Hapus item dari keranjang | `204` | `404` |
+| ORDERS | `POST` | `/orders` | Checkout/Buat pesanan baru | `201` | `401, 422` |
+| ORDERS | `GET` | `/orders` | Riwayat pesanan milik customer | `200` | `401` |
+| ORDERS | `GET` | `/orders/admin/all` | Lihat semua pesanan masuk (Admin Only) | `200` | `403` |
+| ORDERS | `PUT` | `/orders/{id}` | Update status pengiriman (Admin Only) | `200` | `404` |
+| PAYMENTS | `POST` | `/payments` | Upload bukti pembayaran | `201` | `401` |
+| PAYMENTS | `GET` | `/payments` | Daftar pembayaran (Isolasi User/Admin) | `200` | `401` |
+| PAYMENTS | `PUT` | `/payments/{id}` | Verifikasi pembayaran oleh Admin | `200` | `404` |
+| TESTIMONIALS | `POST` | `/testimonials` | Buat ulasan produk | `201` | `422` |
+| TESTIMONIALS | `GET` | `/testimonials` | Daftar testimoni publik | `200` | `-` |
+| TESTIMONIALS | `PUT` | `/testimonials/{id}` | Update ulasan (Pemilik Only) | `200` | `403, 404` |
+| TESTIMONIALS | `PUT` | `/testimonials/{id}/toggle-visibility` | Sembunyikan/Tampilkan ulasan (Admin) | `200` | `403` |
+
 ### Alur Autentikasi
  
 ```
@@ -1020,6 +1028,249 @@ Setelah login berhasil, server mengembalikan data berikut:
 Nilai `access_token` inilah yang perlu disertakan di setiap permintaan ke endpoint `/items`.
  
 ---
+## 🔑 Authentication
+
+ATHSNAC menggunakan **JWT (JSON Web Token)** untuk autentikasi dan otorisasi. Setiap user yang login akan menerima token yang harus disertakan di setiap request yang memerlukan autentikasi.
+
+### Konsep JWT
+
+**JWT** terdiri dari 3 bagian yang dipisahkan oleh titik (`.`):
+```
+header.payload.signature
+```
+- **Header**: Tipe token dan algoritma hashing
+- **Payload**: Data user (id, email, role) — dapat di-decode tapi tidak dapat diubah karena signature
+- **Signature**: Tanda tangan digital yang membuktikan token valid dan tidak dimanipulasi
+
+### 1. **Register (Daftar Akun Baru)**
+
+**Endpoint:**
+```
+POST /auth/register
+```
+
+**Request Body:**
+```json
+{
+  "email": "user@example.com",
+  "name": "Nama Lengkap",
+  "password": "secure_password123",
+  "role": "customer"
+}
+```
+
+**Response (201 Created):**
+```json
+{
+  "id": 1,
+  "email": "user@example.com",
+  "name": "Nama Lengkap",
+  "role": "customer",
+  "is_active": true,
+  "created_at": "2026-04-15T10:30:00+07:00"
+}
+```
+
+**Error Response (422 Unprocessable Entity):**
+```json
+{
+  "detail": [
+    {
+      "loc": ["body", "email"],
+      "msg": "invalid email format",
+      "type": "value_error.email"
+    }
+  ]
+}
+```
+
+**Validasi:**
+- Email harus unik (tidak boleh terdaftar sebelumnya)
+- Password minimal 8 karakter
+- Role harus `customer` atau `admin`
+
+---
+
+### 2. **Login (Dapatkan Token)**
+
+**Endpoint:**
+```
+POST /auth/login
+```
+
+**Request Body:**
+```json
+{
+  "email": "user@example.com",
+  "password": "secure_password123"
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyQGV4YW1wbGUuY29tIiwiaWQiOjEsImVtYWlsIjoidXNlckBleGFtcGxlLmNvbSIsInJvbGUiOiJjdXN0b21lciIsImV4cCI6MTcxNDk0NTcwMH0.9nKu7vQ1pL8mN3oR5sT7uW8xY9zAbCdEfGhIjKlMnOp",
+  "token_type": "bearer",
+  "user": {
+    "id": 1,
+    "email": "user@example.com",
+    "name": "Nama Lengkap",
+    "role": "customer",
+    "is_active": true
+  }
+}
+```
+
+**Error Response (401 Unauthorized):**
+```json
+{
+  "detail": "Incorrect email or password"
+}
+```
+
+**Token Properties:**
+- **Tipe**: Bearer token
+- **Durasi**: 60 menit (3600 detik)
+- **Format**: JWT dengan 3 bagian (header.payload.signature)
+
+---
+
+### 3. **Get Current User (Verifikasi Token)**
+
+**Endpoint:**
+```
+GET /auth/me
+```
+
+**Header yang Diperlukan:**
+```
+Authorization: Bearer <access_token>
+```
+
+**Response (200 OK):**
+```json
+{
+  "id": 1,
+  "email": "user@example.com",
+  "name": "Nama Lengkap",
+  "role": "customer",
+  "is_active": true,
+  "created_at": "2026-04-15T10:30:00+07:00"
+}
+```
+
+**Error Response (401 Unauthorized):**
+```json
+{
+  "detail": "Could not validate credentials"
+}
+```
+
+---
+
+### 4. **Cara Menggunakan Token di Request**
+
+Setiap request ke endpoint yang memerlukan autentikasi harus menyertakan `Authorization` header:
+
+**Format:**
+```
+Authorization: Bearer <access_token>
+```
+
+**Contoh Request (cURL):**
+```bash
+curl -X GET "http://localhost:8000/cart" \
+  -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
+```
+
+**Contoh Request (JavaScript/Fetch API):**
+```javascript
+const token = localStorage.getItem('access_token');
+
+fetch('http://localhost:8000/cart', {
+  method: 'GET',
+  headers: {
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json'
+  }
+})
+  .then(response => response.json())
+  .then(data => console.log(data));
+```
+
+**Contoh Request (Python/Requests):**
+```python
+import requests
+
+token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
+headers = {
+    'Authorization': f'Bearer {token}',
+    'Content-Type': 'application/json'
+}
+
+response = requests.get('http://localhost:8000/cart', headers=headers)
+print(response.json())
+```
+
+---
+
+### 5. **Role-Based Access Control (RBAC)**
+
+Beberapa endpoint hanya dapat diakses oleh role tertentu:
+
+| Endpoint | Role Diizinkan | Deskripsi |
+|---|---|---|
+| `POST /products` | `admin` | Hanya admin dapat membuat produk baru |
+| `PUT /products/{id}` | `admin` | Hanya admin dapat mengubah produk |
+| `DELETE /products/{id}` | `admin` | Hanya admin dapat menghapus produk |
+| `GET /products/stats` | `admin` | Hanya admin dapat lihat statistik |
+| `GET /orders/admin/all` | `admin` | Hanya admin dapat lihat semua pesanan |
+| `PUT /orders/{id}` | `admin` | Hanya admin dapat ubah status pesanan |
+| `PUT /payments/{id}` | `admin` | Hanya admin dapat verifikasi pembayaran |
+| `PUT /testimonials/{id}/toggle-visibility` | `admin` | Hanya admin dapat moderasi testimoni |
+
+**Error Response (403 Forbidden):**
+```json
+{
+  "detail": "Access denied. Admin role required."
+}
+```
+
+---
+
+### 6. **Token Security Best Practices**
+
+**Untuk Frontend (React):**
+```javascript
+// ✅ BENAR: Simpan token di localStorage atau sessionStorage
+localStorage.setItem('access_token', response.access_token);
+
+// ❌ SALAH: Jangan hardcode token di kode
+const token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...";
+```
+
+**Untuk Backend (FastAPI):**
+```python
+# ✅ BENAR: Simpan secret key di environment variable
+SECRET_KEY = os.getenv("SECRET_KEY")
+
+# ❌ SALAH: Jangan hardcode secret key
+SECRET_KEY = "super_secret_key_12345"
+```
+
+**Kapan Token Expired:**
+- Token berlaku selama **60 menit**
+- Setelah token expired, user harus login ulang
+- Response server akan mengembalikan `401 Unauthorized`
+
+```json
+{
+  "detail": "Token has expired"
+}
+```
+
+---
+
  
 ## 📂 Dokumentasi
  
