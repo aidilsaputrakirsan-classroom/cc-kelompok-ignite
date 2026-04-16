@@ -1,25 +1,5 @@
-# 📋 Dokumentasi Hasil Pengujian API — ATHSNACK
+# 📋 Dokumentasi Hasil Pengujian API — ATHSNAC
 
-**Proyek:** ATHSNACK — UMKM E-Commerce Makanan Khas Balikpapan  
-**Tim:** Cloud Kelompok Ignite  
-**Institusi:** Institut Teknologi Kalimantan (ITK)  
-**Mata Kuliah:** Komputasi Awan — Sistem Informasi  
-**Tanggal Pengujian:** 07 April 2026  
-**Tools:** Swagger UI (`http://127.0.0.1:8000/docs`)  
-**Base URL:** `http://127.0.0.1:8000`
-
----
-
-## 👥 Pembagian Peran Pengujian
-
-| Peran | Nama | Fokus Pengujian |
-|---|---|---|
-| Lead Backend | Andini Permata Dewanti | Endpoint Produk & Statistik |
-| Lead Frontend | Putri Rahmawati | Endpoint Keranjang & Tampilan Response |
-| Lead DevOps | Krishandy Dhanysa Pratama | Endpoint Autentikasi & Environment |
-| Lead QA & Docs | Desnita Dwi Putri | Endpoint Pesanan, Pembayaran, & Testimoni |
-
----
 
 ## 📊 Ringkasan Hasil Pengujian
 
@@ -43,12 +23,12 @@
 - [x] **TC-SYS-01** — Request tanpa parameter berhasil mengembalikan `200 OK`
 - [x] Response body mengandung field `app`, `version`, `description`, `status`
 - [x] Nilai `status` adalah `"active"`
-- [x] Nilai `app` sesuai nama proyek: `"ATHSNACK - UMKM E-Commerce"`
+- [x] Nilai `app` sesuai nama proyek: `"ATHSNAC - UMKM E-Commerce"`
 
 **Response aktual:**
 ```json
 {
-  "app": "ATHSNACK - UMKM E-Commerce",
+  "app": "ATHSNAC - UMKM E-Commerce",
   "version": "1.0.0",
   "description": "Platform e-commerce untuk makanan khas Balikpapan",
   "status": "active"
@@ -71,7 +51,7 @@
 {
   "status": "healthy",
   "version": "1.0.0",
-  "service": "ATHSNACK API"
+  "service": "ATHSNAC API"
 }
 ```
 
@@ -90,7 +70,7 @@
 ```json
 {
   "team": "Cloud Kelompok Ignite",
-  "project": "ATHSNACK - UMKM E-Commerce Makanan Khas Balikpapan",
+  "project": "ATHSNAC - UMKM E-Commerce Makanan Khas Balikpapan",
   "members": [
     { "name": "Andini Permata Dewanti",    "nim": "10231014", "role": "Lead Backend",   "email": "10231014@student.itk.ac.id" },
     { "name": "Putri Rahmawati",           "nim": "10231074", "role": "Lead Frontend",  "email": "10231074@student.itk.ac.id" },

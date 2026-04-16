@@ -1,11 +1,11 @@
-# ☁️ Cloud App - [ATHSNACK— UMKM E-Commerce Platform]
+# ☁️ Cloud App - [ATHSNAC— UMKM E-Commerce Platform]
 
 ## 📌 Deskripsi Proyek
 
-ATHSNACK (E-Commerce UMKM RAZ'Q) adalah platform e-commerce berbasis website yang dirancang untuk mendigitalisasikan proses bisnis UMKM RAZ'Q Balikpapan. UMKM ini memproduksi makanan khas Balikpapan seperti Amplang, keripik pisang, abon, dan camilan lainnya. Aplikasi ini mengatasi kendala pemasaran dan visibilitas usaha, serta mempermudah pengelolaan transaksi dan stok produk yang sebelumnya menghadapi tantangan kompleksitas pada aplikasi pihak ketiga.
+ATHSNAC (E-Commerce UMKM RAZ'Q) adalah platform e-commerce berbasis website yang dirancang untuk mendigitalisasikan proses bisnis UMKM RAZ'Q Balikpapan. UMKM ini memproduksi makanan khas Balikpapan seperti Amplang, keripik pisang, abon, dan camilan lainnya. Aplikasi ini mengatasi kendala pemasaran dan visibilitas usaha, serta mempermudah pengelolaan transaksi dan stok produk yang sebelumnya menghadapi tantangan kompleksitas pada aplikasi pihak ketiga.
 
 ## 📖 Daftar Isi
-- [☁️ Cloud App - \[ATHSNACK— UMKM E-Commerce Platform\]](#️-cloud-app---athsnack-umkm-e-commerce-platform)
+- [☁️ Cloud App - \[ATHSNAC— UMKM E-Commerce Platform\]](#️-cloud-app---athsnac-umkm-e-commerce-platform)
   - [📌 Deskripsi Proyek](#-deskripsi-proyek)
   - [📖 Daftar Isi](#-daftar-isi)
   - [Fitur Utama](#fitur-utama)
@@ -27,8 +27,8 @@ ATHSNACK (E-Commerce UMKM RAZ'Q) adalah platform e-commerce berbasis website yan
   - [🚀 Cara Menjalankan](#-cara-menjalankan)
     - [1. Clone repository](#1-clone-repository)
     - [2. Jalankan Backend](#2-jalankan-backend)
-    - [3. Jalankan Frontend](#3-jalankan-frontend)
-    - [4. Verifikasi](#4-verifikasi)
+    - [4. Jalankan Frontend](#4-jalankan-frontend)
+    - [5. Verifikasi](#5-verifikasi)
   - [📁 Struktur Proyek](#-struktur-proyek)
   - [📚 Dasar Teori](#-dasar-teori)
     - [1. API (Application Programming Interface)](#1-api-application-programming-interface)
@@ -39,7 +39,6 @@ ATHSNACK (E-Commerce UMKM RAZ'Q) adalah platform e-commerce berbasis website yan
     - [6. ORM — SQLAlchemy](#6-orm--sqlalchemy)
     - [7. Pydantic — Validasi Data](#7-pydantic--validasi-data)
     - [8. FastAPI](#8-fastapi)
-    - [9. Arsitektur Aplikasi](#9-arsitektur-aplikasi)
   - [🏗️ Panduan Membangun REST API](#️-panduan-membangun-rest-api)
   - [📚 Dasar Teori](#-dasar-teori-1)
     - [1. API (Application Programming Interface)](#1-api-application-programming-interface-1)
@@ -50,14 +49,10 @@ ATHSNACK (E-Commerce UMKM RAZ'Q) adalah platform e-commerce berbasis website yan
     - [6. ORM — SQLAlchemy](#6-orm--sqlalchemy-1)
     - [7. Pydantic — Validasi Data](#7-pydantic--validasi-data-1)
     - [8. FastAPI](#8-fastapi-1)
-    - [9. Arsitektur Aplikasi](#9-arsitektur-aplikasi-1)
+  - [| **Type hints** | Memanfaatkan type hints Python untuk validasi dan dokumentasi |](#-type-hints--memanfaatkan-type-hints-python-untuk-validasi-dan-dokumentasi-)
   - [📡 Dokumentasi API](#-dokumentasi-api)
     - [Base URL](#base-url)
   - [📊 Tabel Ringkasan Endpoint](#-tabel-ringkasan-endpoint)
-  - [🚀 Cara Menjalankan](#-cara-menjalankan-1)
-    - [1. Clone repository](#1-clone-repository-1)
-    - [2. Setup environment](#2-setup-environment)
-    - [3. Install dependencies \& jalankan server](#3-install-dependencies--jalankan-server)
   - [🏗️ Panduan Membangun Frontend React](#️-panduan-membangun-frontend-react)
   - [📚 Dasar Teori](#-dasar-teori-2)
     - [1. React](#1-react)
@@ -65,11 +60,6 @@ ATHSNACK (E-Commerce UMKM RAZ'Q) adalah platform e-commerce berbasis website yan
     - [3. Fetch API](#3-fetch-api)
     - [4. Separation of Concerns pada Frontend](#4-separation-of-concerns-pada-frontend)
   - [✅ Fitur UI yang Dibangun](#-fitur-ui-yang-dibangun)
-  - [📊 Daftar Endpoint API](#-daftar-endpoint-api)
-    - [Endpoint Autentikasi (Publik)](#endpoint-autentikasi-publik)
-    - [Endpoint Item (Membutuhkan Token)](#endpoint-item-membutuhkan-token)
-    - [Endpoint Lainnya (Publik)](#endpoint-lainnya-publik)
-    - [Kode Status yang Digunakan](#kode-status-yang-digunakan)
     - [Alur Autentikasi](#alur-autentikasi)
     - [Contoh Response Login](#contoh-response-login)
   - [📂 Dokumentasi](#-dokumentasi)
@@ -166,7 +156,7 @@ ATHSNACK (E-Commerce UMKM RAZ'Q) adalah platform e-commerce berbasis website yan
  
 ## 🏗️ Arsitektur Sistem
 
-Proyek ATHSNACK menggunakan arsitektur **three-tier** yang memisahkan presentation layer (Frontend), business logic layer (Backend), dan data layer (Database) secara bersih.
+Proyek ATHSNAC menggunakan arsitektur **three-tier** yang memisahkan presentation layer (Frontend), business logic layer (Backend), dan data layer (Database) secara bersih.
 
 ### **Diagram 1: Overall System Architecture**
 
@@ -376,13 +366,38 @@ graph TD
 ## 🚀 Getting Started
 
 ### Prasyarat
-- **Python 3.10+**: Diperlukan untuk menjalankan modul FastAPI dan asynchronous logic.
-- **Node.js 18+**: Diperlukan untuk kompilasi aset React dan manajemen package (NPM).
-- **Git**: Untuk manajemen versi dan kolaborasi antar anggota tim.
+
+**🔴 Wajib Diinstall:**
+- **Python 3.10+**: Diperlukan untuk menjalankan modul FastAPI, SQLAlchemy, dan async logic
+- **PostgreSQL 12+**: ⚠️ **WAJIB** — Backend menggunakan database PostgreSQL untuk menyimpan data (users, products, orders, payments, testimonials)
+  - Di Windows: Download dari [postgresql.org](https://www.postgresql.org/download/windows/)
+  - Di macOS: `brew install postgresql`
+  - Di Linux: `sudo apt-get install postgresql`
+  - **Pastikan PostgreSQL sudah berjalan** sebelum menjalankan backend
+  - Catatan: User yang digunakan di `.env` adalah `postgres` dengan port default `5432`
+- **Node.js 18+ (include npm)**: Diperlukan untuk build dan dependency management frontend React
+- **Git**: Untuk manajemen versi dan kolaborasi tim
+
+**ℹ️ Verifikasi Instalasi:**
+```bash
+# Check Python version
+python --version
+
+# Check PostgreSQL version & status
+psql --version
+psql -U postgres -c "SELECT version();"
+
+# Check Node.js & npm version
+node --version
+npm --version
+
+# Check Git
+git --version
+```
 
 ## 🚀 Cara Menjalankan
  
-> ⚠️ **Perlu 2 terminal berjalan bersamaan** — satu untuk backend, satu untuk frontend.
+> ⚠️ **Perlu 3 terminal berjalan** — terminal PostgreSQL (jika perlu), backend, dan frontend.
  
 ### 1. Clone repository
  
@@ -390,37 +405,61 @@ graph TD
 git clone https://github.com/aidilsaputrakirsan-classroom/cloud-team-ignite.git
 cd cloud-team-ignite
 ```
- 
+
 ### 2. Jalankan Backend
- 
+
+Buka terminal pertama untuk backend:
+
 ```bash
 cd backend
+
+# Copy environment file
 cp .env.example .env
-# Edit .env — isi password PostgreSQL Anda
+
+# Edit .env — isi konfigurasi PostgreSQL
+# DATABASE_URL=postgresql://athsnack_user:your_secure_password@localhost:5432/athsnack
+# SECRET_KEY=<generate dengan: openssl rand -hex 32>
+
+# Install dependencies
 pip install -r requirements.txt
+
+# Jalankan backend
 uvicorn main:app --reload --port 8000
 ```
  
-Backend tersedia di `http://localhost:8000`  
-Dokumentasi API (Swagger UI): `http://localhost:8000/docs`
+✅ Backend tersedia di `http://localhost:8000`  
+📖 Dokumentasi API (Swagger UI): `http://localhost:8000/docs`
+
  
-### 3. Jalankan Frontend
+### 4. Jalankan Frontend
  
 Buka terminal **baru** (jangan tutup terminal backend):
  
 ```bash
 cd frontend
+
+# Copy environment file
 cp .env.example .env
-# Pastikan VITE_API_URL=http://localhost:8000
+
+# Pastikan .env berisi: VITE_API_URL=http://localhost:8000
+cat .env
+
+# Install dependencies
 npm install
+
+# Jalankan development server
 npm run dev
 ```
  
-Frontend tersedia di `http://localhost:5173`
+✅ Frontend tersedia di `http://localhost:5173`
  
-### 4. Verifikasi
+### 5. Verifikasi
  
-Buka `http://localhost:5173` — halaman **Login** akan tampil. Lakukan registrasi akun baru, kemudian login untuk mengakses aplikasi.
+Buka `http://localhost:5173` — halaman **Login** akan tampil. Lakukan:
+1. Registrasi akun baru (role: Customer)
+2. Login dengan email & password yang baru didaftar
+3. Cek apakah data tersimpan di database (akses Swagger UI di `http://localhost:8000/docs`)
+4. Untuk login sebagai Admin, hubungi team lead atau gunakan admin seed data (jika ada)
  
 ---
 
@@ -618,32 +657,6 @@ Contoh: jika client mengirim `price: -500` atau `price: "lima ratus"`, Pydantic 
 
 ---
 
-### 9. Arsitektur Aplikasi
-
-Proyek ini menggunakan pola **Separation of Concerns** — setiap file punya satu tanggung jawab yang spesifik:
-
-```
-Request dari client
-       ↓
-main.py          ← Menerima request, menentukan endpoint yang dipanggil
-       ↓
-schemas.py       ← Memvalidasi data request (Pydantic)
-       ↓
-crud.py          ← Menjalankan logika bisnis (CRUD operations)
-       ↓
-models.py        ← Mendefinisikan struktur tabel (SQLAlchemy)
-       ↓
-database.py      ← Mengelola koneksi ke PostgreSQL
-       ↓
-PostgreSQL       ← Menyimpan & mengambil data
-       ↑
-(alur balik: data dikembalikan ke client sebagai JSON)
-```
-
-> 💡 **Kenapa dipisah jadi banyak file?** Ketika proyek berkembang menjadi microservices (fase Minggu 12–14), struktur ini membuat kode lebih mudah dibaca, di-test, dan di-maintain oleh seluruh anggota tim.
-
----
-
 ## 🏗️ Panduan Membangun REST API
 
 ## 📚 Dasar Teori
@@ -730,12 +743,6 @@ Server selalu mengembalikan **status code** di setiap response untuk memberitahu
 | Rentan SQL Injection jika tidak hati-hati | Aman dari SQL Injection secara default |
 | Tidak portable antar database | Bisa pindah database tanpa mengubah kode |
 
-**Cara kerja SQLAlchemy:**
-```
-Python Object  →  SQLAlchemy ORM  →  SQL Query  →  PostgreSQL
-Item(name="Laptop")  →  translasi otomatis  →  INSERT INTO items...  →  data tersimpan
-```
-
 ---
 
 ### 7. Pydantic — Validasi Data
@@ -760,30 +767,6 @@ Contoh: jika client mengirim `price: -500` atau `price: "lima ratus"`, Pydantic 
 | **Validasi otomatis** | Terintegrasi dengan Pydantic untuk validasi request/response |
 | **Dependency Injection** | Sistem `Depends()` yang elegan untuk koneksi database, auth, dll. |
 | **Type hints** | Memanfaatkan type hints Python untuk validasi dan dokumentasi |
-
----
-
-### 9. Arsitektur Aplikasi
-Proyek ini menggunakan pola **Separation of Concerns** — setiap file punya satu tanggung jawab yang spesifik:
- 
-```
-Request dari client
-       ↓
-main.py          ← Menerima request, menentukan endpoint yang dipanggil
-       ↓
-schemas.py       ← Memvalidasi data request (Pydantic)
-       ↓
-crud.py          ← Menjalankan logika bisnis (CRUD operations)
-       ↓
-models.py        ← Mendefinisikan struktur tabel (SQLAlchemy)
-       ↓
-database.py      ← Mengelola koneksi ke PostgreSQL
-       ↓
-PostgreSQL       ← Menyimpan & mengambil data
-       ↑
-(alur balik: data dikembalikan ke client sebagai JSON)
-```
- 
 ---
 
 ## 📡 Dokumentasi API
@@ -824,30 +807,6 @@ http://localhost:8000
 | TESTIMONIALS | `PUT` | `/testimonials/{id}` | Update ulasan (Pemilik Only) | `200` | `403, 404` |
 | TESTIMONIALS | `PUT` | `/testimonials/{id}/toggle-visibility` | Sembunyikan/Tampilkan ulasan (Admin) | `200` | `403` |
 
-## 🚀 Cara Menjalankan
-
-### 1. Clone repository
-
-```bash
-git clone https://github.com/itk-si-cloud/cloud-team-ignite.git
-cd cloud-team-ignite
-```
-
-### 2. Setup environment
-
-```bash
-cd backend
-cp .env.example .env
-# Edit .env — isi password PostgreSQL Anda
-```
-
-### 3. Install dependencies & jalankan server
-
-```bash
-pip install -r requirements.txt
-uvicorn main:app --reload --port 8000
-```
----
 ## 🏗️ Panduan Membangun Frontend React
 ## 📚 Dasar Teori
 
@@ -1008,52 +967,6 @@ Berikut daftar fitur UI berdasarkan halaman dan komponen yang sudah diimplementa
 | **Modal Confirmasi** | `CartPage.jsx`, `AdminProducts.jsx` | Konfirmasi sebelum delete/checkout |
 
 ---
-## 📊 Daftar Endpoint API
- 
-Seluruh endpoint yang tersedia pada aplikasi Cloud App. Endpoint yang ditandai ✅ pada kolom Auth membutuhkan token JWT untuk dapat diakses.
- 
-> ✅ = Membutuhkan token JWT di header: `Authorization: Bearer <token>`  
-> ❌ = Dapat diakses tanpa token (endpoint publik)
- 
-### Endpoint Autentikasi (Publik)
- 
-| Method | Endpoint | Deskripsi | Request Body | Status Sukses | Status Error |
-|--------|----------|-----------|--------------|---------------|--------------|
-| `POST` | `/auth/register` | Mendaftarkan akun baru | `{ email, name, password }` | `201 Created` | `400` email duplikat, `422` validasi gagal |
-| `POST` | `/auth/login` | Login dan mendapatkan token | `{ email, password }` | `200 OK` + token | `401` email/password salah |
-| `GET` | `/auth/me` | Melihat profil akun yang sedang aktif | — | `200 OK` | `401` token tidak valid |
- 
-### Endpoint Item (Membutuhkan Token)
- 
-| Method | Endpoint | Deskripsi | Request | Status Sukses | Status Error |
-|--------|----------|-----------|---------|---------------|--------------|
-| `POST` | `/items` | Menambahkan item baru ke inventori | Body: `{ name, price, description?, quantity? }` | `201 Created` | `401`, `422` |
-| `GET` | `/items` | Mengambil daftar semua item | Query: `search?`, `skip?`, `limit?` | `200 OK` | `401` |
-| `GET` | `/items/stats` | Melihat statistik inventori | — | `200 OK` | `401` |
-| `GET` | `/items/{id}` | Mengambil detail satu item berdasarkan ID | Path: `id` | `200 OK` | `401`, `404` |
-| `PUT` | `/items/{id}` | Memperbarui data item (hanya field yang dikirim yang berubah) | Path: `id`, Body: field yang ingin diubah | `200 OK` | `401`, `404`, `422` |
-| `DELETE` | `/items/{id}` | Menghapus item dari inventori | Path: `id` | `204 No Content` | `401`, `404` |
- 
-### Endpoint Lainnya (Publik)
- 
-| Method | Endpoint | Deskripsi | Status Sukses |
-|--------|----------|-----------|---------------|
-| `GET` | `/health` | Memeriksa apakah server berjalan normal | `200 OK` |
-| `GET` | `/team` | Menampilkan informasi anggota tim | `200 OK` |
- 
-### Kode Status yang Digunakan
- 
-| Kode | Artinya | Kapan Muncul |
-|---|---|---|
-| `200 OK` | Permintaan berhasil | GET, PUT yang berhasil |
-| `201 Created` | Data baru berhasil dibuat | POST register, POST items |
-| `204 No Content` | Berhasil, tidak ada data dikembalikan | DELETE yang berhasil |
-| `400 Bad Request` | Data ditolak karena konflik | Email sudah terdaftar |
-| `401 Unauthorized` | Tidak memiliki akses | Token tidak ada, token tidak valid, login gagal |
-| `404 Not Found` | Data tidak ditemukan | ID item tidak ada di database |
-| `422 Unprocessable Entity` | Format data tidak sesuai aturan | Field wajib kosong, harga negatif, password terlalu pendek |
- 
----
  
 ### Alur Autentikasi
  
@@ -1084,7 +997,6 @@ Seluruh endpoint yang tersedia pada aplikasi Cloud App. Endpoint yang ditandai �
 │     Tampilan kembali ke halaman login                       │
 └─────────────────────────────────────────────────────────────┘
 ```
- 
 ---
  
 ### Contoh Response Login

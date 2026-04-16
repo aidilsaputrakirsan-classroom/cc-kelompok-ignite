@@ -1,0 +1,80 @@
+[33m38910dc[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m update docker-run.sh
+[33ma5e3495[m[33m ([m[1;31morigin/main[m[33m)[m feat: add Docker network setup and run scripts
+[33mc9ff448[m feat: add multi-stage Docker build for frontend
+[33m1772acc[m update README.md bagian Dokumentasi API
+[33m8792950[m Merge branch 'main' of https://github.com/aidilsaputrakirsan-classroom/cc-kelompok-ignite
+[33m20d82ea[m add non-root user for Dockerfile
+[33m9bdd6be[m update perbaikan frontend dan backend
+[33m0109a74[m perbaikan backend
+[33m7e44f8f[m update fe y
+[33md676448[m Update Frontend Regis
+[33m6182fe2[m Update Frontend Admin
+[33m0b50a7b[m Update Frontend Admin
+[33mff71aff[m update akun admin
+[33m2276068[m menambahkan database-schema.md
+[33md0571d5[m Update Frontend
+[33mb7896dc[m Update Frontend Project
+[33mfe2101f[m Update Frontend Project
+[33ma3e3377[m Update Frontend Project
+[33m614aa48[m update api-test-result.md
+[33m3a46006[m update README
+[33m8fbd001[m update perbaikan backend
+[33m5aa135f[m update perbaikan backend
+[33mc66b7ce[m update perbaikan backend sesuai ERD
+[33mbf18f86[m update perbaikan backend sesuai ERD
+[33mceed47a[m perbaikan tabel backend project
+[33m43ed25d[m update file
+[33m2606dad[m update tabel database  project
+[33m42c986d[m update tabel database  project
+[33mca48f0b[m update progress backend project
+[33m58ea502[m update progress backend project
+[33mf373fdc[m feat: add Docker support for backend
+[33m5d917ae[m update team
+[33mbd5b0bc[m update README
+[33mf79738d[m docs: add UI test results and authentication documentation
+[33m11b828e[m docs: add testing screenshots
+[33m1d2d2a1[m update backend & frontend
+[33m9014402[m menambahkan notifikasi & loading state
+[33m8ca588d[m update README
+[33m3d025b9[m update docs: add UI testing results
+[33m83b0f96[m docs: add testing screenshots
+[33mc45e84a[m Merge branch 'main' of github.com:aidilsaputrakirsan-classroom/cc-kelompok-ignite
+[33mc3fad5a[m docs: add UI testing results
+[33m3182764[m Add setup-guide.md
+[33ma3523a2[m menambahkan validasi & enpoints get/items/stats
+[33m73ac0bd[m update main.py
+[33m79db976[m feat: add login/register UI and auth integration
+[33m656492d[m feat: add JWT authentication
+[33m00d373e[m update fitur sorting
+[33m72208db[m update README
+[33m66cb804[m docs: add UI testing results
+[33m09db7b1[m docs: add testing screenshots
+[33m40fbc7e[m Add Vite environment variable for API URL
+[33m8e182fe[m feat: add sorting feature in item list
+[33m02d7c41[m feat: add React CRUD frontend with component architectur - Add api.js: centralized API service layer - Add Header component: title, stats, API status - Add SearchBar component: search with clear - Add ItemForm component: create/edit with validation - Add ItemCard component: display item with edit/delete - Add ItemList component: grid layout with empty state - Update App.jsx: state management, CRUD handlers
+[33mde29d9a[m docs: add API testing results via Swagger UI
+[33m32470e0[m docs: add API documentation
+[33m82c496d[m Merge branch 'main' of github.com:aidilsaputrakirsan-classroom/cc-kelompok-ignite
+[33m93312ab[m docs: add API documentation
+[33m4a3123e[m docs: add API documentation
+[33m98c7b17[m docs: add API documentation
+[33mc0efd4c[m update main.py
+[33m0b1d8d5[m Add setup.sh, update gitignore
+[33m1a78229[m update endpoint
+[33m9397a0d[m chore: add gitignore
+[33mc391548[m feat: add REST API CRUD with PostgreSQL integration Add database.py: PostgreSQL connection via SQLAlchemy - Add models.py: Item model with timestamps - Add schemas.py: Pydantic validation schemas - Add crud.py: CRUD operations with search & pagination - Update main.py: CRUD endpoints with proper status codes - Add .env.example: database URL template
+[33m92d36d2[m update README
+[33mf63681f[m update README
+[33macfa390[m menghapus pdf yang tidak sengaja terunggah
+[33m473937a[m Mengisi Deskripsi Proyek
+[33m842a0d2[m update README
+[33me520b00[m update backend
+[33m2791555[m Add README
+[33mbbb948d[m feat: add React frontend with API integration
+[33mc5e6e5a[m docs: add member info - [NAMA]
+[33m895e82b[m docs: add member info - [Desnita]
+[33mfeb9773[m docs: add member info - [Krishandy]
+[33m43647de[m feat: add FastAPI backend with health check and team endpoint
+[33m673f530[m docs: add member info - [Andini]
+[33md473dc7[m docs: add member info - [Andini]
+[33md4b9be9[m chore: initial project structure
