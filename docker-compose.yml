@@ -43,6 +43,8 @@ services:
       - ./backend/.env.docker
     ports:
       - "8000:8000"
+    volumes:
+    - ./backend/uploads:/app/uploads  
     networks:
       - cloudnet
     depends_on:
