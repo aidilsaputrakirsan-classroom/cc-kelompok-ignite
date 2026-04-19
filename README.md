@@ -22,6 +22,7 @@ ATHSNAC (E-Commerce UMKM RAZ'Q) adalah platform e-commerce berbasis website yang
     - [**Diagram 1: Overall System Architecture**](#diagram-1-overall-system-architecture)
     - [**Diagram 2: Frontend Component \& Service Architecture**](#diagram-2-frontend-component--service-architecture)
     - [**Diagram 3: Backend API Endpoints by Module**](#diagram-3-backend-api-endpoints-by-module)
+    - [**Diagram 4: Entity Relationship Diagram (ERD)**](#diagram-4-entity-relationship-diagram-erd)
   - [🚀 Getting Started](#-getting-started)
     - [Prasyarat](#prasyarat)
   - [🚀 Cara Menjalankan](#-cara-menjalankan)
@@ -360,15 +361,53 @@ graph TD
     style Testimonials fill:#ffe1e1
     style DB fill:#e1e1ff
 ```
----
-
-> **📌 Catatan Arsitektur:**
+**📌 Catatan Arsitektur:**
 > - **Frontend (React + Vite)** berjalan di port **5173** dengan hot-reload development server
 > - **Backend (FastAPI + Uvicorn)** berjalan di port **8000** dengan auto-documentation Swagger UI
 > - **Database (PostgreSQL)** di port **5432** dengan SQLAlchemy ORM untuk abstraksi query
 > - **JWT Authentication** memastikan setiap request authenticated dan ter-validasi role-nya
 > - **Separation of Concerns** memisahkan routing, validasi, business logic, dan data access dalam file terpisah
  
+
+### **Diagram 4: Entity Relationship Diagram (ERD)**
+
+![ERD ATHSNAC](./docs/images/erd%20cc.drawio.png)
+
+**📊 Daftar Tabel & Penjelasan:**
+
+| Tabel | Deskripsi | Field Utama |
+|-------|-----------|-------------|
+| **USER** | Menyimpan data pengguna (customer & admin) | id, email, name, password_hash, role, phone, address |
+| **PRODUCT** | Katalog produk UMKM | id, name, description, category, price, stock, image_url |
+| **CART** | Keranjang belanja per user | id, user_id, status |
+| **CARTITEM** | Item dalam keranjang | id, cart_id, product_id, quantity, price_at_time, subtotal |
+| **ORDER** | Pesanan yang ditempatkan customer | id, user_id, order_code, receipt_name, total_amount, status |
+| **ORDERITEM** | Item dalam order | id, order_id, product_id, quantity, price_at_time, subtotal |
+| **PAYMENT** | Metode pembayaran & verifikasi | id, order_id, payment_method, amount, payment_status, verified_by |
+| **TESTIMONIAL** | Review/rating produk dari customer | id, product_id, user_id, order_id, rating, comment, is_visible |
+
+**🔗 Hubungan Antar Tabel:**
+
+| Relasi | Penjelasan |
+|--------|-----------|
+| **USER → CART** | Setiap pelanggan punya 1 keranjang belanja (bisa aktif atau tidak) |
+| **USER → ORDER** | Setiap pelanggan bisa membuat banyak pesanan |
+| **USER → TESTIMONIAL** | Setiap pelanggan bisa menulis banyak review/rating produk |
+| **USER → PAYMENT** | Admin bisa memverifikasi banyak pembayaran dari customer |
+| **CART → CARTITEM** | Setiap keranjang berisi banyak item produk |
+| **CARTITEM → PRODUCT** | Setiap item keranjang terhubung ke 1 produk tertentu |
+| **ORDER → ORDERITEM** | Setiap pesanan berisi banyak item produk |
+| **ORDERITEM → PRODUCT** | Setiap item pesanan terhubung ke 1 produk tertentu |
+| **ORDER → PAYMENT** | Setiap pesanan bisa memiliki banyak pembayaran (untuk cicilan) |
+| **ORDER → TESTIMONIAL** | Setiap pesanan bisa punya banyak review dari produk berbeda |
+| **PRODUCT → TESTIMONIAL** | Setiap produk bisa menerima banyak review dari customer |
+
+**💡 Fitur Penting:**
+- **Auto Hapus Terkait** — Jika customer dihapus, semua keranjang, pesanan, review, dan pembayaran-nya otomatis terhapus juga
+- **Simpan Harga** — Harga produk saat ditambah ke keranjang/pesanan disimpan tetap, tidak ikut berubah jika harga produk berubah
+- **Track Status** — Pesanan dan pembayaran punya status (pending, success, dll) untuk memantau progres
+- **Verifikasi Pembelian** — Review harus terhubung ke pesanan asli agar tidak ada review palsu dari yang tidak beli
+
 ---
 
 ## 🚀 Getting Started
