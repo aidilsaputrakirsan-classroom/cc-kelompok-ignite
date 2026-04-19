@@ -1,35 +1,67 @@
 # ============================================================
-# Stage: Production Image
+# Stage 1: Builder Stage
 # ============================================================
 
-# 1. Base image — Python 3.12 slim
-FROM python:3.12-slim
+FROM python:3.12-slim AS builder
 
-# 2. Set working directory
+# Set working directory
 WORKDIR /app
 
-# 3. Copy requirements (cache optimization)
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    gcc \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements first (cache optimization)
 COPY requirements.txt .
 
-# 4. Install dependencies + curl untuk healthcheck
-RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/* && \
+# Create virtual environment
+RUN python -m venv /opt/venv
+
+# Activate venv path
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Install Python dependencies
+RUN pip install --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
-# 5. Copy seluruh kode
+
+# ============================================================
+# Stage 2: Production Stage
+# ============================================================
+
+FROM python:3.12-slim
+
+# Set working directory
+WORKDIR /app
+
+# Install only curl for healthcheck
+RUN apt-get update && apt-get install -y curl && \
+    rm -rf /var/lib/apt/lists/*
+
+# Copy virtual environment from builder
+COPY --from=builder /opt/venv /opt/venv
+
+# Set venv path
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Copy application code only
 COPY . .
 
-# 6. Buat non-root user + kasih permission
+# Create non-root user
 RUN useradd -m appuser && chown -R appuser /app
 
-# 7. Gunakan user tersebut
+# Use non-root user
 USER appuser
 
-# 8. Expose port
+# Expose application port
 EXPOSE 8000
 
-# 9. Healthcheck
+# Healthcheck endpoint
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
-# 10. Run aplikasi
+# Run FastAPI app
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
