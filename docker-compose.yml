@@ -3,53 +3,71 @@
 # Komputasi Awan — SI ITK
 # ============================================================
 # Usage:
-#   docker compose up -d          # Start semua services
-#   docker compose down            # Stop & remove
-#   docker compose logs -f         # Lihat logs
-#   docker compose ps              # Status services
+#   docker compose up -d         # Start semua services di background (detached)
+#   docker compose down          # Stop & remove semua container, network, dll.
+#   docker compose logs -f       # Lihat logs secara real-time (follow)
+#   docker compose ps            # Status services yang sedang berjalan
 # ============================================================
 
+# 'services' mendefinisikan aplikasi/kontainer apa saja yang akan dijalankan.
 services:
   # ==================== DATABASE ====================
+  # Service untuk database PostgreSQL
   db:
+    # Menggunakan image resmi PostgreSQL versi 16 dengan OS Alpine yang ringan
     image: postgres:16-alpine
+    # Memberikan nama spesifik pada kontainer agar mudah dikenali
     container_name: cloudapp-db
+    # Kontainer akan selalu di-restart otomatis jika crash, kecuali di-stop manual
     restart: unless-stopped
+    # Variabel lingkungan (Environment Variables) untuk inisialisasi database
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres123
-      POSTGRES_DB: cloudapp
+      POSTGRES_USER: postgres       # Username default DB
+      POSTGRES_PASSWORD: postgres123 # Password untuk user tersebut
+      POSTGRES_DB: cloudapp         # Nama database yang otomatis dibuat saat pertama jalan
+    # Mapping port: Port 5433 di Host (komputer Anda) diarahkan ke Port 5432 di dalam kontainer
     ports:
       - "5433:5432"
+    # Menyimpan data database secara permanen (persistent) agar tidak hilang saat kontainer mati
     volumes:
       - pgdata:/var/lib/postgresql/data
+    # Menghubungkan kontainer ini ke jaringan khusus bernama 'cloudnet'
     networks:
       - cloudnet
+    # Mengecek apakah database benar-benar sudah siap menerima koneksi
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d cloudapp"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
+      test: ["CMD-SHELL", "pg_isready -U postgres -d cloudapp"] # Perintah cek status DB
+      interval: 10s       # Lakukan pengecekan setiap 10 detik
+      timeout: 5s         # Batas waktu pengecekan (timeout)
+      retries: 5          # Coba ulang hingga 5 kali jika gagal
+      start_period: 10s   # Beri waktu tunggu 10 detik saat awal booting sebelum mulai ngecek
 
   # ==================== BACKEND ====================
+  # Service untuk aplikasi Backend (contoh: Python/FastAPI/Django dll)
   backend:
+    # Mendefinisikan cara membangun (build) image backend secara lokal
     build:
-      context: ./backend
-      dockerfile: Dockerfile
+      context: ./backend      # Folder tempat source code backend berada
+      dockerfile: Dockerfile  # Nama file Dockerfile yang digunakan
     container_name: cloudapp-backend
     restart: unless-stopped
+    # Membaca variabel lingkungan dari file eksternal agar lebih rapi/aman
     env_file:
       - ./backend/.env.docker
+    # Mapping port: Port 8000 di Host diarahkan ke Port 8000 di kontainer
     ports:
       - "8000:8000"
+    # Bind mount: Menyinkronkan folder lokal './backend/uploads' dengan '/app/uploads' di dalam kontainer (misal untuk simpan foto/file)
     volumes:
     - ./backend/uploads:/app/uploads  
     networks:
       - cloudnet
+    # Menentukan bahwa backend membutuhkan service 'db' untuk jalan lebih dulu
     depends_on:
       db:
+        # Backend baru akan dijalankan SETELAH status healthcheck 'db' bernilai "healthy"
         condition: service_healthy
+    # Mengecek apakah backend sudah berjalan normal (biasanya mengecek endpoint /health)
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
       interval: 30s
@@ -58,28 +76,35 @@ services:
       start_period: 15s
 
   # ==================== FRONTEND ====================
+  # Service untuk aplikasi Frontend (contoh: React, Vue, Vite)
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      # Mengirim variabel (Arguments) saat proses 'build' image frontend
       args:
-        VITE_API_URL: http://localhost:8000
+        VITE_API_URL: http://localhost:8000 # Memberitahu frontend kemana harus menembak API backend
     container_name: cloudapp-frontend
     restart: unless-stopped
+    # Mapping port: Port 3000 di Host diarahkan ke Port 80 di kontainer (biasanya port web server seperti Nginx)
     ports:
       - "3000:80"
     networks:
       - cloudnet
+    # Memastikan service backend dijalankan sebelum frontend
     depends_on:
       - backend
 
 # ==================== VOLUMES ====================
+# Deklarasi volume eksternal yang dikelola oleh Docker untuk penyimpanan permanen
 volumes:
   pgdata:
-    name: cloudapp-pgdata
+    name: cloudapp-pgdata # Nama spesifik volume di Docker Host
 
 # ==================== NETWORKS ====================
+# Deklarasi jaringan (network) buatan sendiri agar antar kontainer bisa saling berkomunikasi menggunakan nama service-nya
 networks:
   cloudnet:
     name: cloudapp-network
+    # Tipe 'bridge' adalah tipe jaringan standar untuk kontainer di host tunggal
     driver: bridge
