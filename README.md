@@ -30,6 +30,11 @@ ATHSNAC (E-Commerce UMKM RAZ'Q) adalah platform e-commerce berbasis website yang
     - [2. Jalankan Backend](#2-jalankan-backend)
     - [4. Jalankan Frontend](#4-jalankan-frontend)
     - [5. Verifikasi](#5-verifikasi)
+  - [🐳 Docker \& Docker Compose](#-docker--docker-compose)
+    - [Quick Start dengan Docker Compose](#quick-start-dengan-docker-compose)
+    - [Docker Compose Commands](#docker-compose-commands)
+    - [Docker Hub Image Reference](#docker-hub-image-reference)
+    - [Environment Setup untuk Docker](#environment-setup-untuk-docker)
   - [📁 Struktur Proyek](#-struktur-proyek)
   - [📚 Dasar Teori](#-dasar-teori)
     - [1. API (Application Programming Interface)](#1-api-application-programming-interface)
@@ -72,7 +77,9 @@ ATHSNAC (E-Commerce UMKM RAZ'Q) adalah platform e-commerce berbasis website yang
     - [5. **Role-Based Access Control (RBAC)**](#5-role-based-access-control-rbac)
     - [6. **Token Security Best Practices**](#6-token-security-best-practices)
   - [📂 Dokumentasi](#-dokumentasi)
-  - [| `docs/images/` | Lead QA \& Docs | Screenshot hasil pengujian API dan UI |](#-docsimages--lead-qa--docs--screenshot-hasil-pengujian-api-dan-ui-)
+    - [📋 Quality Assurance \& Testing](#-quality-assurance--testing)
+    - [📖 Development Documentation](#-development-documentation)
+  - [| `docs/api-documentation.md` | Backend | Dokumentasi lengkap API endpoints](#-docsapi-documentationmd--backend--dokumentasi-lengkap-api-endpoints)
   - [📅 Roadmap](#-roadmap)
 ---
 ## Fitur Utama
@@ -415,6 +422,9 @@ graph TD
 ### Prasyarat
 
 **🔴 Wajib Diinstall:**
+- **Docker & Docker Compose** (Opsional, untuk development dengan container)
+  - Download dari [docker.com](https://www.docker.com/products/docker-desktop)
+  - Verifikasi: `docker --version` dan `docker compose --version`
 - **Python 3.10+**: Diperlukan untuk menjalankan modul FastAPI, SQLAlchemy, dan async logic
 - **PostgreSQL 12+**: ⚠️ **WAJIB** — Backend menggunakan database PostgreSQL untuk menyimpan data (users, products, orders, payments, testimonials)
   - Di Windows: Download dari [postgresql.org](https://www.postgresql.org/download/windows/)
@@ -507,7 +517,98 @@ Buka `http://localhost:5173` — halaman **Login** akan tampil. Lakukan:
 2. Login dengan email & password yang baru didaftar
 3. Cek apakah data tersimpan di database (akses Swagger UI di `http://localhost:8000/docs`)
 4. Untuk login sebagai Admin, hubungi team lead atau gunakan admin seed data (jika ada)
- 
+
+---
+
+## 🐳 Docker & Docker Compose
+
+### Quick Start dengan Docker Compose
+
+Alternatif **mudah** tanpa perlu setup PostgreSQL, backend, dan frontend secara terpisah:
+
+```bash
+# Clone repository
+git clone https://github.com/aidilsaputrakirsan-classroom/cloud-team-ignite.git
+cd cloud-team-ignite
+
+# Jalankan semua services (backend, frontend, postgres)
+docker compose up -d
+
+# Tunggu ~10 detik untuk services startup
+sleep 10
+
+# Verifikasi semua services berjalan
+docker compose ps
+```
+
+✅ Aplikasi siap:
+- **Frontend**: http://localhost:5173
+- **Backend API**: http://localhost:8000/docs
+- **PostgreSQL**: localhost:5432
+
+### Docker Compose Commands
+
+```bash
+# Lihat status semua services
+docker compose ps
+
+# Lihat logs real-time
+docker compose logs -f
+
+# Lihat logs service tertentu
+docker compose logs -f backend
+docker compose logs -f frontend
+docker compose logs -f db
+
+# Jalankan services di background
+docker compose up -d
+
+# Stop semua services (data tetap tersimpan)
+docker compose down
+
+# Stop services & hapus semua data/volumes
+docker compose down -v
+
+# Restart semua services
+docker compose restart
+
+# Rebuild images & jalankan
+docker compose up -d --build
+```
+
+### Docker Hub Image Reference
+
+Images yang digunakan:
+
+| Service | Image | Version | Purpose |
+|---------|-------|---------|---------|
+| **Backend** | `python:3.11-slim` | 3.11 | FastAPI + SQLAlchemy |
+| **Frontend** | `node:18-alpine` | 18 | React + Vite build |
+| **Database** | `postgres:15-alpine` | 15 | PostgreSQL dengan Alpine |
+| **Nginx** | `nginx:alpine` | Alpine | Reverse proxy & static serve |
+
+**Custom Images (dari Dockerfile lokal):**
+- `athsnac-backend:latest` — dibangun dari `backend/Dockerfile`
+- `athsnac-frontend:latest` — dibangun dari `frontend/Dockerfile`
+
+### Environment Setup untuk Docker
+
+File `.env` di root project (jika menggunakan docker-compose):
+
+```env
+# Database
+POSTGRES_USER=athsnac_user
+POSTGRES_PASSWORD=your_secure_password_here
+POSTGRES_DB=athsnac_db
+DATABASE_URL=postgresql://athsnac_user:your_secure_password_here@db:5432/athsnac_db
+
+# Backend
+SECRET_KEY=your_super_secret_key_generate_with_openssl_rand_hex_32
+DEBUG=False
+
+# Frontend (di dalam container sudah otomatis menggunakan backend:8000)
+VITE_API_URL=http://localhost:8000
+```
 ---
 
 ## 📁 Struktur Proyek
@@ -574,12 +675,12 @@ cloud-team-ignite/
 │   ├── .dockerignore              ← Daftar file yang tidak masuk ke Docker image
 │   └── ...
 ├── docs/
-│   ├── api-test-results.md        ← (Lead QA & Docs) Dokumentasi hasil testing endpoint API
-│   ├── ui-test-results.md         ← (Lead QA & Docs) Dokumentasi hasil testing UI React
-│   ├── auth-test-results.md       ← (Lead QA & Docs) Dokumentasi hasil testing autentikasi JWT
-│   ├── image-comparison.md        ← (Lead QA & Docs) Perbandingan ukuran Docker image
-│   ├── docker-cheatsheet.md       ← (Lead Frontend) Referensi perintah Docker
-│   ├── database-schema.md         ← (Lead DevOps) Skema tabel database PostgreSQL
+│   ├── api-test-results.md        ←  Dokumentasi hasil testing endpoint API
+│   ├── ui-test-results.md         ←  Dokumentasi hasil testing UI React
+│   ├── auth-test-results.md       ←  Dokumentasi hasil testing autentikasi JWT
+│   ├── image-comparison.md        ←  Perbandingan ukuran Docker image
+│   ├── docker-cheatsheet.md       ←  Referensi perintah Docker
+│   ├── database-schema.md         ←  Skema tabel database PostgreSQL
 │   └── member-[NAMA].md           ← File verifikasi masing-masing anggota
 ├── .gitignore                     ← Daftar file yang tidak di-commit (termasuk .env)
 └── README.md                      ← Dokumentasi proyek (file ini)
@@ -1307,27 +1408,28 @@ SECRET_KEY = "super_secret_key_12345"
   "detail": "Token has expired"
 }
 ```
-
 ---
-
- 
 ## 📂 Dokumentasi
- 
+
 Seluruh dokumen hasil pengujian dan referensi proyek tersedia di folder `docs/`:
- 
-| File | Dibuat oleh | Keterangan |
+
+### 📋 Quality Assurance & Testing
+| File | Status | Keterangan |
+|---|--------|---|
+| `docs/auth-test-results.md` | ✅ **19/19 Tests** | Hasil pengujian autentikasi & otentikasi JWT — 100% Success Rate |
+| `docs/api-test-results.md`| ✅ | Hasil pengujian endpoint API via Swagger UI |
+| `docs/ui-test-results.md`| ✅ | Hasil pengujian 10 test case UI React via browser |
+
+### 📖 Development Documentation
+| File | Lead | Keterangan |
 |---|---|---|
-| `docs/api-test-results.md` | Lead QA & Docs | Hasil pengujian endpoint API via Swagger UI |
-| `docs/ui-test-results.md` | Lead QA & Docs | Hasil pengujian 10 test case UI React via browser |
-| `docs/auth-test-results.md` | Lead QA & Docs | Hasil pengujian test case alur autentikasi JWT |
-| `docs/database-schema.md` | Lead DevOps | Skema tabel database PostgreSQL |
-| `docs/setup-guide.md` | Lead DevOps | Panduan setup lengkap dari clone hingga running |
-| `docs/member-[NAMA].md` | Masing-masing anggota | File verifikasi kontribusi per anggota |
-| `docs/images/` | Lead QA & Docs | Screenshot hasil pengujian API dan UI | 
+| `docs/setup-guide.md` | DevOps | Panduan setup lengkap dari clone hingga running |
+| `docs/database-schema.md` | DevOps | Skema tabel database PostgreSQL dengan ERD |
+| `docs/docker-architecture.md` | DevOps | Arsitektur Docker & Docker Compose |
+| `docs/api-documentation.md` | Backend | Dokumentasi lengkap API endpoints 
 ---
 
----
- ## 📅 Roadmap
+## 📅 Roadmap
 
 | Minggu | Target | Status |
 |--------|--------|--------|
@@ -1335,7 +1437,7 @@ Seluruh dokumen hasil pengujian dan referensi proyek tersedia di folder `docs/`:
 | 2 | REST API + Database | ✅ |
 | 3 | React Frontend | ✅ |
 | 4 | Full-Stack Integration | ✅ |
-| 5-7 | Docker & Compose | ⬜ |
+| 5-7 | Docker & Compose |✅|
 | 8 | UTS Demo | ⬜ |
 | 9-11 | CI/CD Pipeline | ⬜ |
 | 12-14 | Microservices | ⬜ |
