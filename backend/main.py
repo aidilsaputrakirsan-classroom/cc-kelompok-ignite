@@ -7,6 +7,8 @@ from fastapi import FastAPI, Depends, HTTPException, Query, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
+from fastapi.responses import JSONResponse
+from sqlalchemy import text
 
 from database import engine, get_db
 from models import Base, User, OrderItem, Product, Payment
@@ -72,14 +74,33 @@ def root():
 
 
 @app.get("/health", tags=["System"])
-def health_check():
-    """Health check endpoint."""
-    return {
+def health_check(db: Session = Depends(get_db)):
+    """
+    Health check endpoint - cek status backend dan database.
+    """
+
+    health = {
         "status": "healthy",
+        "service": "ATHSNACK API",
         "version": "1.0.0",
-        "service": "ATHSNACK API"
+        "timestamp": datetime.now().isoformat()
     }
 
+    try:
+        # cek koneksi database
+        db.execute(text("SELECT 1"))
+        health["database"] = "connected"
+
+    except Exception as e:
+        health["status"] = "unhealthy"
+        health["database"] = f"error: {str(e)}"
+
+    status_code = 200 if health["status"] == "healthy" else 503
+
+    return JSONResponse(
+        content=health,
+        status_code=status_code
+    )
 
 @app.get("/team", tags=["System"])
 def team_info():
@@ -1043,5 +1064,5 @@ def delete_testimonial(
     success = crud.delete_testimonial(db=db, testimonial_id=testimonial_id)
     if not success:
         raise HTTPException(status_code=404, detail=f"Testimonial {testimonial_id} tidak ditemukan")
-    return None
+    
     return None
