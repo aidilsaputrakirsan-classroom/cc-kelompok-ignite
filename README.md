@@ -1001,7 +1001,7 @@ Prinsip **Separation of Concerns** berarti setiap file hanya memiliki satu tangg
 | `OrdersPage.jsx` | Riwayat pesanan customer dengan status, detail, dan timeline pengiriman |
 | `TestimoniPage.jsx` | Halaman daftar testimonial dari customer lain (publik) |
 | `ProfilePage.jsx` | Profil customer: data pribadi, riwayat pesanan, dan opsi edit |
-| `AboutPage.jsx` | Informasi tentang ATHSNAC, visi-misi, dan contact details |
+| `AboutPage.jsx` | Informasi tentang ATHSNAC, visi dan misi, dan contact details |
 | **Admin Pages** | |
 | `AdminDashboard.jsx` | Dashboard utama admin dengan KPI, statistik penjualan, dan quick actions |
 | `AdminProducts.jsx` | Manajemen produk: CRUD, bulk edit, filter, dan statistik inventori |
