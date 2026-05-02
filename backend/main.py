@@ -219,7 +219,7 @@ def list_products(
     skip: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=100),
     search: str = Query(None),
-    category: str = Query(None),
+    category: str = Query(None, description="Filter kategori (case insensitive)"),
     db: Session = Depends(get_db),
 ):
     """
@@ -359,6 +359,22 @@ def delete_product(
         raise HTTPException(status_code=404, detail=f"Produk {product_id} tidak ditemukan")
     return None
 
+@app.get("/products/categories", tags=["Products"])
+def get_categories(db: Session = Depends(get_db)):
+    """
+    Ambil daftar kategori produk yang tersedia.
+    
+    *Endpoint ini bisa diakses oleh siapa saja*
+    """
+    categories = db.query(Product.category).distinct().all()
+    
+    # hasil query berupa tuple → ubah ke list biasa
+    category_list = [c[0] for c in categories if c[0]]
+    
+    return {
+        "total": len(category_list),
+        "categories": category_list
+    }
 
 # ==================== 4. CART ENDPOINTS ====================
 
