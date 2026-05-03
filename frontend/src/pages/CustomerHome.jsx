@@ -28,15 +28,30 @@ export default function CustomerHome({ user, onLogout }) {
   return (
     <div style={styles.page}>
       <Header user={user} onLogout={handleLogout} />
+
       <main style={styles.main}>
         <section id="home" style={styles.heroSection}>
           <div style={styles.heroContent}>
             <p style={styles.heroLabel}>Oleh-oleh Khas Balikpapan</p>
-            <h1 style={styles.heroTitle}>Cita Rasa Asli, Langsung dari Dapur ATHSNAC</h1>
-            <p style={styles.heroText}>Snack & makanan khas Balikpapan kualitas terjamin</p>
+            <h1 style={styles.heroTitle}>
+              Cita Rasa Asli, Langsung dari Dapur ATHSNAC
+            </h1>
+            <p style={styles.heroText}>
+              Snack & makanan khas Balikpapan kualitas terjamin
+            </p>
             <div style={styles.heroActions}>
-              <button style={styles.heroButton} onClick={() => navigate("/shop")}>Lihat Produk</button>
-              <button style={styles.secondaryButton} onClick={() => navigate("/about")}>Pelajari Lebih</button>
+              <button
+                style={styles.heroButton}
+                onClick={() => navigate("/shop")}
+              >
+                Lihat Produk
+              </button>
+              <button
+                style={styles.secondaryButton}
+                onClick={() => navigate("/about")}
+              >
+                Pelajari Lebih
+              </button>
             </div>
           </div>
         </section>
@@ -54,7 +69,15 @@ export default function CustomerHome({ user, onLogout }) {
             <h2 style={styles.featureTitle}>Kata Pelanggan</h2>
             <div style={styles.divider} />
           </div>
-          <div style={styles.emptySection} />
+
+          <div style={styles.testimonialList}>
+            {testimonials.map((item, index) => (
+              <div key={index} style={styles.testimonialCard}>
+                <p style={styles.testimonialText}>"{item.text}"</p>
+                <p style={styles.testimonialAuthor}>- {item.name}</p>
+              </div>
+            ))}
+          </div>
         </section>
       </main>
     </div>
@@ -64,7 +87,7 @@ export default function CustomerHome({ user, onLogout }) {
 const styles = {
   page: {
     minHeight: "100vh",
-    backgroundColor: "#FFF4E6",
+    backgroundColor: "var(--bg-page)",
     paddingBottom: "40px",
   },
   main: {
@@ -81,15 +104,15 @@ const styles = {
     alignItems: "center",
     textAlign: "center",
     padding: "48px 24px",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "var(--surface)",
     borderRadius: "28px",
   },
   heroLabel: {
     margin: 0,
     fontSize: "0.95rem",
     fontWeight: 700,
-    color: "#F57C00",
-    opacity: 0.8,
+    color: "var(--brand)",
+    opacity: 0.9,
     textTransform: "uppercase",
     letterSpacing: "0.12em",
   },
@@ -97,12 +120,12 @@ const styles = {
     margin: "20px 0 12px",
     fontSize: "3rem",
     lineHeight: 1.05,
-    color: "#2E1F14",
+    color: "var(--text-primary)",
   },
   heroText: {
     margin: 0,
     fontSize: "1.05rem",
-    color: "#70503C",
+    color: "var(--text-secondary)",
     lineHeight: 1.8,
   },
   heroActions: {
@@ -112,41 +135,12 @@ const styles = {
     flexWrap: "wrap",
     justifyContent: "center",
   },
-  emptySection: {
-    minHeight: "220px",
-  },
-  testimonialSection: {
-    marginBottom: "40px",
-  },
-  testimonialList: {
-    display: "grid",
-    gap: "18px",
-    gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-  },
-  testimonialCard: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: "22px",
-    padding: "24px",
-    border: "1px solid #F3D2B3",
-  },
-  testimonialText: {
-    margin: 0,
-    color: "#5C4635",
-    lineHeight: 1.8,
-    fontSize: "1rem",
-  },
-  testimonialAuthor: {
-    margin: "18px 0 0",
-    color: "#2E1F14",
-    fontWeight: 700,
-    fontSize: "0.95rem",
-  },
   heroButton: {
     minWidth: "180px",
     padding: "16px 24px",
     borderRadius: "22px",
     border: "none",
-    backgroundColor: "#F57C00",
+    backgroundColor: "var(--brand)",
     color: "white",
     fontWeight: 700,
     cursor: "pointer",
@@ -156,8 +150,8 @@ const styles = {
     padding: "16px 24px",
     borderRadius: "22px",
     border: "none",
-    backgroundColor: "#FFE7D0",
-    color: "#F57C00",
+    backgroundColor: "var(--brand-light)",
+    color: "var(--brand)",
     fontWeight: 700,
     cursor: "pointer",
   },
@@ -173,76 +167,37 @@ const styles = {
   featureTitle: {
     margin: 0,
     fontSize: "2rem",
-    color: "#2E1F14",
+    color: "var(--text-primary)",
   },
   divider: {
     flex: 1,
     height: "1px",
-    backgroundColor: "#F3D2B3",
+    backgroundColor: "var(--divider)",
   },
-  productGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-    gap: "20px",
-  },
-  placeholderText: {
-    textAlign: "center",
-    color: "#70503C",
-    fontSize: "1rem",
-    padding: "40px",
-  },
-  aboutSection: {
+  testimonialSection: {
     marginBottom: "40px",
   },
-  aboutWrapper: {
+  testimonialList: {
     display: "grid",
-    gridTemplateColumns: "1.2fr 1fr",
-    gap: "32px",
-    alignItems: "center",
-    backgroundColor: "#FFFFFF",
-    borderRadius: "28px",
-    padding: "32px",
+    gap: "18px",
+    gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
   },
-  aboutTextWrapper: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "16px",
+  testimonialCard: {
+    backgroundColor: "var(--surface)",
+    borderRadius: "22px",
+    padding: "24px",
+    border: "1px solid var(--border-card)",
   },
-  aboutText: {
+  testimonialText: {
     margin: 0,
-    color: "#70503C",
-    fontSize: "1rem",
+    color: "var(--text-secondary)",
     lineHeight: 1.8,
+    fontSize: "1rem",
   },
-  aboutImage: {
-    width: "100%",
-    minHeight: "260px",
-    objectFit: "cover",
-    borderRadius: "24px",
-    backgroundColor: "#F3F0EE",
-  },
-  contactSection: {
-    marginBottom: "40px",
-  },
-  contactWrapper: {
-    display: "grid",
-    gridTemplateColumns: "1fr 1.1fr",
-    gap: "32px",
-    alignItems: "center",
-    backgroundColor: "#FFFFFF",
-    borderRadius: "28px",
-    padding: "32px",
-  },
-  contactImage: {
-    width: "100%",
-    minHeight: "260px",
-    objectFit: "cover",
-    borderRadius: "24px",
-    backgroundColor: "#F3F0EE",
-  },
-  contactInfo: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "16px",
+  testimonialAuthor: {
+    margin: "18px 0 0",
+    color: "var(--text-primary)",
+    fontWeight: 700,
+    fontSize: "0.95rem",
   },
 }
