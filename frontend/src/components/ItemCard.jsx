@@ -81,11 +81,11 @@ function ItemCard({ item, onEdit, onDelete, isAdmin = false }) {
 
 const styles = {
     card: {
-        backgroundColor: "#FFFFFF",
+        backgroundColor: "var(--surface)",
         padding: "1.5rem",
         borderRadius: "22px",
-        border: "1px solid #F2D1B3",
-        boxShadow: "0 20px 40px rgba(245, 124, 0, 0.08)",
+        border: "1px solid var(--brand-border-light)",
+        boxShadow: "var(--card-shadow)",
         transition: "transform 0.2s, box-shadow 0.2s",
         display: "flex",
         flexDirection: "column",
@@ -106,12 +106,12 @@ const styles = {
         width: "100%",
         height: "180px",
         borderRadius: "14px",
-        backgroundColor: "#FFF4E6",
+        backgroundColor: "var(--surface-placeholder)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         marginBottom: "1.2rem",
-        border: "1px dashed #F2D1B3",
+        border: "1px dashed var(--brand-border-light)",
     },
     placeholderIcon: {
         fontSize: "3rem",
@@ -126,21 +126,21 @@ const styles = {
     name: {
         margin: 0,
         fontSize: "1.25rem",
-        color: "#2E1F14",
+        color: "var(--text-primary)",
     },
     price: {
         fontWeight: "700",
-        color: "#D95B12",
+        color: "var(--brand-hover)",
         fontSize: "1.1rem",
         whiteSpace: "nowrap",
     },
     categoryText: {
         margin: "0.5rem 0 0 0",
         fontSize: "0.85rem",
-        color: "#8A5D3B",
+        color: "var(--text-muted)",
     },
     description: {
-        color: "#5C4635",
+        color: "var(--text-secondary)",
         fontSize: "0.95rem",
         margin: "0 0 1rem 0",
         lineHeight: 1.6,
@@ -149,7 +149,7 @@ const styles = {
         display: "flex",
         gap: "1rem",
         fontSize: "0.9rem",
-        color: "#70503C",
+        color: "var(--text-secondary)",
         marginBottom: "1rem",
     },
     quantity: {
@@ -162,8 +162,8 @@ const styles = {
     btnEdit: {
         flex: 1,
         padding: "0.85rem 1rem",
-        backgroundColor: "#FFE1C2",
-        color: "#C86A00",
+        backgroundColor: "var(--brand-light)",
+        color: "var(--brand-hover)",
         border: "none",
         borderRadius: "14px",
         cursor: "pointer",
@@ -173,8 +173,8 @@ const styles = {
     btnDelete: {
         flex: 1,
         padding: "0.85rem 1rem",
-        backgroundColor: "#F9D9D1",
-        color: "#A12A25",
+        backgroundColor: "var(--danger-bg)",
+        color: "var(--danger-text)",
         border: "none",
         borderRadius: "14px",
         cursor: "pointer",
@@ -184,7 +184,7 @@ const styles = {
     btnDetail: {
         flex: 1,
         padding: "0.85rem 1rem",
-        backgroundColor: "#F57C00",
+        backgroundColor: "var(--brand)",
         color: "#FFFFFF",
         border: "none",
         borderRadius: "14px",
@@ -196,7 +196,7 @@ const styles = {
     btnAddCart: {
         flex: 1,
         padding: "0.85rem 1rem",
-        backgroundColor: "#F57C00",
+        backgroundColor: "var(--brand)",
         color: "#FFFFFF",
         border: "none",
         borderRadius: "14px",

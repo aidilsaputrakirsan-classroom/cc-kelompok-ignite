@@ -1,10 +1,17 @@
 import { Link, useNavigate } from "react-router-dom"
 import { toast } from "react-toastify"
 import { useState } from "react"
+import { useTheme } from "../context/ThemeContext"
 
 function Header({ user, onLogout, totalItems = 0, onCartClick }) {
     const [hoveredLink, setHoveredLink] = useState(null)
+    const [hoveredToggle, setHoveredToggle] = useState(false)
     const navigate = useNavigate()
+
+    // ✅ FIX: sesuai ThemeContext
+    const { theme, toggleTheme } = useTheme()
+
+    console.log("THEME SEKARANG:", theme)
 
     const handleProfileClick = () => {
         navigate("/profile")
@@ -21,6 +28,7 @@ function Header({ user, onLogout, totalItems = 0, onCartClick }) {
     return (
         <header style={styles.header}>
             <h1 style={styles.title}>ATHSNAC</h1>
+
             <nav style={styles.navLinks}>
                 <Link
                     to="/home"
@@ -33,6 +41,7 @@ function Header({ user, onLogout, totalItems = 0, onCartClick }) {
                 >
                     Home
                 </Link>
+
                 <Link
                     to="/about"
                     style={{
@@ -44,6 +53,7 @@ function Header({ user, onLogout, totalItems = 0, onCartClick }) {
                 >
                     About
                 </Link>
+
                 <Link
                     to="/shop"
                     style={{
@@ -58,6 +68,44 @@ function Header({ user, onLogout, totalItems = 0, onCartClick }) {
             </nav>
 
             <div style={styles.actionGroup}>
+                
+                {/* ✅ DARK MODE TOGGLE WITH ICONS */}
+                <button 
+                    onClick={toggleTheme} 
+                    style={{
+                        ...styles.themeToggleButton,
+                        ...(hoveredToggle ? styles.themeToggleButtonHover : {}),
+                    }}
+                    onMouseEnter={() => setHoveredToggle(true)}
+                    onMouseLeave={() => setHoveredToggle(false)}
+                    title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
+                >
+                    {theme === "dark" ? (
+                        // ☀️ Sun Icon untuk Light Mode
+                        <svg
+                            viewBox="0 0 24 24"
+                            width="24"
+                            height="24"
+                            fill="currentColor"
+                            style={{ transition: "all 0.3s ease" }}
+                        >
+                            <circle cx="12" cy="12" r="5" />
+                            <path d="M12 1v6m0 6v6M4.22 4.22l4.24 4.24m5.08 5.08l4.24 4.24M1 12h6m6 0h6M4.22 19.78l4.24-4.24m5.08-5.08l4.24-4.24M19.78 19.78l-4.24-4.24m-5.08-5.08l-4.24-4.24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none" />
+                        </svg>
+                    ) : (
+                        // 🌙 Moon Icon untuk Dark Mode
+                        <svg
+                            viewBox="0 0 24 24"
+                            width="24"
+                            height="24"
+                            fill="currentColor"
+                            style={{ transition: "all 0.3s ease" }}
+                        >
+                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                        </svg>
+                    )}
+                </button>
+
                 {user && (
                     <button onClick={handleCartClick} style={styles.cartButton} title="Keranjang Belanja">
                         <svg
@@ -99,7 +147,7 @@ const styles = {
         alignItems: "center",
         gap: "16px",
         padding: "1rem 1.5rem",
-        backgroundColor: "#F57C00",
+        backgroundColor: "var(--brand)",
         color: "white",
         borderRadius: "18px",
         marginBottom: "1.5rem",
@@ -147,6 +195,26 @@ const styles = {
         alignItems: "center",
         gap: "12px",
     },
+    themeToggleButton: {
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        width: "56px",
+        height: "56px",
+        borderRadius: "18px",
+        border: "2px solid white",
+        backgroundColor: "rgba(255,255,255,0.95)",
+        color: "var(--brand)",
+        cursor: "pointer",
+        transition: "all 0.25s ease",
+        fontSize: "20px",
+        padding: 0,
+    },
+    themeToggleButtonHover: {
+        backgroundColor: "white",
+        transform: "scale(1.05)",
+        boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
+    },
     cartButton: {
         display: "inline-flex",
         alignItems: "center",
@@ -160,7 +228,6 @@ const styles = {
         color: "white",
         cursor: "pointer",
     },
-    // ✅ SUDAH DIBESARKAN
     cartIcon: {
         width: "64px",
         height: "64px",
