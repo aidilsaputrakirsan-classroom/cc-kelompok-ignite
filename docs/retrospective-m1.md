@@ -998,6 +998,3 @@ Tim telah menunjukkan kemampuan **excellent** dalam delivery. Untuk Milestone 2,
 5. Prepare monitoring & logging untuk production
 
 ---
-
-
-
