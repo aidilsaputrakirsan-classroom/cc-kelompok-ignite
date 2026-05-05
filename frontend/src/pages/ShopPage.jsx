@@ -85,7 +85,7 @@ export default function ShopPage({ user, onLogout }) {
 const styles = {
   page: {
     minHeight: "100vh",
-    backgroundColor: "#FFF4E6",
+    backgroundColor: "var(--bg-page)",
     paddingBottom: "40px",
   },
   main: {
@@ -102,11 +102,12 @@ const styles = {
   title: {
     margin: 0,
     fontSize: "2.2rem",
-    color: "#2E1F14",
+    color: "var(--text-primary)",
   },
   subtitle: {
     margin: "10px 0 0",
-    color: "#70503C",
+    color: "var(--text-secondary)",
     fontSize: "1rem",
   },
 }
+

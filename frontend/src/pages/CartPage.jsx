@@ -247,7 +247,7 @@ export default function CartPage({ user, onLogout }) {
 const styles = {
   page: {
     minHeight: "100vh",
-    backgroundColor: "#FFF4E6",
+    backgroundColor: "var(--bg-page)",
     paddingBottom: "80px",
   },
   main: {
@@ -257,7 +257,7 @@ const styles = {
   },
   pageTitle: {
     fontSize: "2.2rem",
-    color: "#2E1F14",
+    color: "var(--text-primary)",
     marginBottom: "32px",
     fontWeight: 800,
   },
@@ -275,25 +275,25 @@ const styles = {
   itemCard: {
     display: "flex",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "var(--surface)",
     padding: "16px 24px",
     borderRadius: "24px",
-    border: "1px solid #F3D2B3",
-    boxShadow: "0 8px 16px rgba(245, 124, 0, 0.04)",
+    border: "1px solid var(--border-card)",
+    boxShadow: "0 8px 16px rgba(0,0,0,0.06)",
   },
   checkbox: {
     width: "22px",
     height: "22px",
     marginRight: "20px",
     cursor: "pointer",
-    accentColor: "#F57C00",
+    accentColor: "var(--brand)",
   },
   itemImageWrapper: {
     width: "80px",
     height: "80px",
     borderRadius: "14px",
     overflow: "hidden",
-    backgroundColor: "#FFF4E6",
+    backgroundColor: "var(--surface-placeholder)",
     marginRight: "20px",
     flexShrink: 0,
   },
@@ -316,12 +316,12 @@ const styles = {
   itemName: {
     margin: 0,
     fontSize: "1.15rem",
-    color: "#2E1F14",
+    color: "var(--text-primary)",
     fontWeight: 700,
   },
   itemPrice: {
     margin: "4px 0 0",
-    color: "#F57C00",
+    color: "var(--brand)",
     fontWeight: 600,
   },
   qtyControls: {
@@ -329,7 +329,7 @@ const styles = {
     alignItems: "center",
     gap: "12px",
     marginRight: "40px",
-    backgroundColor: "#FFF9F4",
+    backgroundColor: "var(--qty-bg)",
     padding: "6px 12px",
     borderRadius: "12px",
   },
@@ -338,8 +338,8 @@ const styles = {
     height: "28px",
     borderRadius: "8px",
     border: "none",
-    backgroundColor: "#FFECCF",
-    color: "#F57C00",
+    backgroundColor: "var(--qty-btn-bg)",
+    color: "var(--qty-btn-color)",
     fontWeight: 700,
     cursor: "pointer",
     display: "flex",
@@ -351,11 +351,12 @@ const styles = {
     fontWeight: 700,
     minWidth: "20px",
     textAlign: "center",
+    color: "var(--text-primary)",
   },
   deleteBtn: {
     border: "none",
     backgroundColor: "transparent",
-    color: "#E53935",
+    color: "var(--danger)",
     fontSize: "1.2rem",
     fontWeight: 700,
     cursor: "pointer",
@@ -368,16 +369,16 @@ const styles = {
     top: "100px",
   },
   summaryCard: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "var(--surface)",
     padding: "32px",
     borderRadius: "32px",
-    border: "1px solid #F3D2B3",
-    boxShadow: "0 20px 40px rgba(245, 124, 0, 0.08)",
+    border: "1px solid var(--border-card)",
+    boxShadow: "var(--summary-shadow)",
   },
   summaryTitle: {
     margin: "0 0 24px 0",
     fontSize: "1.4rem",
-    color: "#2E1F14",
+    color: "var(--text-primary)",
   },
   detailsList: {
     display: "flex",
@@ -389,7 +390,7 @@ const styles = {
     display: "flex",
     justifyContent: "space-between",
     fontSize: "0.95rem",
-    color: "#70503C",
+    color: "var(--text-secondary)",
   },
   detailName: {
     flex: 1,
@@ -400,7 +401,7 @@ const styles = {
   },
   totalDivider: {
     height: "1px",
-    backgroundColor: "#F3D2B3",
+    backgroundColor: "var(--divider)",
     margin: "0 0 20px 0",
   },
   totalRow: {
@@ -412,12 +413,12 @@ const styles = {
   totalLabel: {
     fontSize: "1.2rem",
     fontWeight: 700,
-    color: "#2E1F14",
+    color: "var(--text-primary)",
   },
   totalPriceText: {
     fontSize: "1.5rem",
     fontWeight: 800,
-    color: "#F57C00",
+    color: "var(--brand)",
   },
   checkoutBtn: {
     width: "100%",
@@ -439,24 +440,24 @@ const styles = {
   spinner: {
     width: "40px",
     height: "40px",
-    border: "4px solid #f3f3f3",
-    borderTop: "4px solid #F57C00",
+    border: "4px solid rgba(245,124,0,0.15)",
+    borderTop: "4px solid var(--brand)",
     borderRadius: "50%",
     animation: "spin 1s linear infinite",
     marginBottom: "16px",
   },
   emptyCard: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "var(--surface)",
     padding: "60px",
     borderRadius: "24px",
     textAlign: "center",
-    border: "1px dashed #F3D2B3",
-    color: "#70503C",
+    border: "1px dashed var(--border-card)",
+    color: "var(--text-secondary)",
   },
   shopBtn: {
     marginTop: "20px",
     padding: "12px 24px",
-    backgroundColor: "#F57C00",
+    backgroundColor: "var(--brand)",
     color: "white",
     border: "none",
     borderRadius: "12px",
@@ -464,9 +465,10 @@ const styles = {
     cursor: "pointer",
   },
   noItems: {
-    color: "#9E9E9E",
+    color: "var(--text-muted)",
     fontStyle: "italic",
     textAlign: "center",
     margin: "20px 0",
-  }
+  },
 }
+

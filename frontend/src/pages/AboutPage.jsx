@@ -75,7 +75,7 @@ export default function AboutPage({ user, onLogout }) {
 const styles = {
   page: {
     minHeight: "100vh",
-    backgroundColor: "#FFF4E6",
+    backgroundColor: "var(--bg-page)",
     paddingBottom: "40px",
   },
   main: {
@@ -92,12 +92,12 @@ const styles = {
   pageTitle: {
     margin: 0,
     fontSize: "2rem",
-    color: "#2E1F14",
+    color: "var(--text-primary)",
   },
   divider: {
     flex: 1,
     height: "1px",
-    backgroundColor: "#F3D2B3",
+    backgroundColor: "var(--divider)",
   },
   aboutSection: {
     marginBottom: "40px",
@@ -107,7 +107,7 @@ const styles = {
     gridTemplateColumns: "1.3fr 1fr",
     gap: "32px",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "var(--surface)",
     borderRadius: "28px",
     padding: "32px",
   },
@@ -119,11 +119,11 @@ const styles = {
   aboutTitle: {
     margin: 0,
     fontSize: "1.8rem",
-    color: "#2E1F14",
+    color: "var(--text-primary)",
   },
   aboutText: {
     margin: 0,
-    color: "#70503C",
+    color: "var(--text-secondary)",
     fontSize: "1rem",
     lineHeight: 1.8,
   },
@@ -132,7 +132,7 @@ const styles = {
     minHeight: "320px",
     objectFit: "cover",
     borderRadius: "24px",
-    backgroundColor: "#F3F0EE",
+    backgroundColor: "var(--surface-subtle)",
   },
   contactSection: {
     marginBottom: "40px",
@@ -142,7 +142,7 @@ const styles = {
     gridTemplateColumns: "1fr 1.2fr",
     gap: "32px",
     alignItems: "stretch",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "var(--surface)",
     borderRadius: "28px",
     padding: "32px",
   },
@@ -152,7 +152,7 @@ const styles = {
     minHeight: "360px",
     objectFit: "cover",
     borderRadius: "24px",
-    backgroundColor: "#F3F0EE",
+    backgroundColor: "var(--surface-subtle)",
     display: "block",
   },
   contactInfo: {
@@ -163,7 +163,7 @@ const styles = {
   contactTitle: {
     margin: 0,
     fontSize: "1.5rem",
-    color: "#2E1F14",
+    color: "var(--text-primary)",
   },
   contactItems: {
     display: "grid",
@@ -171,19 +171,20 @@ const styles = {
   },
   contactCard: {
     padding: "18px",
-    backgroundColor: "#FFF7F0",
+    backgroundColor: "var(--surface-subtle)",
     borderRadius: "20px",
-    border: "1px solid #F3D2B3",
+    border: "1px solid var(--border-card)",
   },
   contactLabel: {
     display: "block",
     marginBottom: "8px",
-    color: "#8A5D3B",
+    color: "var(--text-muted)",
     fontWeight: 700,
   },
   contactValue: {
     margin: 0,
-    color: "#2E1F14",
+    color: "var(--text-primary)",
     fontSize: "1rem",
   },
 }
+

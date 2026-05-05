@@ -1001,7 +1001,8 @@ Prinsip **Separation of Concerns** berarti setiap file hanya memiliki satu tangg
 | `OrdersPage.jsx` | Riwayat pesanan customer dengan status, detail, dan timeline pengiriman |
 | `TestimoniPage.jsx` | Halaman daftar testimonial dari customer lain (publik) |
 | `ProfilePage.jsx` | Profil customer: data pribadi, riwayat pesanan, dan opsi edit |
-| `AboutPage.jsx` | Informasi tentang ATHSNAC, visi-misi, dan contact details |
+| `AboutPage.jsx` | Informasi tentang ATHSNAC, visi dan misi, dan contact details |
+| `AboutPage.jsx` |Aplikasi cloud-native untuk manajemen inventaris |
 | **Admin Pages** | |
 | `AdminDashboard.jsx` | Dashboard utama admin dengan KPI, statistik penjualan, dan quick actions |
 | `AdminProducts.jsx` | Manajemen produk: CRUD, bulk edit, filter, dan statistik inventori |
@@ -1427,6 +1428,75 @@ Seluruh dokumen hasil pengujian dan referensi proyek tersedia di folder `docs/`:
 | `docs/database-schema.md` | DevOps | Skema tabel database PostgreSQL dengan ERD |
 | `docs/docker-architecture.md` | DevOps | Arsitektur Docker & Docker Compose |
 | `docs/api-documentation.md` | Backend | Dokumentasi lengkap API endpoints 
+---
+
+# 📘 DevOps Workflow Guide
+
+### `make lint`
+Menjalankan linter untuk memeriksa kualitas kode Python.
+
+```bash
+make lint
+```
+
+- Menggunakan **flake8** untuk style checking (max line length: 100)
+- Mengecualikan folder: `.git`, `__pycache__`, `.venv`, `node_modules`
+- Jika linter tidak ditemukan, akan menampilkan pesan skip + instruksi instalasi
+
+---
+
+### `make test`
+Menjalankan test suite menggunakan pytest.
+
+```bash
+make test
+```
+
+- Menjalankan semua test di folder `tests/`
+- Output verbose (`-v`) dengan short traceback
+- **Placeholder**: Jika pytest belum ada, menampilkan instruksi instalasi
+
+> ⚠️ **Catatan:** Pastikan test files ada di folder `tests/` sebelum menjalankan.
+
+---
+
+### `make pr-check`
+Menjalankan **full pipeline check** sebelum PR disubmit — wajib lolos sebelum merge.
+
+```bash
+make pr-check
+```
+
+Pipeline yang dijalankan secara berurutan:
+1. 🐳 `docker-build` — Build Docker image (`app:latest`)
+2. 🧪 `test` — Jalankan seluruh test suite
+
+Jika salah satu tahap gagal, pr-check akan berhenti dan menampilkan error.
+
+---
+
+### `make build`
+Meng-install semua dependency dari `requirements.txt`.
+
+```bash
+make build
+```
+
+---
+
+### `make clean`
+Membersihkan semua build artifacts dan cache.
+
+```bash
+make clean
+```
+
+File/folder yang dihapus:
+- `__pycache__/`
+- `*.pyc`
+- `.pytest_cache/`
+- `*.egg-info/`
+
 ---
 
 ## 📅 Roadmap
