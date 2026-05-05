@@ -46,20 +46,20 @@ const styles = {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#FAFAFA",
+    backgroundColor: "var(--bg-page)",
     padding: "2rem",
   },
   card: {
     width: "100%",
     maxWidth: "500px",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "var(--surface)",
     borderRadius: "24px",
     padding: "3rem 2.5rem",
-    boxShadow: "0 8px 24px rgba(0, 0, 0, 0.1)",
+    boxShadow: "0 8px 24px rgba(0, 0, 0, 0.15)",
   },
   brand: {
     margin: 0,
-    color: "#F57C00",
+    color: "var(--brand)",
     fontSize: "2.5rem",
     letterSpacing: "0.08em",
     textTransform: "uppercase",
@@ -68,11 +68,11 @@ const styles = {
   heading: {
     margin: "16px 0 4px",
     fontSize: "1.5rem",
-    color: "#222222",
+    color: "var(--text-primary)",
   },
   subheading: {
     margin: "0 0 2rem",
-    color: "#666666",
+    color: "var(--text-secondary)",
     lineHeight: 1.5,
     fontSize: "0.95rem",
   },
@@ -88,8 +88,8 @@ const styles = {
   choiceButton: {
     padding: "1.5rem",
     borderRadius: "16px",
-    border: "1px solid #E8E8E8",
-    backgroundColor: "#F9F9F9",
+    border: "1px solid var(--border-card)",
+    backgroundColor: "var(--surface-subtle)",
     cursor: "pointer",
     transition: "all 0.3s ease",
     textAlign: "center",
@@ -100,21 +100,21 @@ const styles = {
   choiceTitle: {
     fontSize: "1rem",
     fontWeight: 700,
-    color: "#F57C00",
+    color: "var(--brand)",
   },
   choiceDesc: {
     fontSize: "0.85rem",
-    color: "#888888",
+    color: "var(--text-muted)",
   },
   bottomText: {
     fontSize: "0.9rem",
-    color: "#666666",
+    color: "var(--text-secondary)",
     textAlign: "center",
   },
   linkButton: {
     background: "none",
     border: "none",
-    color: "#F57C00",
+    color: "var(--brand)",
     fontSize: "0.9rem",
     fontWeight: 600,
     cursor: "pointer",
@@ -123,3 +123,4 @@ const styles = {
 }
 
 export default LoginChoicePage
+

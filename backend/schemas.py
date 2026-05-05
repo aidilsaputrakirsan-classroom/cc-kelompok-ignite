@@ -9,12 +9,17 @@ class ProductBase(BaseModel):
     name: str = Field(..., min_length=1, max_length=100, examples=["Amplang Balikpapan"])
     description: Optional[str] = Field(None, examples=["Amplang gurih khas Balikpapan"])
     category: str = Field(default="makanan", examples=["makanan", "minuman", "snack"])
-    slug: Optional[str] = Field(None, examples=["amplang-balikpapan"])  # Perbaikan: Tambah slug (sesuai ERD)
+    slug: Optional[str] = Field(None, examples=["amplang-balikpapan"])
     price: float = Field(..., gt=0, examples=[25000])
     stock: int = Field(0, ge=0, examples=[100])
     image_url: Optional[str] = Field(None, examples=["https://example.com/amplang.jpg"])
-    is_active: bool = Field(default=True)  # Perbaikan: is_active (bukan is_available)
+    is_active: bool = Field(default=True)
 
+    @field_validator("category")
+    def normalize_category(cls, value):
+        if not value:
+            return "makanan"
+        return value.lower()
 
 class ProductCreate(ProductBase):
     pass
