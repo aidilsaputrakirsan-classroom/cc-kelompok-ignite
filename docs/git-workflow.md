@@ -538,17 +538,6 @@ After approval:
 
 ---
 
-## 📞 Questions & Support
-
-Jika ada pertanyaan tentang git workflow:
-
-1. Check file ini terlebih dahulu
-2. Ask in team Slack/Discord
-3. Ask Lead Backend atau Lead DevOps for clarification
-4. Create issue jika ada improvement suggestion
-
----
-
 ## 📌 Important Links
 
 - [Conventional Commits](https://www.conventionalcommits.org/)
@@ -557,4 +546,3 @@ Jika ada pertanyaan tentang git workflow:
 - Our GitHub: [cc-kelompok-ignite](https://github.com/your-org/cc-kelompok-ignite)
 
 ---
-
