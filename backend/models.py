@@ -27,7 +27,7 @@ class Product(Base):
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     name = Column(String(100), nullable=False, index=True)
     description = Column(Text, nullable=True)
-    category = Column(String(50), nullable=False, default="makanan")  # makanan, minuman, snack, dll
+    category = Column(String(50), nullable=False, default="makanan", index=True)  # makanan, minuman, snack, dll
     slug = Column(String(100), nullable=True, unique=True)  # Perbaikan: Tambah slug (sesuai ERD)
     price = Column(Float, nullable=False)
     stock = Column(Integer, nullable=False, default=0)
