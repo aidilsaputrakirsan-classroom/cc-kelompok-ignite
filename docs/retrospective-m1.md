@@ -996,8 +996,3 @@ Tim telah menunjukkan kemampuan **excellent** dalam delivery. Untuk Milestone 2,
 3. Plan sprint untuk M2 dengan action items yang jelas
 4. Setup automated testing pipeline
 5. Prepare monitoring & logging untuk production
-
----
-
-
-
