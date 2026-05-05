@@ -538,16 +538,6 @@ After approval:
 
 ---
 
-## 📞 Questions & Support
-
-Jika ada pertanyaan tentang git workflow:
-
-1. Check file ini terlebih dahulu
-2. Ask in team Slack/Discord
-3. Ask Lead Backend atau Lead DevOps for clarification
-4. Create issue jika ada improvement suggestion
-
----
 
 ## 📌 Important Links
 
@@ -555,6 +545,4 @@ Jika ada pertanyaan tentang git workflow:
 - [GitHub Flow Guide](https://guides.github.com/introduction/flow/)
 - [Pro Git Book](https://git-scm.com/book/en/v2)
 - Our GitHub: [cc-kelompok-ignite](https://github.com/your-org/cc-kelompok-ignite)
-
----
-
+>>> mai
