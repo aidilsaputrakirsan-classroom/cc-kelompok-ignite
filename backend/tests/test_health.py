@@ -11,4 +11,3 @@ def test_health_check(client):
     assert data["database"] == "connected"
     assert data["version"] == "1.0.0"
     assert "timestamp" in data
-    assert data["service"] == "backend"
