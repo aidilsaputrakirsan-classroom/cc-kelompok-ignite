@@ -27,7 +27,7 @@ function Header({ user, onLogout, totalItems = 0, onCartClick }) {
 
     return (
         <header style={styles.header}>
-            <h1 style={styles.title}>ATHSNAC</h1>
+            <h1 style={styles.title}>ATHSNACK</h1>
 
             <nav style={styles.navLinks}>
                 <Link
@@ -68,10 +68,10 @@ function Header({ user, onLogout, totalItems = 0, onCartClick }) {
             </nav>
 
             <div style={styles.actionGroup}>
-                
+
                 {/* ✅ DARK MODE TOGGLE WITH ICONS */}
-                <button 
-                    onClick={toggleTheme} 
+                <button
+                    onClick={toggleTheme}
                     style={{
                         ...styles.themeToggleButton,
                         ...(hoveredToggle ? styles.themeToggleButtonHover : {}),
@@ -115,9 +115,9 @@ function Header({ user, onLogout, totalItems = 0, onCartClick }) {
                             fill="currentColor"
                             style={styles.cartIcon}
                         >
-                            <path d="M7 4H3v2h2l3.6 7.59-1.35 2.44C6.52 17.37 7.48 19 9 19h9v-2H9.42c-.14 0-.25-.11-.25-.25l.03-.12L10.1 15h6.45c.75 0 1.41-.41 1.75-1.03L21 8H7.42L6.27 6H7V4z"/>
-                            <circle cx="10" cy="21" r="1.5"/>
-                            <circle cx="18" cy="21" r="1.5"/>
+                            <path d="M7 4H3v2h2l3.6 7.59-1.35 2.44C6.52 17.37 7.48 19 9 19h9v-2H9.42c-.14 0-.25-.11-.25-.25l.03-.12L10.1 15h6.45c.75 0 1.41-.41 1.75-1.03L21 8H7.42L6.27 6H7V4z" />
+                            <circle cx="10" cy="21" r="1.5" />
+                            <circle cx="18" cy="21" r="1.5" />
                         </svg>
 
                         {totalItems > 0 && (
