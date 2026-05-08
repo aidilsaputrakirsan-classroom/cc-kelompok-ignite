@@ -2,6 +2,7 @@
 __pycache__/
 *.pyc
 venv/
+.venv/
 .env
 
 # Node
@@ -15,5 +16,15 @@ dist/
 .vscode/
 .idea/
 
+# Database
 backend/test.db
 *.db
+*.sqlite3
+
+# Pytest
+.pytest_cache/
+.coverage
+
+# OS
+.DS_Store
+Thumbs.db
