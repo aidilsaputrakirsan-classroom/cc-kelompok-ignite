@@ -10,8 +10,9 @@ load_dotenv()
 # Ambil DATABASE_URL dari environment
 DATABASE_URL = os.getenv("DATABASE_URL")
 
+# Jika DATABASE_URL tidak ada, gunakan default SQLite untuk testing/development
 if not DATABASE_URL:
-    raise ValueError("DATABASE_URL tidak ditemukan di .env!")
+    DATABASE_URL = "sqlite:///./test.db"
 
 # Buat engine (koneksi ke database)
 engine = create_engine(DATABASE_URL)
