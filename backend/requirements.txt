@@ -1,113 +1,14 @@
-anaconda-anon-usage @ file:///C:/b/abs_e8r_zga7xy/croot/anaconda-anon-usage_1732732454901/work
-annotated-types @ file:///C:/b/abs_0dmaoyhhj3/croot/annotated-types_1709542968311/work
-anyio==4.13.0
-archspec @ file:///croot/archspec_1709217642129/work
-asttokens==3.0.1
-bcrypt==4.0.1
-beautifulsoup4==4.14.3
-boltons @ file:///C:/b/abs_45_52ughkz/croot/boltons_1737061711836/work
-Brotli @ file:///C:/b/abs_c415aux9ra/croot/brotli-split_1736182803933/work
-certifi @ file:///C:/b/abs_8a944p1_gn/croot/certifi_1738623753421/work/certifi
-cffi @ file:///C:/b/abs_29_b57if3f/croot/cffi_1736184144340/work
-charset-normalizer @ file:///croot/charset-normalizer_1721748349566/work
-click==8.3.2
-colorama @ file:///C:/ci_311/colorama_1676422310965/work
-comm==0.2.3
-conda @ file:///C:/b/abs_12ybmrg1d4/croot/conda_1738168389704/work
-conda-anaconda-telemetry @ file:///C:/b/abs_4c9llcc5ob/croot/conda-anaconda-telemetry_1736524617431/work
-conda-anaconda-tos @ file:///C:/b/abs_ceeuq0lee_/croot/conda-anaconda-tos_1739299022910/work
-conda-content-trust @ file:///C:/b/abs_bdfatn_wzf/croot/conda-content-trust_1714483201909/work
-conda-libmamba-solver @ file:///croot/conda-libmamba-solver_1737733694612/work/src
-conda-package-handling @ file:///C:/b/abs_7fz3aferfv/croot/conda-package-handling_1731369038903/work
-conda_package_streaming @ file:///C:/b/abs_bdz9vbvbh2/croot/conda-package-streaming_1731366449946/work
-contourpy==1.3.3
-coverage==7.13.5
-cryptography @ file:///C:/b/abs_e2lzchf4i6/croot/cryptography_1732130411942/work
-curl_cffi==0.13.0
-cycler==0.12.1
-debugpy==1.8.20
-decorator==5.2.1
-distro @ file:///C:/b/abs_71xr36ua5r/croot/distro_1714488282676/work
-dnspython==2.8.0
-ecdsa==0.19.2
-email-validator==2.3.0
-executing==2.2.1
 fastapi==0.115.0
-fonttools==4.61.1
-frozendict @ file:///C:/b/abs_2alamqss6p/croot/frozendict_1713194885124/work
-greenlet==3.3.2
-h11==0.16.0
-httpcore==1.0.9
-httpx==0.28.1
-idna @ file:///C:/b/abs_aad84bnnw5/croot/idna_1714398896795/work
-iniconfig==2.3.0
-ipykernel==7.2.0
-ipython==9.10.1
-ipython_pygments_lexers==1.1.1
-jedi==0.19.2
-jsonpatch @ file:///C:/b/abs_4fdm88t7zi/croot/jsonpatch_1714483974578/work
-jsonpointer==2.1
-jupyter_client==8.8.0
-jupyter_core==5.9.1
-kiwisolver==1.4.9
-libmambapy @ file:///C:/b/abs_627vsv8bhu/croot/mamba-split_1734469608328/work/libmambapy
-markdown-it-py @ file:///C:/b/abs_a5bfngz6fu/croot/markdown-it-py_1684279915556/work
-matplotlib==3.10.8
-matplotlib-inline==0.2.1
-mdurl @ file:///C:/ci_311/mdurl_1676442676678/work
-menuinst @ file:///C:/b/abs_fblttj5gp1/croot/menuinst_1738943438301/work
-multitasking==0.0.12
-nest-asyncio==1.6.0
-numpy==1.26.4
-packaging==26.0
-pandas==3.0.1
-parso==0.8.6
-passlib==1.7.4
-peewee==4.0.4
-pillow==12.1.1
-platformdirs==4.9.4
-pluggy @ file:///C:/b/abs_dfec_m79vo/croot/pluggy_1733170145382/work
-prompt_toolkit==3.0.52
-protobuf==7.34.1
-psutil==7.2.2
+uvicorn==0.30.0
+sqlalchemy==2.0.35
 psycopg2-binary==2.9.9
-pure_eval==0.2.3
-pyasn1==0.6.3
-pycosat @ file:///C:/b/abs_18nblzzn70/croot/pycosat_1736868434419/work
-pycparser @ file:///tmp/build/80754af9/pycparser_1636541352034/work
-pydantic==2.9.0
-pydantic_core==2.23.2
-Pygments==2.20.0
-pyparsing==3.3.2
-PySocks @ file:///C:/ci_311/pysocks_1676425991111/work
-pytest==9.0.3
-pytest-cov==7.1.0
-python-dateutil==2.9.0.post0
 python-dotenv==1.0.1
+passlib==1.7.4
+bcrypt==4.0.1
 python-jose==3.3.0
 python-multipart==0.0.6
-pytz==2026.1.post1
-pyzmq==27.1.0
-requests @ file:///C:/b/abs_c3508vg8ez/croot/requests_1731000584867/work
-rich @ file:///C:/b/abs_8b92fzmygg/croot/rich_1732638991774/work
-rsa==4.9.1
-ruamel.yaml @ file:///C:/b/abs_0cunwx_ww6/croot/ruamel.yaml_1727980181547/work
-ruamel.yaml.clib @ file:///C:/b/abs_5fk8zi6n09/croot/ruamel.yaml.clib_1727769837359/work
-six==1.17.0
-soupsieve==2.8.3
-SQLAlchemy==2.0.35
-stack-data==0.6.3
-starlette==0.38.6
-tornado==6.5.5
-tqdm @ file:///C:/b/abs_0eh9b6xugj/croot/tqdm_1738945553987/work
-traitlets==5.14.3
-truststore @ file:///C:/b/abs_494cm143zh/croot/truststore_1736550137835/work
-typing_extensions==4.15.0
-tzdata==2025.3
-urllib3 @ file:///C:/b/abs_7bst06lizn/croot/urllib3_1737133657081/work
-uvicorn==0.30.0
-wcwidth==0.6.0
-websockets==16.0
-win-inet-pton @ file:///C:/ci_311/win_inet_pton_1676425458225/work
-yfinance==1.2.0
-zstandard @ file:///C:/b/abs_31t8xmrv_h/croot/zstandard_1731356578015/work
+email-validator==2.3.0
+pydantic==2.9.0
+httpx==0.28.1
+pytest==9.0.3
+pytest-cov==7.1.0
