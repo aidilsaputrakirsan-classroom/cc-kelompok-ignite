@@ -1,11 +1,12 @@
 {
+  {
   "name": "frontend",
   "private": true,
   "version": "0.0.0",
-  "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "test": "echo \"Test berhasil\""
     "lint": "eslint .",
     "preview": "vite preview"
   },
