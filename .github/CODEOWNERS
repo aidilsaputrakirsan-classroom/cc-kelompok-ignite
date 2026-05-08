@@ -1,0 +1,24 @@
+# =============================================
+# CODEOWNERS — Cloud Team Ignite
+# =============================================
+# Setiap baris: pola file → username GitHub reviewer
+# Reviewer otomatis ditambahkan saat PR mengubah file terkait
+
+# Backend — Lead Backend
+/backend/                @andinipermatadewanti
+
+# Frontend — Lead Frontend
+/frontend/               @10231074-sketch
+
+# Docker & Infrastructure — Lead DevOps
+docker-compose.yml       @10231050
+/backend/Dockerfile      @10231050
+/frontend/Dockerfile     @10231050
+Makefile                 @10231050
+
+# Documentation — Lead QA & Docs
+README.md                @desnitadwip
+/docs/                   @desnitadwip
+
+# CI/CD  — Lead CI/CD
+/.github/workflows/      @10231050

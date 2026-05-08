@@ -183,7 +183,7 @@ export default function ProductDetailPage({ user, onLogout }) {
 const styles = {
   page: {
     minHeight: "100vh",
-    backgroundColor: "#FFF4E6",
+    backgroundColor: "var(--bg-page)",
     paddingBottom: "80px",
   },
   main: {
@@ -199,16 +199,16 @@ const styles = {
     display: "flex",
     alignItems: "center",
     gap: "10px",
-    backgroundColor: "#FFFFFF",
-    color: "#F57C00",
-    border: "1.5px solid #F57C00",
+    backgroundColor: "var(--surface)",
+    color: "var(--brand)",
+    border: "1.5px solid var(--brand)",
     borderRadius: "12px",
     padding: "10px 18px",
     fontSize: "0.95rem",
     fontWeight: 700,
     cursor: "pointer",
     transition: "all 0.2s",
-    boxShadow: "0 4px 10px rgba(245, 124, 0, 0.05)",
+    boxShadow: "0 4px 10px rgba(0,0,0,0.06)",
   },
   backArrow: {
     fontSize: "1.2rem",
@@ -219,11 +219,11 @@ const styles = {
     justifyContent: "center",
   },
   detailCard: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "var(--surface)",
     borderRadius: "32px",
     padding: "48px",
-    boxShadow: "0 30px 60px rgba(245, 124, 0, 0.08)",
-    border: "1px solid #F3D2B3",
+    boxShadow: "var(--card-shadow)",
+    border: "1px solid var(--border-card)",
     width: "100%",
   },
   contentGrid: {
@@ -240,8 +240,8 @@ const styles = {
     aspectRatio: "1 / 1",
     borderRadius: "20px",
     overflow: "hidden",
-    border: "1px solid #F3D2B3",
-    boxShadow: "0 10px 20px rgba(0,0,0,0.03)",
+    border: "1px solid var(--border-card)",
+    boxShadow: "0 10px 20px rgba(0,0,0,0.06)",
   },
   image: {
     width: "100%",
@@ -252,11 +252,11 @@ const styles = {
     width: "100%",
     aspectRatio: "1 / 1",
     borderRadius: "20px",
-    backgroundColor: "#FFF4E6",
+    backgroundColor: "var(--surface-placeholder)",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    border: "1px dashed #F3D2B3",
+    border: "1px dashed var(--border-card)",
   },
   placeholderIcon: {
     fontSize: "4rem",
@@ -268,14 +268,14 @@ const styles = {
   productName: {
     margin: "0 0 10px 0",
     fontSize: "1.8rem",
-    color: "#2E1F14",
+    color: "var(--text-primary)",
     lineHeight: 1.2,
     fontWeight: 800,
   },
   price: {
     fontSize: "1.6rem",
     fontWeight: 800,
-    color: "#F57C00",
+    color: "var(--brand)",
     margin: "0 0 20px 0",
   },
   metaContainer: {
@@ -283,9 +283,9 @@ const styles = {
     alignItems: "center",
     gap: "24px",
     padding: "16px",
-    backgroundColor: "#FFF9F4",
+    backgroundColor: "var(--surface-input)",
     borderRadius: "16px",
-    border: "1px solid #FFEBE0",
+    border: "1px solid var(--brand-border)",
     marginBottom: "20px",
   },
   metaItem: {
@@ -296,11 +296,11 @@ const styles = {
   metaDivider: {
     width: "1.5px",
     height: "30px",
-    backgroundColor: "#FFEBE0",
+    backgroundColor: "var(--brand-border)",
   },
   metaLabel: {
     fontSize: "0.8rem",
-    color: "#8A5D3B",
+    color: "var(--text-muted)",
     textTransform: "uppercase",
     letterSpacing: "0.05em",
     fontWeight: 600,
@@ -308,7 +308,7 @@ const styles = {
   metaValue: {
     fontSize: "0.95rem",
     fontWeight: 700,
-    color: "#4E342E",
+    color: "var(--text-dark)",
   },
   ratingBox: {
     display: "flex",
@@ -322,14 +322,14 @@ const styles = {
     fontSize: "1rem",
   },
   starActive: {
-    color: "#F57C00",
+    color: "var(--brand)",
   },
   starInactive: {
-    color: "#E0E0E0",
+    color: "var(--divider)",
   },
   reviewText: {
     fontSize: "0.9rem",
-    color: "#70503C",
+    color: "var(--text-secondary)",
     fontWeight: 500,
   },
   descriptionBox: {
@@ -337,12 +337,12 @@ const styles = {
   },
   sectionTitle: {
     fontSize: "1.05rem",
-    color: "#2E1F14",
+    color: "var(--text-primary)",
     margin: "0 0 8px 0",
     fontWeight: 700,
   },
   descriptionText: {
-    color: "#5C4635",
+    color: "var(--text-secondary)",
     lineHeight: 1.7,
     fontSize: "0.92rem",
     margin: 0,
@@ -353,14 +353,14 @@ const styles = {
     gap: "20px",
     marginBottom: "32px",
     padding: "16px",
-    backgroundColor: "#FAFAFA",
+    backgroundColor: "var(--qty-bg)",
     borderRadius: "16px",
-    border: "1px solid #F0F0F0",
+    border: "1px solid var(--border-card)",
   },
   qtyLabel: {
     fontSize: "0.95rem",
     fontWeight: 700,
-    color: "#2E1F14",
+    color: "var(--text-primary)",
   },
   qtyControls: {
     display: "flex",
@@ -372,7 +372,7 @@ const styles = {
     height: "32px",
     borderRadius: "10px",
     border: "none",
-    backgroundColor: "#F57C00",
+    backgroundColor: "var(--brand)",
     color: "white",
     fontSize: "1.1rem",
     fontWeight: 700,
@@ -385,7 +385,7 @@ const styles = {
   qtyDisplay: {
     fontSize: "1.1rem",
     fontWeight: 800,
-    color: "#F57C00",
+    color: "var(--brand)",
     minWidth: "24px",
     textAlign: "center",
   },
@@ -396,7 +396,7 @@ const styles = {
   btnOrder: {
     flex: 2,
     padding: "16px",
-    backgroundColor: "#F57C00",
+    backgroundColor: "var(--brand)",
     color: "white",
     border: "none",
     borderRadius: "16px",
@@ -404,14 +404,14 @@ const styles = {
     fontWeight: 700,
     cursor: "pointer",
     transition: "all 0.2s",
-    boxShadow: "0 8px 16px rgba(245, 124, 0, 0.2)",
+    boxShadow: "0 8px 16px rgba(245,124,0,0.25)",
   },
   btnAddCart: {
     flex: 1,
     padding: "16px",
-    backgroundColor: "#FFFFFF",
-    color: "#F57C00",
-    border: "2px solid #F57C00",
+    backgroundColor: "var(--surface)",
+    color: "var(--brand)",
+    border: "2px solid var(--brand)",
     borderRadius: "16px",
     fontSize: "1rem",
     fontWeight: 700,
@@ -420,7 +420,7 @@ const styles = {
   },
   loadingContainer: {
     minHeight: "100vh",
-    backgroundColor: "#FFF4E6",
+    backgroundColor: "var(--bg-page)",
   },
   spinnerWrapper: {
     display: "flex",
@@ -432,8 +432,8 @@ const styles = {
   spinner: {
     width: "40px",
     height: "40px",
-    border: "4px solid #f3f3f3",
-    borderTop: "4px solid #F57C00",
+    border: "4px solid rgba(245,124,0,0.15)",
+    borderTop: "4px solid var(--brand)",
     borderRadius: "50%",
     animation: "spin 1s linear infinite",
     marginBottom: "16px",
