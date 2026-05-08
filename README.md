@@ -1,4 +1,5 @@
 # ☁️ Cloud App - [ATHSNAC— UMKM E-Commerce Platform]
+![CI Pipeline](https://github.com/aidilsaputrakirsan-classroom/cc-kelompok-ignite/actions/workflows/ci.yml/badge.svg)
 
 ## 📌 Deskripsi Proyek
 
