@@ -1,35 +1,35 @@
 import os
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import declarative_base, sessionmaker
 
-# Load environment variables dari .env
 load_dotenv()
 
-# Ambil DATABASE_URL dari environment
-DATABASE_URL = os.getenv("DATABASE_URL")
+DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    "sqlite:///./test.db"
+)
 
-# Jika DATABASE_URL tidak ada, gunakan default SQLite untuk testing/development
-if not DATABASE_URL:
-    DATABASE_URL = "sqlite:///./test.db"
+connect_args = {}
 
-# Buat engine (koneksi ke database)
-engine = create_engine(DATABASE_URL)
+if DATABASE_URL.startswith("sqlite"):
+    connect_args = {"check_same_thread": False}
 
-# Buat session factory
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+engine = create_engine(
+    DATABASE_URL,
+    connect_args=connect_args
+)
 
-# Base class untuk models
+SessionLocal = sessionmaker(
+    autocommit=False,
+    autoflush=False,
+    bind=engine
+)
+
 Base = declarative_base()
 
 
-# Dependency: dapatkan database session
 def get_db():
-    """
-    Dependency injection untuk FastAPI.
-    Membuka session saat request masuk, menutup saat selesai.
-    """
     db = SessionLocal()
     try:
         yield db
