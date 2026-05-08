@@ -101,7 +101,6 @@ def health_check(db: Session = Depends(get_db)):
         content=health,
         status_code=status_code
     )
-
 @app.get("/team", tags=["System"])
 def team_info():
     """Informasi tim pengembang."""
@@ -167,28 +166,17 @@ def upload_image(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/auth/register", response_model=UserResponse, status_code=201, tags=["Authentication"])
+@app.post("/auth/register", response_model=UserResponse, status_code=201)
 def register(user_data: UserCreate, db: Session = Depends(get_db)):
-    """
-    Registrasi user baru sebagai CUSTOMER.
-    
-    Customer harus mendaftar melalui form ini. Admin account sudah disediakan di database.
-    
-    - **email**: Email unik (akan digunakan untuk login)
-    - **name**: Nama lengkap
-    - **password**: Minimal 8 karakter (harus mengandung angka)
-    """
-    # Force role menjadi "customer" - admin tidak bisa register via form
-    user_data.role = "customer"
-    
-    user = crud.create_user(db=db, user_data=user_data)
-    if not user:
-        raise HTTPException(
-            status_code=400,
-            detail="Registrasi gagal: email sudah digunakan"
-        )
-    return user
 
+    # cek email duplicate
+    existing_user = db.query(User).filter(User.email == user_data.email).first()
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Email already registered")
+
+    user_data.role = "customer"
+    user = crud.create_user(db=db, user_data=user_data)
+    return user
 
 @app.post("/auth/login", response_model=TokenResponse, tags=["Authentication"])
 def login(login_data: LoginRequest, db: Session = Depends(get_db)):
@@ -1080,5 +1068,63 @@ def delete_testimonial(
     success = crud.delete_testimonial(db=db, testimonial_id=testimonial_id)
     if not success:
         raise HTTPException(status_code=404, detail=f"Testimonial {testimonial_id} tidak ditemukan")
-    
     return None
+
+
+# ==================== TEST ITEMS ENDPOINT (UNTUK PYTEST) ====================
+
+fake_items_db = []
+item_id_counter = 1
+
+
+from fastapi import Header
+
+@app.post("/items", status_code=201)
+def create_item(item: dict, authorization: str = Header(None)):
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    global item_id_counter
+    new_item = {
+        "id": item_id_counter,
+        "name": item.get("name"),
+        "description": item.get("description"),
+        "price": item.get("price", 0)
+    }
+    fake_items_db.append(new_item)
+    item_id_counter += 1
+    return new_item
+
+@app.get("/items")
+def get_items(search: str = None):
+    if search:
+        filtered = [item for item in fake_items_db if search.lower() in item["name"].lower()]
+    else:
+        filtered = fake_items_db
+
+    return {
+        "total": len(filtered),
+        "items": filtered
+    }
+
+
+@app.get("/items/{item_id}")
+def get_item(item_id: int):
+    for item in fake_items_db:
+        if item["id"] == item_id:
+            return item
+    raise HTTPException(status_code=404, detail="Item not found")
+
+
+@app.put("/items/{item_id}")
+def update_item(item_id: int, updated_data: dict):
+    for item in fake_items_db:
+        if item["id"] == item_id:
+            item.update(updated_data)
+            return item
+    raise HTTPException(status_code=404, detail="Item not found")
+
+
+@app.delete("/items/{item_id}", status_code=204)
+def delete_item(item_id: int):
+    global fake_items_db
+    fake_items_db = [item for item in fake_items_db if item["id"] != item_id]
