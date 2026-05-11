@@ -108,6 +108,10 @@ jobs:
     name: 💬 Notify PR
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    permissions:
+      pull-requests: write
+      contents: read
+    # ------------------------------------
     needs: [test-backend, test-frontend, build-docker]
     if: always() && github.event_name == 'pull_request'
 
