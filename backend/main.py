@@ -18,7 +18,7 @@ from schemas import (
     CartItemCreate, CartItemUpdate, CartItemResponse, CartResponse,
     OrderCreate, OrderItemCreate, OrderItemResponse, OrderResponse, OrderListResponse,
     PaymentCreate, PaymentUpdate, PaymentResponse, PaymentListResponse,
-    TestimonialCreate, TestimonialResponse, TestimonialListResponse,
+    TestimonialCreate, TestimonialResponse, TestimonialListResponse,ItemCreate
 )
 from auth import create_access_token, get_current_user, get_current_admin, get_current_customer
 import crud
@@ -1080,18 +1080,22 @@ item_id_counter = 1
 from fastapi import Header
 
 @app.post("/items", status_code=201)
-def create_item(item: dict, authorization: str = Header(None)):
+def create_item(item: ItemCreate, authorization: str = Header(None)):
     if not authorization:
         raise HTTPException(status_code=401, detail="Unauthorized")
+
     global item_id_counter
+
     new_item = {
         "id": item_id_counter,
-        "name": item.get("name"),
-        "description": item.get("description"),
-        "price": item.get("price", 0)
+        "name": item.name,
+        "price": item.price,
+        "quantity": item.quantity,
     }
+
     fake_items_db.append(new_item)
     item_id_counter += 1
+
     return new_item
 
 @app.get("/items")

@@ -2,7 +2,7 @@
 # Stage 1: Build — Install deps & build React app
 # ============================================================
 # Menggunakan image Node.js berbasis Alpine untuk tahap build (lebih ringan)
-FROM node:18-alpine AS builder
+FROM node:22-alpine AS builder
 
 # Menetapkan folder /app dalam container
 WORKDIR /app
