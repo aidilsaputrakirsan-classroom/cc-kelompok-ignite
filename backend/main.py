@@ -7,6 +7,8 @@ from fastapi import FastAPI, Depends, HTTPException, Query, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
+from fastapi.responses import JSONResponse
+from sqlalchemy import text
 
 from database import engine, get_db
 from models import Base, User, OrderItem, Product, Payment
@@ -16,7 +18,7 @@ from schemas import (
     CartItemCreate, CartItemUpdate, CartItemResponse, CartResponse,
     OrderCreate, OrderItemCreate, OrderItemResponse, OrderResponse, OrderListResponse,
     PaymentCreate, PaymentUpdate, PaymentResponse, PaymentListResponse,
-    TestimonialCreate, TestimonialResponse, TestimonialListResponse,
+    TestimonialCreate, TestimonialResponse, TestimonialListResponse,ItemCreate
 )
 from auth import create_access_token, get_current_user, get_current_admin, get_current_customer
 import crud
@@ -72,15 +74,33 @@ def root():
 
 
 @app.get("/health", tags=["System"])
-def health_check():
-    """Health check endpoint."""
-    return {
+def health_check(db: Session = Depends(get_db)):
+    """
+    Health check endpoint - cek status backend dan database.
+    """
+
+    health = {
         "status": "healthy",
+        "service": "ATHSNACK API",
         "version": "1.0.0",
-        "service": "ATHSNACK API"
+        "timestamp": datetime.now().isoformat()
     }
 
+    try:
+        # cek koneksi database
+        db.execute(text("SELECT 1"))
+        health["database"] = "connected"
 
+    except Exception as e:
+        health["status"] = "unhealthy"
+        health["database"] = f"error: {str(e)}"
+
+    status_code = 200 if health["status"] == "healthy" else 503
+
+    return JSONResponse(
+        content=health,
+        status_code=status_code
+    )
 @app.get("/team", tags=["System"])
 def team_info():
     """Informasi tim pengembang."""
@@ -146,28 +166,17 @@ def upload_image(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/auth/register", response_model=UserResponse, status_code=201, tags=["Authentication"])
+@app.post("/auth/register", response_model=UserResponse, status_code=201)
 def register(user_data: UserCreate, db: Session = Depends(get_db)):
-    """
-    Registrasi user baru sebagai CUSTOMER.
-    
-    Customer harus mendaftar melalui form ini. Admin account sudah disediakan di database.
-    
-    - **email**: Email unik (akan digunakan untuk login)
-    - **name**: Nama lengkap
-    - **password**: Minimal 8 karakter (harus mengandung angka)
-    """
-    # Force role menjadi "customer" - admin tidak bisa register via form
-    user_data.role = "customer"
-    
-    user = crud.create_user(db=db, user_data=user_data)
-    if not user:
-        raise HTTPException(
-            status_code=400,
-            detail="Registrasi gagal: email sudah digunakan"
-        )
-    return user
 
+    # cek email duplicate
+    existing_user = db.query(User).filter(User.email == user_data.email).first()
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Email already registered")
+
+    user_data.role = "customer"
+    user = crud.create_user(db=db, user_data=user_data)
+    return user
 
 @app.post("/auth/login", response_model=TokenResponse, tags=["Authentication"])
 def login(login_data: LoginRequest, db: Session = Depends(get_db)):
@@ -219,7 +228,7 @@ def list_products(
     skip: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=100),
     search: str = Query(None),
-    category: str = Query(None),
+    category: str = Query(None, description="Filter kategori (case insensitive)"),
     db: Session = Depends(get_db),
 ):
     """
@@ -359,6 +368,22 @@ def delete_product(
         raise HTTPException(status_code=404, detail=f"Produk {product_id} tidak ditemukan")
     return None
 
+@app.get("/products/categories", tags=["Products"])
+def get_categories(db: Session = Depends(get_db)):
+    """
+    Ambil daftar kategori produk yang tersedia.
+    
+    *Endpoint ini bisa diakses oleh siapa saja*
+    """
+    categories = db.query(Product.category).distinct().all()
+    
+    # hasil query berupa tuple → ubah ke list biasa
+    category_list = [c[0] for c in categories if c[0]]
+    
+    return {
+        "total": len(category_list),
+        "categories": category_list
+    }
 
 # ==================== 4. CART ENDPOINTS ====================
 
@@ -1044,4 +1069,66 @@ def delete_testimonial(
     if not success:
         raise HTTPException(status_code=404, detail=f"Testimonial {testimonial_id} tidak ditemukan")
     return None
-    return None
+
+
+# ==================== TEST ITEMS ENDPOINT (UNTUK PYTEST) ====================
+
+fake_items_db = []
+item_id_counter = 1
+
+
+from fastapi import Header
+
+@app.post("/items", status_code=201)
+def create_item(item: ItemCreate, authorization: str = Header(None)):
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+    global item_id_counter
+
+    new_item = {
+        "id": item_id_counter,
+        "name": item.name,
+        "price": item.price,
+        "quantity": item.quantity,
+    }
+
+    fake_items_db.append(new_item)
+    item_id_counter += 1
+
+    return new_item
+
+@app.get("/items")
+def get_items(search: str = None):
+    if search:
+        filtered = [item for item in fake_items_db if search.lower() in item["name"].lower()]
+    else:
+        filtered = fake_items_db
+
+    return {
+        "total": len(filtered),
+        "items": filtered
+    }
+
+
+@app.get("/items/{item_id}")
+def get_item(item_id: int):
+    for item in fake_items_db:
+        if item["id"] == item_id:
+            return item
+    raise HTTPException(status_code=404, detail="Item not found")
+
+
+@app.put("/items/{item_id}")
+def update_item(item_id: int, updated_data: dict):
+    for item in fake_items_db:
+        if item["id"] == item_id:
+            item.update(updated_data)
+            return item
+    raise HTTPException(status_code=404, detail="Item not found")
+
+
+@app.delete("/items/{item_id}", status_code=204)
+def delete_item(item_id: int):
+    global fake_items_db
+    fake_items_db = [item for item in fake_items_db if item["id"] != item_id]

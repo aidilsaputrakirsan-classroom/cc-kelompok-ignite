@@ -291,7 +291,7 @@ export default function CheckoutPage({ user, onLogout }) {
 const styles = {
   page: {
     minHeight: "100vh",
-    backgroundColor: "#FFF4E6",
+    backgroundColor: "var(--bg-page)",
     paddingBottom: "80px",
     backgroundColor: "#f6efe6",
     paddingBottom: "40px",
@@ -304,7 +304,7 @@ const styles = {
   },
   title: {
     fontSize: "2rem",
-    color: "#2E1F14",
+    color: "var(--text-primary)",
     marginBottom: "32px",
     fontWeight: 800,
   },
@@ -315,16 +315,16 @@ const styles = {
     alignItems: "start",
   },
   formSection: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "var(--surface)",
     padding: "32px",
     borderRadius: "24px",
-    border: "1px solid #F3D2B3",
-    boxShadow: "0 10px 30px rgba(0,0,0,0.03)",
+    border: "1px solid var(--border-card)",
+    boxShadow: "0 10px 30px rgba(0,0,0,0.06)",
   },
   sectionTitle: {
     fontSize: "1.3rem",
     margin: "0 0 20px 0",
-    color: "#2E1F14",
+    color: "var(--text-primary)",
   },
   inputGroup: {
     marginBottom: "20px",
@@ -332,7 +332,7 @@ const styles = {
   label: {
     display: "block",
     marginBottom: "8px",
-    color: "#8A5D3B",
+    color: "var(--text-muted)",
     fontWeight: 600,
     fontSize: "0.9rem",
   },
@@ -340,26 +340,30 @@ const styles = {
     width: "100%",
     padding: "14px",
     borderRadius: "12px",
-    border: "1px solid #E0E0E0",
+    border: "1px solid var(--border-input)",
     fontSize: "1rem",
-    backgroundColor: "#FAFAFA",
+    backgroundColor: "var(--surface-input)",
+    color: "var(--text-dark)",
+    boxSizing: "border-box",
   },
   textarea: {
     width: "100%",
     minHeight: "100px",
     padding: "14px",
     borderRadius: "12px",
-    border: "1px solid #E0E0E0",
+    border: "1px solid var(--border-input)",
     fontSize: "1rem",
-    backgroundColor: "#FAFAFA",
+    backgroundColor: "var(--surface-input)",
+    color: "var(--text-dark)",
     resize: "vertical",
+    boxSizing: "border-box",
   },
   summarySection: {
     position: "sticky",
     top: "100px",
   },
   summaryCard: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "var(--surface)",
     padding: "24px",
     borderRadius: "24px",
     border: "1px solid #F57C00",
@@ -367,6 +371,8 @@ const styles = {
     width: "100%",
     padding: "24px",
     boxSizing: "border-box",
+    border: "1px solid var(--brand)",
+    boxShadow: "var(--summary-shadow)",
   },
 
   form: {
@@ -412,6 +418,7 @@ const styles = {
     color: "#4a3425",
     fontSize: "1rem",
     lineHeight: "1.5",
+    color: "var(--text-secondary)",
   },
 
   /* SUMMARY */
@@ -433,7 +440,7 @@ const styles = {
   divider: {
     width: "100%",
     height: "1px",
-    backgroundColor: "#F3D2B3",
+    backgroundColor: "var(--divider)",
     margin: "0 0 16px 0",
     backgroundColor: "#e2c5a7",
     margin: "10px 0",
@@ -464,7 +471,7 @@ const styles = {
     alignItems: "center",
     fontSize: "1.1rem",
     fontWeight: 700,
-    color: "#2E1F14",
+    color: "var(--text-primary)",
   },
   totalPrice: {
     fontSize: "1.4rem",
@@ -488,6 +495,7 @@ const styles = {
     flexDirection: "column",
     gap: "8px",
     marginBottom: "16px",
+    color: "var(--brand)",
   },
 
   inputLabel: {
@@ -583,7 +591,7 @@ const styles = {
   submitBtn: {
     width: "100%",
     padding: "16px",
-    backgroundColor: "#F57C00",
+    backgroundColor: "var(--brand)",
     color: "white",
     height: "52px",
     border: "none",
@@ -593,7 +601,7 @@ const styles = {
     fontSize: "1rem",
     fontWeight: "700",
     cursor: "pointer",
-    boxShadow: "0 8px 16px rgba(245,124,0,0.2)",
+    boxShadow: "0 8px 16px rgba(245,124,0,0.25)",
   },
 
   hiddenFields: {
