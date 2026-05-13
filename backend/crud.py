@@ -92,7 +92,7 @@ def get_products(db: Session, skip: int = 0, limit: int = 20, search: str = None
         )
     
     if category:
-        query = query.filter(Product.category.ilike(f"%{category}%"))
+        query = query.filter(Product.category.ilike(f"%{category.lower()}%"))
     
     total = query.count()
     products = query.order_by(Product.created_at.desc()).offset(skip).limit(limit).all()

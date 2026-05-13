@@ -1,4 +1,5 @@
 # ☁️ Cloud App - [ATHSNAC— UMKM E-Commerce Platform]
+![CI Pipeline](https://github.com/aidilsaputrakirsan-classroom/cc-kelompok-ignite/actions/workflows/ci.yml/badge.svg)
 
 ## 📌 Deskripsi Proyek
 
@@ -46,7 +47,7 @@ ATHSNAC (E-Commerce UMKM RAZ'Q) adalah platform e-commerce berbasis website yang
     - [7. Pydantic — Validasi Data](#7-pydantic--validasi-data)
     - [8. FastAPI](#8-fastapi)
   - [🏗️ Panduan Membangun REST API](#️-panduan-membangun-rest-api)
-  - [📚 Dasar Teori](#-dasar-teori-1)
+  - [🏗️ Panduan Membangun Frontend React](#️-panduan-membangun-frontend-react)
     - [1. API (Application Programming Interface)](#1-api-application-programming-interface-1)
     - [2. REST (Representational State Transfer)](#2-rest-representational-state-transfer-1)
     - [3. HTTP Methods \& CRUD](#3-http-methods--crud-1)
@@ -56,8 +57,8 @@ ATHSNAC (E-Commerce UMKM RAZ'Q) adalah platform e-commerce berbasis website yang
     - [7. Pydantic — Validasi Data](#7-pydantic--validasi-data-1)
     - [8. FastAPI](#8-fastapi-1)
   - [| **Type hints** | Memanfaatkan type hints Python untuk validasi dan dokumentasi |](#-type-hints--memanfaatkan-type-hints-python-untuk-validasi-dan-dokumentasi-)
-  - [🏗️ Panduan Membangun Frontend React](#️-panduan-membangun-frontend-react)
-  - [📚 Dasar Teori](#-dasar-teori-2)
+  - [🏗️ Panduan Membangun Frontend React](#️-panduan-membangun-frontend-react-1)
+  - [📚 Dasar Teori](#-dasar-teori-1)
     - [1. React](#1-react)
     - [2. Props dan State](#2-props-dan-state)
     - [3. Fetch API](#3-fetch-api)
@@ -77,9 +78,20 @@ ATHSNAC (E-Commerce UMKM RAZ'Q) adalah platform e-commerce berbasis website yang
     - [5. **Role-Based Access Control (RBAC)**](#5-role-based-access-control-rbac)
     - [6. **Token Security Best Practices**](#6-token-security-best-practices)
   - [📂 Dokumentasi](#-dokumentasi)
-    - [📋 Quality Assurance \& Testing](#-quality-assurance--testing)
-    - [📖 Development Documentation](#-development-documentation)
-  - [| `docs/api-documentation.md` | Backend | Dokumentasi lengkap API endpoints](#-docsapi-documentationmd--backend--dokumentasi-lengkap-api-endpoints)
+    - [🧪 Quality Assurance \& Testing Documentation](#-quality-assurance--testing-documentation)
+    - [📖 Development \& Architecture Documentation](#-development--architecture-documentation)
+    - [📋 Project Management \& Meeting Notes](#-project-management--meeting-notes)
+  - [| uts-demo-script.md | Script demo untuk UTS presentation — feature walkthrough \& testing checklist | ✅ Complete |](#-uts-demo-scriptmd--script-demo-untuk-uts-presentation--feature-walkthrough--testing-checklist---complete-)
+  - [📋 Git Workflow \& Development Process](#-git-workflow--development-process)
+    - [Branch Protection \& PR Workflow](#branch-protection--pr-workflow)
+    - [CODEOWNERS \& Reviewer](#codeowners--reviewer)
+    - [Merge Strategy](#merge-strategy)
+- [📘 DevOps Workflow Guide](#-devops-workflow-guide)
+    - [`make lint`](#make-lint)
+    - [`make test`](#make-test)
+    - [`make pr-check`](#make-pr-check)
+    - [`make build`](#make-build)
+    - [`make clean`](#make-clean)
   - [📅 Roadmap](#-roadmap)
 ---
 ## Fitur Utama
@@ -540,10 +552,9 @@ sleep 10
 # Verifikasi semua services berjalan
 docker compose ps
 ```
-
 ✅ Aplikasi siap:
-- **Frontend**: http://localhost:5173
-- **Backend API**: http://localhost:8000/docs
+- **Frontend**: http://localhost:3000
+- **Backend API**: http://localhost:3000/docs
 - **PostgreSQL**: localhost:5432
 
 ### Docker Compose Commands
@@ -675,13 +686,30 @@ cloud-team-ignite/
 │   ├── .dockerignore              ← Daftar file yang tidak masuk ke Docker image
 │   └── ...
 ├── docs/
-│   ├── api-test-results.md        ←  Dokumentasi hasil testing endpoint API
-│   ├── ui-test-results.md         ←  Dokumentasi hasil testing UI React
-│   ├── auth-test-results.md       ←  Dokumentasi hasil testing autentikasi JWT
-│   ├── image-comparison.md        ←  Perbandingan ukuran Docker image
-│   ├── docker-cheatsheet.md       ←  Referensi perintah Docker
-│   ├── database-schema.md         ←  Skema tabel database PostgreSQL
-│   └── member-[NAMA].md           ← File verifikasi masing-masing anggota
+│   ├── 📋 QA & Testing Results
+│   │   ├── auth-test-results.md        ← Hasil testing autentikasi JWT (19/19 tests ✅)
+│   │   ├── api-test-results.md         ← Hasil testing semua API endpoints dengan examples
+│   │   ├── ui-test-results.md          ← Hasil testing UI React (10 test cases ✅)
+│   │   └── image-comparison.md         ← Analisis ukuran Docker images & optimization
+│   ├── 📖 Development & Architecture
+│   │   ├── api-documentation.md        ← Dokumentasi lengkap REST API endpoints
+│   │   ├── database-schema.md          ← Skema database PostgreSQL & ERD
+│   │   ├── docker-architecture.md      ← Arsitektur Docker & Docker Compose
+│   │   ├── docker-cheatsheet.md        ← Referensi perintah Docker
+│   │   ├── setup-guide.md              ← Panduan setup dari clone hingga running
+│   │   └── git-workflow.md             ← Git workflow & PR process
+│   ├── 📋 Project Management
+│   │   ├── retrospective-m1.md         ← Retrospective & lessons learned (Milestone 1)
+│   │   └── uts-demo-script.md          ← Script untuk demo UTS presentation
+│   ├── 👥 Member Documentation
+│   │   ├── member-[Andini-Permata-Dewanti].md  ← Profil Andini (Lead Backend)
+│   │   ├── member-[Desnita-Dwi-Putri].md       ← Profil Desnita (Lead QA & Docs)
+│   │   ├── member-[Krishandy].md               ← Profil Krishandy (Lead DevOps)
+│   │   └── member-Putri-Rahmawati.md           ← Profil Putri (Lead Frontend)
+│   └── images/
+│       ├── api_test_result/            ← Screenshot hasil API testing
+│       ├── auth-test-result/           ← Screenshot hasil auth testing
+│       └── ui-test-result/             ← Screenshot hasil UI testing
 ├── .gitignore                     ← Daftar file yang tidak di-commit (termasuk .env)
 └── README.md                      ← Dokumentasi proyek (file ini)
 ```
@@ -807,7 +835,11 @@ Contoh: jika client mengirim `price: -500` atau `price: "lima ratus"`, Pydantic 
 
 ## 🏗️ Panduan Membangun REST API
 
-## 📚 Dasar Teori
+Dokumentasi lengkap tentang REST API dapat dilihat di [docs/api-documentation.md](docs/api-documentation.md).
+
+---
+
+## 🏗️ Panduan Membangun Frontend React
 
 Sebelum memulai implementasi, penting untuk memahami konsep-konsep dasar yang menjadi fondasi dari proyek ini.
 
@@ -1001,7 +1033,8 @@ Prinsip **Separation of Concerns** berarti setiap file hanya memiliki satu tangg
 | `OrdersPage.jsx` | Riwayat pesanan customer dengan status, detail, dan timeline pengiriman |
 | `TestimoniPage.jsx` | Halaman daftar testimonial dari customer lain (publik) |
 | `ProfilePage.jsx` | Profil customer: data pribadi, riwayat pesanan, dan opsi edit |
-| `AboutPage.jsx` | Informasi tentang ATHSNAC, visi-misi, dan contact details |
+| `AboutPage.jsx` | Informasi tentang ATHSNAC, visi dan misi, dan contact details |
+| `AboutPage.jsx` |Aplikasi cloud-native untuk manajemen inventaris |
 | **Admin Pages** | |
 | `AdminDashboard.jsx` | Dashboard utama admin dengan KPI, statistik penjualan, dan quick actions |
 | `AdminProducts.jsx` | Manajemen produk: CRUD, bulk edit, filter, dan statistik inventori |
@@ -1411,22 +1444,127 @@ SECRET_KEY = "super_secret_key_12345"
 ---
 ## 📂 Dokumentasi
 
-Seluruh dokumen hasil pengujian dan referensi proyek tersedia di folder `docs/`:
+Seluruh dokumen hasil pengujian, referensi proyek, dan panduan teknis tersedia di folder `docs/`. Berikut penjelasan lengkap setiap file dokumentasi:
 
-### 📋 Quality Assurance & Testing
-| File | Status | Keterangan |
-|---|--------|---|
-| `docs/auth-test-results.md` | ✅ **19/19 Tests** | Hasil pengujian autentikasi & otentikasi JWT — 100% Success Rate |
-| `docs/api-test-results.md`| ✅ | Hasil pengujian endpoint API via Swagger UI |
-| `docs/ui-test-results.md`| ✅ | Hasil pengujian 10 test case UI React via browser |
+### 🧪 Quality Assurance & Testing Documentation
 
-### 📖 Development Documentation
-| File | Lead | Keterangan |
+| File | Deskripsi | Status |
 |---|---|---|
-| `docs/setup-guide.md` | DevOps | Panduan setup lengkap dari clone hingga running |
-| `docs/database-schema.md` | DevOps | Skema tabel database PostgreSQL dengan ERD |
-| `docs/docker-architecture.md` | DevOps | Arsitektur Docker & Docker Compose |
-| `docs/api-documentation.md` | Backend | Dokumentasi lengkap API endpoints 
+| [auth-test-results.md](docs/auth-test-results.md) | Hasil pengujian autentikasi & JWT authentication — 19/19 test cases ✅ | ✅ Complete |
+| [api-test-results.md](docs/api-test-results.md) | Hasil pengujian lengkap semua endpoint API via Swagger UI dengan request/response examples | ✅ Complete |
+| [ui-test-results.md](docs/ui-test-results.md) | Hasil testing UI React — 10 test cases untuk customer & admin features | ✅ Complete |
+| [image-comparison.md](docs/image-comparison.md) | Perbandingan ukuran Docker images (Alpine vs Full) dan optimization tips | ✅ Complete |
+
+### 📖 Development & Architecture Documentation
+
+| File | Deskripsi | Status |
+|---|---|---|
+| [api-documentation.md](docs/api-documentation.md) | Dokumentasi lengkap semua REST API endpoints dengan curl examples dan response codes | ✅ Complete |
+| [database-schema.md](docs/database-schema.md) | Skema tabel database PostgreSQL dengan ERD, relationships, dan field descriptions | ✅ Complete |
+| [docker-architecture.md](docs/docker-architecture.md) | Arsitektur Docker & Docker Compose, layering, dan deployment strategy | ✅ Complete |
+| [docker-cheatsheet.md](docs/docker-cheatsheet.md) | Referensi perintah Docker dan Docker Compose yang sering digunakan | ✅ Complete |
+| [setup-guide.md](docs/setup-guide.md) | Panduan setup lengkap dari clone repository hingga running semua services | ✅ Complete |
+| [git-workflow.md](docs/git-workflow.md) | Git workflow, branch naming conventions, PR process, dan merge strategy | ✅ Complete |
+
+### 📋 Project Management & Meeting Notes
+
+| File | Deskripsi | Status |
+|---|---|---|
+| [retrospective-m1.md](docs/retrospective-m1.md) | Retrospective meeting untuk milestone 1 — lessons learned & improvements | ✅ Complete |
+| [uts-demo-script.md](docs/uts-demo-script.md) | Script demo untuk UTS presentation — feature walkthrough & testing checklist | ✅ Complete |
+---
+
+## 📋 Git Workflow & Development Process
+
+### Branch Protection & PR Workflow
+- ❌ **Direct push ke `main`**: Tidak diizinkan
+- ✅ **Cara yang benar:**
+  1. Buat feature branch: `git checkout -b feature/nama-fitur`
+  2. Commit perubahan: `git commit -m "..."`
+  3. Push ke branch: `git push origin feature/nama-fitur`
+  4. Buat Pull Request di GitHub
+  5. Tunggu review + 1 approval minimal
+  6. Merge via "Squash and Merge" → history tetap bersih
+
+### CODEOWNERS & Reviewer
+- Reviewer otomatis ditambah per area code:
+  - `/backend/` → @andinipermatadewanti
+  - `/frontend/` → @10231074-sketch
+  - `docker-compose.yml` → @10231050
+  - `/docs/` → @desnitadwip
+
+### Merge Strategy
+- **Squash and Merge** = gabung semua commit jadi 1 saat merge
+- Manfaat: history `main` rapi, mudah di-read, tidak berantakan
+
+---
+# 📘 DevOps Workflow Guide
+
+### `make lint`
+Menjalankan linter untuk memeriksa kualitas kode Python.
+
+```bash
+make lint
+```
+
+- Menggunakan **flake8** untuk style checking (max line length: 100)
+- Mengecualikan folder: `.git`, `__pycache__`, `.venv`, `node_modules`
+- Jika linter tidak ditemukan, akan menampilkan pesan skip + instruksi instalasi
+
+---
+
+### `make test`
+Menjalankan test suite menggunakan pytest.
+
+```bash
+make test
+```
+
+- Menjalankan semua test di folder `tests/`
+- Output verbose (`-v`) dengan short traceback
+- **Placeholder**: Jika pytest belum ada, menampilkan instruksi instalasi
+
+> ⚠️ **Catatan:** Pastikan test files ada di folder `tests/` sebelum menjalankan.
+
+---
+
+### `make pr-check`
+Menjalankan **full pipeline check** sebelum PR disubmit — wajib lolos sebelum merge.
+
+```bash
+make pr-check
+```
+
+Pipeline yang dijalankan secara berurutan:
+1. 🐳 `docker-build` — Build Docker image (`app:latest`)
+2. 🧪 `test` — Jalankan seluruh test suite
+
+Jika salah satu tahap gagal, pr-check akan berhenti dan menampilkan error.
+
+---
+
+### `make build`
+Meng-install semua dependency dari `requirements.txt`.
+
+```bash
+make build
+```
+
+---
+
+### `make clean`
+Membersihkan semua build artifacts dan cache.
+
+```bash
+make clean
+```
+
+File/folder yang dihapus:
+- `__pycache__/`
+- `*.pyc`
+- `.pytest_cache/`
+- `*.egg-info/`
+
 ---
 
 ## 📅 Roadmap
@@ -1438,7 +1576,7 @@ Seluruh dokumen hasil pengujian dan referensi proyek tersedia di folder `docs/`:
 | 3 | React Frontend | ✅ |
 | 4 | Full-Stack Integration | ✅ |
 | 5-7 | Docker & Compose |✅|
-| 8 | UTS Demo | ⬜ |
+| 8 | UTS Demo | ✅ |
 | 9-11 | CI/CD Pipeline | ⬜ |
 | 12-14 | Microservices | ⬜ |
 | 15-16 | Final & UAS | ⬜ |
