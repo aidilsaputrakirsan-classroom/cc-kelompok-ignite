@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom"
 import { useEffect, useState } from "react"
 import Header from "../components/Header"
-import { fetchMyOrders, getOrderItems, confirmOrder, completePayment, createPayment, getPaymentsByOrder, createTestimonial, API_URL } from "../services/api"
+import { fetchMyOrders, getOrderItems, completePayment, createPayment, getPaymentsByOrder, createTestimonial, uploadImage } from "../services/api"
 import { toast } from "react-toastify"
 
 export default function OrdersPage({ user, onLogout }) {
@@ -78,6 +78,43 @@ export default function OrdersPage({ user, onLogout }) {
     })
   }
 
+  const bankAccounts = [
+    { bank: "BNI", account: "121-234-5678", owner: "Nadia Omara" },
+    { bank: "BCA", account: "987-654-3210", owner: "Nadia Omara" },
+    { bank: "BRI", account: "112-233-4455", owner: "Nadia Omara" },
+    { bank: "Mandiri", account: "556-677-8899", owner: "Nadia Omara" },
+  ]
+
+  const qrisImageSrc = "/qris-kode.png"
+
+  const getPaymentFormData = (orderId) => paymentForm[`payment_${orderId}`] || {}
+
+  const setPaymentFormData = (orderId, nextData) => {
+    setPaymentForm({
+      ...paymentForm,
+      [`payment_${orderId}`]: {
+        ...(paymentForm[`payment_${orderId}`] || {}),
+        ...nextData,
+      },
+    })
+  }
+
+  const handleSelectPaymentMethod = (orderId, paymentMethod) => {
+    setPaymentFormData(orderId, {
+      payment_method: paymentMethod,
+      proof_file: null,
+      proof_preview: "",
+      selected_bank: paymentMethod === "bank_transfer" ? "BNI" : "",
+    })
+  }
+
+  const handleProofFileChange = (orderId, file) => {
+    setPaymentFormData(orderId, {
+      proof_file: file,
+      proof_preview: file ? URL.createObjectURL(file) : "",
+    })
+  }
+
   const getStatusBadge = (status) => {
     const statusMap = {
       pending: { bg: "#FFF4E6", color: "#F57C00", text: "Menunggu Konfirmasi" },
@@ -122,41 +159,48 @@ export default function OrdersPage({ user, onLogout }) {
     )
   }
 
-  const handleConfirmOrder = async (orderId) => {
-    try {
-      toast.loading("Mengkonfirmasi pesanan...", { id: "confirm" })
-      await confirmOrder(orderId)
-      toast.success("Pesanan dikonfirmasi!", { id: "confirm" })
-      loadOrders()
-    } catch (err) {
-      toast.error(err?.message || "Gagal mengkonfirmasi pesanan", { id: "confirm" })
-    }
-  }
-
   const handleCreatePayment = async (orderId, order) => {
-    const formDataKey = `payment_${orderId}`
-    const data = paymentForm[formDataKey] || {}
+    const data = getPaymentFormData(orderId)
 
-    if (!data.payment_method?.trim()) {
+    if (!data.payment_method) {
       toast.error("Pilih metode pembayaran", { id: `payment_${orderId}` })
       return
     }
-    if (!data.proof_url?.trim()) {
-      toast.error("Upload bukti pembayaran", { id: `payment_${orderId}` })
+
+    if ((data.payment_method === "qris" || data.payment_method === "bank_transfer") && !data.proof_file) {
+      toast.error("Upload bukti pembayaran untuk metode ini", { id: `payment_${orderId}` })
+      return
+    }
+
+    if (data.payment_method === "bank_transfer" && !data.selected_bank) {
+      toast.error("Pilih rekening tujuan untuk transfer", { id: `payment_${orderId}` })
       return
     }
 
     try {
       toast.loading("Membuat pembayaran...", { id: `payment_${orderId}` })
+      let proof_url = data.proof_url || null
+
+      if ((data.payment_method === "qris" || data.payment_method === "bank_transfer") && data.proof_file) {
+        const uploadResult = await uploadImage(data.proof_file)
+        proof_url = uploadResult?.url || uploadResult?.path || proof_url
+      }
+
+      const apiPaymentMethod =
+        data.payment_method === "qris"
+          ? "e_wallet"
+          : data.payment_method
+
       const paymentData = {
         order_id: orderId,
-        payment_method: data.payment_method,
+        payment_method: apiPaymentMethod,
         amount: order.total_amount,
-        proof_url: data.proof_url,
+        proof_url: proof_url || undefined,
       }
+
       await createPayment(paymentData)
       toast.success("Pembayaran berhasil dibuat! Tunggu admin verifikasi.", { id: `payment_${orderId}` })
-      setPaymentForm({ ...paymentForm, [formDataKey]: {} })
+      setPaymentForm({ ...paymentForm, [`payment_${orderId}`]: {} })
       loadOrders()
     } catch (err) {
       toast.error(err?.message || "Gagal membuat pembayaran", { id: `payment_${orderId}` })
@@ -215,6 +259,11 @@ export default function OrdersPage({ user, onLogout }) {
     )
   }
 
+  // Filter: show only active orders (pending, processing, shipped)
+  const activeOrders = orders.filter(order => 
+    ["pending", "processing", "shipped"].includes(order.status)
+  )
+
   return (
     <div style={styles.page}>
       <Header user={user} onLogout={handleLogout} />
@@ -228,9 +277,16 @@ export default function OrdersPage({ user, onLogout }) {
               Belanja Sekarang
             </button>
           </section>
+        ) : activeOrders.length === 0 ? (
+          <section style={styles.emptyCard}>
+            <p style={styles.emptyText}>Tidak ada pesanan yang sedang diproses</p>
+            <button style={styles.button} onClick={() => navigate("/shop")}>
+              Belanja Sekarang
+            </button>
+          </section>
         ) : (
           <div style={styles.ordersList}>
-            {orders.map((order) => (
+            {activeOrders.map((order) => (
               <div key={order.id} style={styles.orderCard}>
                 <div style={styles.orderHeader}>
                   <div>
@@ -241,6 +297,138 @@ export default function OrdersPage({ user, onLogout }) {
                     {getStatusBadge(order.status)}
                   </div>
                 </div>
+
+                {(order.status === "pending" || order.status === "processing") && (!order.payments || order.payments.length === 0) && (
+                  <div style={styles.paymentFormSection}>
+                    <h4 style={styles.infoLabel}>Pilih Metode Pembayaran</h4>
+                    <div style={styles.paymentMethodsGrid}>
+                      <div
+                        style={{
+                          ...styles.paymentMethodCard,
+                          ...(getPaymentFormData(order.id).payment_method === "qris" ? styles.paymentMethodCardSelected : {}),
+                        }}
+                        onClick={() => handleSelectPaymentMethod(order.id, "qris")}
+                      >
+                        <span style={styles.paymentMethodIcon}>📱</span>
+                        <div style={styles.paymentMethodLabel}>QRIS</div>
+                        <div style={styles.paymentMethodSubtitle}>Scan QR Code</div>
+                      </div>
+
+                      <div
+                        style={{
+                          ...styles.paymentMethodCard,
+                          ...(getPaymentFormData(order.id).payment_method === "bank_transfer" ? styles.paymentMethodCardSelected : {}),
+                        }}
+                        onClick={() => handleSelectPaymentMethod(order.id, "bank_transfer")}
+                      >
+                        <span style={styles.paymentMethodIcon}>🏦</span>
+                        <div style={styles.paymentMethodLabel}>Transfer Bank</div>
+                        <div style={styles.paymentMethodSubtitle}>BNI, BCA, BRI, Mandiri</div>
+                      </div>
+
+                      <div
+                        style={{
+                          ...styles.paymentMethodCard,
+                          ...(getPaymentFormData(order.id).payment_method === "cash" ? styles.paymentMethodCardSelected : {}),
+                        }}
+                        onClick={() => handleSelectPaymentMethod(order.id, "cash")}
+                      >
+                        <span style={styles.paymentMethodIcon}>💵</span>
+                        <div style={styles.paymentMethodLabel}>Cash</div>
+                        <div style={styles.paymentMethodSubtitle}>Bayar di tempat</div>
+                      </div>
+                    </div>
+
+                    {getPaymentFormData(order.id).payment_method === "qris" && (
+                      <div style={styles.qrisSection}>
+                        <p style={styles.qrisHeadline}>Scan QR Code di bawah ini untuk membayar</p>
+                        <div style={styles.qrCard}>
+                          <img src={qrisImageSrc} alt="QRIS Pembayaran" style={styles.qrImage} />
+                        </div>
+                        <p style={styles.qrisAmount}>{formatRupiah(order.total_amount)}</p>
+                        <p style={styles.orderCode}>Kode Pesanan ATH-{String(order.id).padStart(10, "0")}</p>
+
+                        <div style={styles.uploadSection}>
+                          <label style={styles.uploadLabel}>Unggah Bukti Pembayaran</label>
+                          <input
+                            type="file"
+                            accept="image/png,image/jpeg,image/jpg"
+                            style={styles.fileInput}
+                            onChange={(e) => handleProofFileChange(order.id, e.target.files?.[0] || null)}
+                          />
+                          <p style={styles.uploadHint}>PNG, JPG, JPEG max 10MB</p>
+                          {getPaymentFormData(order.id).proof_file && (
+                            <p style={styles.uploadFileName}>{getPaymentFormData(order.id).proof_file.name}</p>
+                          )}
+                          {getPaymentFormData(order.id).proof_preview && (
+                            <img
+                              src={getPaymentFormData(order.id).proof_preview}
+                              alt="Preview Bukti Pembayaran"
+                              style={styles.previewImage}
+                            />
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {getPaymentFormData(order.id).payment_method === "bank_transfer" && (
+                      <div style={styles.bankSection}>
+                        <p style={styles.bankHeadline}>Pilih rekening untuk transfer kepada pemilik UMKM</p>
+                        {bankAccounts.map((bank) => (
+                          <div
+                            key={bank.bank}
+                            style={{
+                              ...styles.bankCard,
+                              ...(getPaymentFormData(order.id).selected_bank === bank.bank ? styles.bankCardSelected : {}),
+                            }}
+                            onClick={() => setPaymentFormData(order.id, { selected_bank: bank.bank })}
+                          >
+                            <p style={styles.bankName}>{bank.bank}</p>
+                            <p style={styles.bankAccount}>{bank.account}</p>
+                            <p style={styles.bankOwner}>{bank.owner}</p>
+                          </div>
+                        ))}
+
+                        <div style={styles.uploadSection}>
+                          <label style={styles.uploadLabel}>Unggah bukti transfer</label>
+                          <input
+                            type="file"
+                            accept="image/png,image/jpeg,image/jpg"
+                            style={styles.fileInput}
+                            onChange={(e) => handleProofFileChange(order.id, e.target.files?.[0] || null)}
+                          />
+                          <p style={styles.uploadHint}>PNG, JPG, JPEG max 10MB</p>
+                          {getPaymentFormData(order.id).proof_file && (
+                            <p style={styles.uploadFileName}>{getPaymentFormData(order.id).proof_file.name}</p>
+                          )}
+                          {getPaymentFormData(order.id).proof_preview && (
+                            <img
+                              src={getPaymentFormData(order.id).proof_preview}
+                              alt="Preview Bukti Transfer"
+                              style={styles.previewImage}
+                            />
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {getPaymentFormData(order.id).payment_method === "cash" && (
+                      <div style={styles.cashSection}>
+                        <p style={styles.cashText}>Pesanan akan dibayar langsung ke kurir saat diterima.</p>
+                      </div>
+                    )}
+
+                    <button
+                      style={{
+                        ...styles.primaryButton,
+                        marginTop: "16px",
+                      }}
+                      onClick={() => handleCreatePayment(order.id, order)}
+                    >
+                      💳 Buat Pembayaran
+                    </button>
+                  </div>
+                )}
 
                 <div style={styles.orderInfo}>
                   <div style={styles.infoSection}>
@@ -296,61 +484,6 @@ export default function OrdersPage({ user, onLogout }) {
 
                 {/* Actions based on order status */}
                 <div style={styles.actionsSection}>
-                  {/* Step 1: Confirm Order */}
-                  {order.status === "pending" && (
-                    <button
-                      style={styles.primaryButton}
-                      onClick={() => handleConfirmOrder(order.id)}
-                    >
-                      ✓ Konfirmasi Pesanan
-                    </button>
-                  )}
-
-                  {/* Step 2: Create Payment */}
-                  {(order.status === "pending" || order.status === "processing") && (!order.payments || order.payments.length === 0) && (
-                    <div style={styles.paymentFormSection}>
-                      <h4 style={styles.infoLabel}>Buat Pembayaran</h4>
-                      <div style={styles.formGroup}>
-                        <label style={styles.label}>Metode Pembayaran</label>
-                        <input
-                          type="text"
-                          placeholder="Contoh: Transfer Bank, QRIS, etc"
-                          value={paymentForm[`payment_${order.id}`]?.payment_method || ""}
-                          onChange={(e) => setPaymentForm({
-                            ...paymentForm,
-                            [`payment_${order.id}`]: {
-                              ...paymentForm[`payment_${order.id}`],
-                              payment_method: e.target.value,
-                            },
-                          })}
-                          style={styles.input}
-                        />
-                      </div>
-                      <div style={styles.formGroup}>
-                        <label style={styles.label}>URL Bukti Pembayaran</label>
-                        <input
-                          type="text"
-                          placeholder="Contoh: https://imgur.com/xxx"
-                          value={paymentForm[`payment_${order.id}`]?.proof_url || ""}
-                          onChange={(e) => setPaymentForm({
-                            ...paymentForm,
-                            [`payment_${order.id}`]: {
-                              ...paymentForm[`payment_${order.id}`],
-                              proof_url: e.target.value,
-                            },
-                          })}
-                          style={styles.input}
-                        />
-                      </div>
-                      <button
-                        style={styles.primaryButton}
-                        onClick={() => handleCreatePayment(order.id, order)}
-                      >
-                        💳 Buat Pembayaran
-                      </button>
-                    </div>
-                  )}
-
                   {/* Step 3: Complete Payment (Admin marked as completed) */}
                   {order.payments?.some(p => p.payment_status === "completed") && order.status !== "delivered" && (
                     <button
@@ -655,5 +788,178 @@ const styles = {
     transition: "border-color 0.3s ease",
     backgroundColor: "var(--surface-input)",
     color: "var(--text-dark)",
+  },
+  paymentMethodsGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+    gap: "12px",
+    marginBottom: "18px",
+  },
+  paymentMethodCard: {
+    borderRadius: "16px",
+    border: "1px solid #E6D7C2",
+    backgroundColor: "#FFF8F2",
+    padding: "18px",
+    cursor: "pointer",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    gap: "8px",
+    transition: "all 0.2s ease",
+    minHeight: "130px",
+  },
+  paymentMethodCardSelected: {
+    borderColor: "#F57C00",
+    boxShadow: "0 12px 24px rgba(245, 124, 0, 0.18)",
+    backgroundColor: "#FFF3E0",
+  },
+  paymentMethodIcon: {
+    fontSize: "1.6rem",
+  },
+  paymentMethodLabel: {
+    fontSize: "1rem",
+    fontWeight: "700",
+    color: "#2B1A11",
+  },
+  paymentMethodSubtitle: {
+    fontSize: "0.85rem",
+    color: "#6A4D3A",
+    textAlign: "center",
+  },
+  qrisSection: {
+    marginTop: "18px",
+    padding: "18px",
+    borderRadius: "16px",
+    backgroundColor: "#FFFFFF",
+    border: "1px solid #E6D7C2",
+  },
+  qrisHeadline: {
+    margin: 0,
+    marginBottom: "16px",
+    fontWeight: "700",
+    color: "#2B1A11",
+  },
+  qrCard: {
+    height: "200px",
+    borderRadius: "18px",
+    border: "1px dashed #D8BFAA",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#F9F2E8",
+    marginBottom: "14px",
+  },
+  qrImage: {
+    width: "100%",
+    height: "100%",
+    objectFit: "contain",
+    borderRadius: "16px",
+  },
+  previewImage: {
+    width: "100%",
+    maxWidth: "260px",
+    marginTop: "12px",
+    borderRadius: "12px",
+    objectFit: "contain",
+    border: "1px solid #E6D7C2",
+  },
+  qrPlaceholder: {
+    fontSize: "1.2rem",
+    fontWeight: "700",
+    color: "#A77A47",
+  },
+  qrisAmount: {
+    margin: 0,
+    fontSize: "1.2rem",
+    fontWeight: "700",
+    color: "#F57C00",
+    textAlign: "center",
+  },
+  orderCode: {
+    margin: "6px 0 0 0",
+    fontSize: "0.9rem",
+    color: "#A17A50",
+    textAlign: "center",
+  },
+  uploadSection: {
+    marginTop: "18px",
+  },
+  uploadLabel: {
+    display: "block",
+    marginBottom: "8px",
+    fontSize: "0.9rem",
+    fontWeight: "700",
+    color: "#2B1A11",
+  },
+  fileInput: {
+    width: "100%",
+    padding: "10px 12px",
+    border: "1px solid #E6D7C2",
+    borderRadius: "12px",
+    fontSize: "0.95rem",
+    backgroundColor: "#FFFFFF",
+    cursor: "pointer",
+  },
+  uploadHint: {
+    marginTop: "8px",
+    fontSize: "0.85rem",
+    color: "#6A4D3A",
+  },
+  uploadFileName: {
+    marginTop: "8px",
+    fontSize: "0.9rem",
+    color: "#2B1A11",
+    fontWeight: "600",
+  },
+  bankSection: {
+    marginTop: "18px",
+  },
+  bankHeadline: {
+    margin: 0,
+    marginBottom: "14px",
+    fontWeight: "700",
+    color: "#2B1A11",
+  },
+  bankCard: {
+    borderRadius: "14px",
+    border: "1px solid #E6D7C2",
+    backgroundColor: "#FFF8F2",
+    padding: "16px",
+    marginBottom: "12px",
+    cursor: "pointer",
+    transition: "all 0.2s ease",
+  },
+  bankCardSelected: {
+    borderColor: "#F57C00",
+    backgroundColor: "#FFF2E0",
+  },
+  bankName: {
+    margin: 0,
+    fontSize: "1rem",
+    fontWeight: "700",
+    color: "#2B1A11",
+  },
+  bankAccount: {
+    margin: "6px 0 0 0",
+    fontSize: "0.95rem",
+    color: "#6A4D3A",
+  },
+  bankOwner: {
+    margin: "4px 0 0 0",
+    fontSize: "0.9rem",
+    color: "#6A4D3A",
+  },
+  cashSection: {
+    marginTop: "18px",
+    padding: "18px",
+    borderRadius: "16px",
+    backgroundColor: "#FFF8F2",
+    border: "1px solid #E6D7C2",
+  },
+  cashText: {
+    margin: 0,
+    fontSize: "0.95rem",
+    color: "#2B1A11",
+    lineHeight: 1.6,
   },
 }
