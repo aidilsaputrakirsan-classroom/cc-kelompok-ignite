@@ -381,6 +381,7 @@ const styles = {
     justifyContent: "space-between",
     fontSize: "0.95rem",
     color: "#70503C",
+  },
 
   /* STORE HEADER */
   storeBox: {
