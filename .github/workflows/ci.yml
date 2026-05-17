@@ -117,15 +117,13 @@ jobs:
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
         run: |
-          cd backend
-          railway up --service backend --detach
+          railway up --service backend --root backend --detach
 
       - name: 🚀 Deploy Frontend
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
         run: |
-          cd frontend
-          railway up --service frontend --detach
+          railway up --service frontend --root frontend --detach
 
       - name: ✅ Deploy complete
         run: |
