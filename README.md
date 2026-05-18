@@ -5,9 +5,50 @@
 
 ATHSNAC (E-Commerce UMKM RAZ'Q) adalah platform e-commerce berbasis website yang dirancang untuk mendigitalisasikan proses bisnis UMKM RAZ'Q Balikpapan. UMKM ini memproduksi makanan khas Balikpapan seperti Amplang, keripik pisang, abon, dan camilan lainnya. Aplikasi ini mengatasi kendala pemasaran dan visibilitas usaha, serta mempermudah pengelolaan transaksi dan stok produk yang sebelumnya menghadapi tantangan kompleksitas pada aplikasi pihak ketiga.
 
+---
+
+## 🌐 Live Demo
+
+**Aplikasi sudah live di internet! Akses langsung tanpa perlu setup local:**
+
+| Service | URL | Status |
+|---------|-----|--------|
+| 🎨 **Frontend** | https://aware-warmth-production-ebd3.up.railway.app | ![Status](https://img.shields.io/website?url=https%3A%2F%2Faware-warmth-production-ebd3.up.railway.app) |
+| 🔧 **Backend API** | https://cc-kelompok-ignite-production.up.railway.app | ![Status](https://img.shields.io/website?url=https%3A%2F%2Fcc-kelompok-ignite-production.up.railway.app) |
+| 📚 **API Docs (Swagger)** | https://cc-kelompok-ignite-production.up.railway.app/docs | ✅ Live |
+
+**Cara Mengakses:**
+1. Klik Frontend URL di atas
+2. Bisa **Register akun baru** atau login dengan admin
+3. Semua fitur e-commerce sudah tersedia & berjalan
+
+**Testing API:**
+- Gunakan Swagger UI (link API Docs) untuk test endpoint
+- Atau gunakan tools: Postman, curl, atau Insomnia
+
+---
+
+## 🔄 CI/CD Pipeline Status
+
+![CI/CD Badge](https://github.com/aidilsaputrakirsan-classroom/cc-kelompok-ignite/actions/workflows/ci.yml/badge.svg)
+
+**Milestone 2 — Continuous Integration & Deployment ✅**
+
+Pipeline otomatis berjalan saat push/merge ke main:
+- ✅ **Test Backend** — pytest untuk FastAPI
+- ✅ **Test Frontend** — Vitest untuk React components
+- ✅ **Build Docker** — Multi-stage image build
+- 🚀 **Deploy to Railway** — Auto-deploy setelah CI pass
+
+**Detail:** [Deployment Guide](docs/deployment-guide.md) | [Production Testing](docs/production-test.md)
+
+---
+
 ## 📖 Daftar Isi
 - [☁️ Cloud App - \[ATHSNAC— UMKM E-Commerce Platform\]](#️-cloud-app---athsnac-umkm-e-commerce-platform)
   - [📌 Deskripsi Proyek](#-deskripsi-proyek)
+  - [🌐 Live Demo](#-live-demo)
+  - [🔄 CI/CD Pipeline Status](#-cicd-pipeline-status)
   - [📖 Daftar Isi](#-daftar-isi)
   - [Fitur Utama](#fitur-utama)
     - [🛒 Manajemen Produk \& Katalog](#-manajemen-produk--katalog)
@@ -1450,6 +1491,7 @@ Seluruh dokumen hasil pengujian, referensi proyek, dan panduan teknis tersedia d
 
 | File | Deskripsi | Status |
 |---|---|---|
+| [production-test.md](docs/production-test.md) | Hasil production smoke testing — 8 test scenarios, security checks, deployment verification | ✅ Complete |
 | [auth-test-results.md](docs/auth-test-results.md) | Hasil pengujian autentikasi & JWT authentication — 19/19 test cases ✅ | ✅ Complete |
 | [api-test-results.md](docs/api-test-results.md) | Hasil pengujian lengkap semua endpoint API via Swagger UI dengan request/response examples | ✅ Complete |
 | [ui-test-results.md](docs/ui-test-results.md) | Hasil testing UI React — 10 test cases untuk customer & admin features | ✅ Complete |
@@ -1459,6 +1501,7 @@ Seluruh dokumen hasil pengujian, referensi proyek, dan panduan teknis tersedia d
 
 | File | Deskripsi | Status |
 |---|---|---|
+| [deployment-guide.md](docs/deployment-guide.md) | Panduan step-by-step deploy ke Railway, environment variables, troubleshooting, monitoring | ✅ Complete |
 | [api-documentation.md](docs/api-documentation.md) | Dokumentasi lengkap semua REST API endpoints dengan curl examples dan response codes | ✅ Complete |
 | [database-schema.md](docs/database-schema.md) | Skema tabel database PostgreSQL dengan ERD, relationships, dan field descriptions | ✅ Complete |
 | [docker-architecture.md](docs/docker-architecture.md) | Arsitektur Docker & Docker Compose, layering, dan deployment strategy | ✅ Complete |
@@ -1575,8 +1618,8 @@ File/folder yang dihapus:
 | 2 | REST API + Database | ✅ |
 | 3 | React Frontend | ✅ |
 | 4 | Full-Stack Integration | ✅ |
-| 5-7 | Docker & Compose |✅|
+| 5-7 | Docker & Compose | ✅ |
 | 8 | UTS Demo | ✅ |
-| 9-11 | CI/CD Pipeline | ⬜ |
+| 9-11 | CI/CD Pipeline | ✅ |
 | 12-14 | Microservices | ⬜ |
 | 15-16 | Final & UAS | ⬜ |
