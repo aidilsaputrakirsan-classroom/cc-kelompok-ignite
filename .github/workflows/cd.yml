@@ -55,9 +55,7 @@ jobs:
       # Set URL output untuk dipakai job berikutnya
       - name: Set backend URL
         id: set-url
-        env:
-          BACKEND_URL: ${{ secrets.BACKEND_URL }}
-        run: echo "url=$BACKEND_URL" >> $GITHUB_OUTPUT
+        run: echo "url=https://cc-kelompok-ignite-production.up.railway.app" >> $GITHUB_OUTPUT
 
 
   # ================================================================
@@ -87,9 +85,7 @@ jobs:
 
       - name: Set frontend URL
         id: set-url
-        env:
-          FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
-        run: echo "url=$FRONTEND_URL" >> $GITHUB_OUTPUT
+        run: echo "url=https://aware-warmth-production-ebd3.up.railway.app" >> $GITHUB_OUTPUT
 
 
   # ================================================================
