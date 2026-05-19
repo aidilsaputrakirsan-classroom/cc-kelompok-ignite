@@ -4,7 +4,7 @@
 # Pipeline ini berjalan otomatis saat:
 # - Push ke branch main
 # - Pull Request ke branch main
-# 
+#
 # Jobs:
 # 1. test-backend: Install deps + run pytest
 # 2. test-frontend: Install deps + run vitest
@@ -18,6 +18,12 @@ on:
   pull_request:
     branches: [main]
 
+# ── OPTIMASI 1: Concurrency Group ─────────────────────────────
+# Cancel run lama otomatis jika ada push baru ke branch yang sama.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   # ================================
   # BACKEND
@@ -25,6 +31,7 @@ jobs:
   test-backend:
     name: 🐍 Test Backend
     runs-on: ubuntu-latest
+    timeout-minutes: 10 # ── OPTIMASI 2: Timeout per job
 
     env:
       DATABASE_URL: sqlite:///./test.db
@@ -53,13 +60,13 @@ jobs:
       - name: Run tests
         run: pytest --cov=. --cov-report=term-missing --cov-fail-under=50
 
-
   # ================================
   # FRONTEND
   # ================================
   test-frontend:
     name: ⚛️ Test Frontend
     runs-on: ubuntu-latest
+    timeout-minutes: 10 # ── OPTIMASI 2: Timeout per job
 
     defaults:
       run:
@@ -70,7 +77,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"   
+          node-version: "20"
           cache: "npm"
           cache-dependency-path: frontend/package-lock.json
 
@@ -83,14 +90,18 @@ jobs:
       - name: Build
         run: npm run build
 
-
   # ================================
   # DOCKER
   # ================================
   build-docker:
     name: 🐳 Build Docker
     runs-on: ubuntu-latest
-    needs: [test-backend, test-frontend]
+
+    needs:
+      - test-backend
+      - test-frontend
+
+    timeout-minutes: 10 # ── OPTIMASI 2: Timeout per job
 
     steps:
       - uses: actions/checkout@v4
@@ -100,3 +111,120 @@ jobs:
 
       - name: Build frontend
         run: docker build -t cloudapp-frontend:ci ./frontend
+
+      - name: Build Frontend Docker
+        run: docker build -t cloudapp-frontend:ci ./frontend
+
+  deploy:
+    name: 🚀 Deploy to Railway
+    runs-on: ubuntu-latest
+    needs: [test-backend, test-frontend, build-docker]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    # ↑ HANYA deploy saat push ke main (bukan saat PR)
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🚂 Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: 🚀 Deploy Backend
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          railway up --service backend backend --detach
+
+      - name: 🚀 Deploy Frontend
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          railway up --service frontend frontend --detach
+
+      - name: ✅ Deploy complete
+        run: |
+          echo "✅ Deployment successful!"
+          echo "Backend: https://cc-kelompok-ignite-production.up.railway.app"
+          echo "Frontend: https://aware-warmth-production-ebd3.up.railway.app"
+
+  # ── OPTIMASI 3: Notifikasi PR Comment ─────────────────────────
+  # Komentar otomatis di PR merangkum status semua job.
+  # - Selalu jalan walau job lain gagal (if: always())
+  # - Hanya aktif saat event pull_request, bukan push ke main
+  # - Update komentar lama agar PR tidak dibanjiri komentar baru
+  notify:
+    name: 💬 Notify PR
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      pull-requests: write
+      contents: read
+    # ------------------------------------
+    needs: [test-backend, test-frontend, build-docker]
+    if: always() && github.event_name == 'pull_request'
+
+    steps:
+      - name: Build status summary
+        id: summary
+        run: |
+          BACKEND="${{ needs.test-backend.result }}"
+          FRONTEND="${{ needs.test-frontend.result }}"
+          DOCKER="${{ needs.build-docker.result }}"
+
+          icon() {
+            case "$1" in
+              success)   echo "✅" ;;
+              failure)   echo "❌" ;;
+              cancelled) echo "⚠️" ;;
+              skipped)   echo "⏭️" ;;
+              *)         echo "❓" ;;
+            esac
+          }
+
+          B=$(icon "$BACKEND")
+          F=$(icon "$FRONTEND")
+          D=$(icon "$DOCKER")
+
+          if [[ "$BACKEND" == "success" && "$FRONTEND" == "success" && "$DOCKER" == "success" ]]; then
+            OVERALL="✅ **CI PASSED** — Semua tahap berhasil. PR aman untuk di-review & merge."
+          else
+            OVERALL="❌ **CI FAILED** — Ada tahap yang gagal. Perbaiki sebelum merge."
+          fi
+
+          EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
+          cat >> $GITHUB_OUTPUT <<END_OUTPUT
+          body<<$EOF
+          ## 🤖 CI Pipeline Report
+
+          $OVERALL
+
+          | Job | Status |
+          |-----|--------|
+          | 🐍 Test Backend | $B \`$BACKEND\` |
+          | ⚛️ Test Frontend | $F \`$FRONTEND\` |
+          | 🐳 Build Docker | $D \`$DOCKER\` |
+
+          **Commit:** \`${{ github.sha }}\`
+          **Triggered by:** @${{ github.actor }}
+          **Workflow run:** [Lihat detail](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
+          ---
+          *Komentar ini dibuat otomatis oleh CI pipeline.*
+          $EOF
+          END_OUTPUT
+
+      - name: Find existing CI comment
+        uses: peter-evans/find-comment@v3
+        id: find_comment
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: "github-actions[bot]"
+          body-includes: "🤖 CI Pipeline Report"
+
+      - name: Create or update PR comment
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          comment-id: ${{ steps.find_comment.outputs.comment-id }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: ${{ steps.summary.outputs.body }}
+          edit-mode: replace
