@@ -382,7 +382,7 @@ const styles = {
     maxWidth: "600px",
     margin: "0 auto",
   },
-  itemRow: {
+  itemRow: { 
     display: "flex",
     justifyContent: "space-between",
     fontSize: "0.95rem",
