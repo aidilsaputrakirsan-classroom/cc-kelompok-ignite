@@ -147,14 +147,13 @@ jobs:
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
         run: |
-          railway up --project 3ec2162f-fc7a-4070-976a-65ea6b3ee926 --service backend backend --detach
+          railway up --project 3ec2162f-fc7a-4070-976a-65ea6b3ee926 --environment production --service backend backend --detach
 
       - name: 🚀 Deploy Frontend
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
         run: |
-          railway up --project 3ec2162f-fc7a-4070-976a-65ea6b3ee926 --service frontend frontend --detach
-
+          railway up --project 3ec2162f-fc7a-4070-976a-65ea6b3ee926 --environment production --service frontend frontend --detach
       - name: ✅ Deploy complete
         run: |
           echo "✅ Deployment successful!"
