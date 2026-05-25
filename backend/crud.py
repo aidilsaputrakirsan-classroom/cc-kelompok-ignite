@@ -1,14 +1,25 @@
-from sqlalchemy.orm import Session
-from sqlalchemy import or_
-from models import User, Product, Cart, CartItem, Order, OrderItem, Payment, Testimonial
-from schemas import UserCreate, ProductCreate, ProductUpdate, CartItemCreate, CartItemUpdate, OrderCreate, OrderItemCreate, PaymentCreate, TestimonialCreate
-from auth import hash_password, verify_password
-from sqlalchemy import func
 from datetime import datetime
 import uuid
 
+from sqlalchemy import func, or_
+from sqlalchemy.orm import Session
+
+from auth import hash_password, verify_password
+from models import Cart, CartItem, Order, OrderItem, Payment, Product, Testimonial, User
+from schemas import (
+    CartItemCreate,
+    CartItemUpdate,
+    OrderCreate,
+    OrderItemCreate,
+    PaymentCreate,
+    ProductCreate,
+    ProductUpdate,
+    TestimonialCreate,
+    UserCreate,
+)
 
 # ==================== USER CRUD ====================
+
 
 def create_user(db: Session, user_data: UserCreate) -> User:
     """Buat user baru dengan password yang di-hash."""
@@ -23,7 +34,7 @@ def create_user(db: Session, user_data: UserCreate) -> User:
         password_hash=hash_password(user_data.password),  # Perbaikan: password_hash
         phone=user_data.phone,
         address=user_data.address,
-        role=user_data.role if hasattr(user_data, 'role') else "customer",
+        role=user_data.role if hasattr(user_data, "role") else "customer",
     )
     db.add(db_user)
     db.commit()
@@ -41,28 +52,32 @@ def authenticate_user(db: Session, email: str, password: str) -> User | None:
     return user
 
 
-def get_users(db: Session, skip: int = 0, limit: int = 100, search: str = None, role: str = "customer"):
+def get_users(
+    db: Session,
+    skip: int = 0,
+    limit: int = 100,
+    search: str = None,
+    role: str = "customer",
+):
     """Ambil daftar user dengan pagination dan filter role."""
     query = db.query(User)
-    
+
     if role:
         query = query.filter(User.role == role)
-        
+
     if search:
         query = query.filter(
-            or_(
-                User.name.ilike(f"%{search}%"),
-                User.email.ilike(f"%{search}%")
-            )
+            or_(User.name.ilike(f"%{search}%"), User.email.ilike(f"%{search}%"))
         )
-        
+
     total = query.count()
     users = query.order_by(User.created_at.desc()).offset(skip).limit(limit).all()
-    
+
     return {"total": total, "users": users}
 
 
 # ==================== PRODUCT CRUD ====================
+
 
 def create_product(db: Session, product_data: ProductCreate) -> Product:
     """Buat produk baru di database."""
@@ -73,7 +88,13 @@ def create_product(db: Session, product_data: ProductCreate) -> Product:
     return db_product
 
 
-def get_products(db: Session, skip: int = 0, limit: int = 20, search: str = None, category: str = None):
+def get_products(
+    db: Session,
+    skip: int = 0,
+    limit: int = 20,
+    search: str = None,
+    category: str = None,
+):
     """
     Ambil daftar produk dengan pagination dan filter.
     - skip: jumlah data yang di-skip
@@ -82,21 +103,21 @@ def get_products(db: Session, skip: int = 0, limit: int = 20, search: str = None
     - category: filter berdasarkan kategori
     """
     query = db.query(Product)
-    
+
     if search:
         query = query.filter(
             or_(
                 Product.name.ilike(f"%{search}%"),
-                Product.description.ilike(f"%{search}%")
+                Product.description.ilike(f"%{search}%"),
             )
         )
-    
+
     if category:
         query = query.filter(Product.category.ilike(f"%{category.lower()}%"))
-    
+
     total = query.count()
     products = query.order_by(Product.created_at.desc()).offset(skip).limit(limit).all()
-    
+
     return {"total": total, "products": products}
 
 
@@ -105,20 +126,22 @@ def get_product(db: Session, product_id: int) -> Product | None:
     return db.query(Product).filter(Product.id == product_id).first()
 
 
-def update_product(db: Session, product_id: int, product_data: ProductUpdate) -> Product | None:
+def update_product(
+    db: Session, product_id: int, product_data: ProductUpdate
+) -> Product | None:
     """
     Update produk berdasarkan ID.
     Hanya update field yang dikirim.
     """
     db_product = db.query(Product).filter(Product.id == product_id).first()
-    
+
     if not db_product:
         return None
-    
+
     update_data = product_data.model_dump(exclude_unset=True)
     for field, value in update_data.items():
         setattr(db_product, field, value)
-    
+
     db.commit()
     db.refresh(db_product)
     return db_product
@@ -127,10 +150,10 @@ def update_product(db: Session, product_id: int, product_data: ProductUpdate) ->
 def delete_product(db: Session, product_id: int) -> bool:
     """Hapus produk berdasarkan ID."""
     db_product = db.query(Product).filter(Product.id == product_id).first()
-    
+
     if not db_product:
         return False
-    
+
     db.delete(db_product)
     db.commit()
     return True
@@ -140,39 +163,43 @@ def get_product_stats(db: Session):
     """Dapatkan statistik produk untuk dashboard admin."""
     total_products = db.query(func.count(Product.id)).scalar() or 0
     total_stock = db.query(func.sum(Product.stock)).scalar() or 0
-    total_available = db.query(func.count(Product.id)).filter(Product.is_active == True).scalar() or 0  # Perbaikan: is_active
-    
+    total_available = (
+        db.query(func.count(Product.id)).filter(Product.is_active == True).scalar() or 0
+    )  # Perbaikan: is_active
+
     # Hitung per kategori
-    categories_raw = db.query(
-        Product.category,
-        func.count(Product.id).label("count")
-    ).group_by(Product.category).all()
+    categories_raw = (
+        db.query(Product.category, func.count(Product.id).label("count"))
+        .group_by(Product.category)
+        .all()
+    )
     categories = {cat: count for cat, count in categories_raw} if categories_raw else {}
-    
+
     # Total nilai stock (price * stock)
     total_value = db.query(func.sum(Product.price * Product.stock)).scalar() or 0
-    
+
     return {
         "total_products": total_products,
         "total_stock": total_stock,
         "total_available": total_available,
         "categories": categories,
-        "total_value": float(total_value)
+        "total_value": float(total_value),
     }
 
 
 # ==================== CART CRUD ====================
 
+
 def get_or_create_cart(db: Session, user_id: int) -> Cart:
     """Dapatkan cart user, jika tidak ada maka buat baru."""
     cart = db.query(Cart).filter(Cart.user_id == user_id).first()
-    
+
     if not cart:
         cart = Cart(user_id=user_id)
         db.add(cart)
         db.commit()
         db.refresh(cart)
-    
+
     return cart
 
 
@@ -181,23 +208,30 @@ def get_cart(db: Session, user_id: int) -> Cart | None:
     return db.query(Cart).filter(Cart.user_id == user_id).first()
 
 
-def add_to_cart(db: Session, cart_id: int, item_data: CartItemCreate) -> CartItem | None:
+def add_to_cart(
+    db: Session, cart_id: int, item_data: CartItemCreate
+) -> CartItem | None:
     """Tambah item ke cart. Jika item sudah ada, update quantitynya."""
     # Cek apakah produk ada
     product = db.query(Product).filter(Product.id == item_data.product_id).first()
     if not product:
         return None
-    
+
     # Cek apakah item sudah ada di cart
-    existing_item = db.query(CartItem).filter(
-        CartItem.cart_id == cart_id,
-        CartItem.product_id == item_data.product_id
-    ).first()
-    
+    existing_item = (
+        db.query(CartItem)
+        .filter(
+            CartItem.cart_id == cart_id, CartItem.product_id == item_data.product_id
+        )
+        .first()
+    )
+
     if existing_item:
         # Update quantity jika sudah ada
         existing_item.quantity += item_data.quantity
-        existing_item.subtotal = existing_item.price_at_time * existing_item.quantity  # Perbaikan: Tambah subtotal
+        existing_item.subtotal = (
+            existing_item.price_at_time * existing_item.quantity
+        )  # Perbaikan: Tambah subtotal
         db.commit()
         db.refresh(existing_item)
         return existing_item
@@ -209,7 +243,7 @@ def add_to_cart(db: Session, cart_id: int, item_data: CartItemCreate) -> CartIte
             product_id=item_data.product_id,
             quantity=item_data.quantity,
             price_at_time=product.price,  # Perbaikan: price_at_time
-            subtotal=subtotal  # Perbaikan: Tambah subtotal
+            subtotal=subtotal,  # Perbaikan: Tambah subtotal
         )
         db.add(cart_item)
         db.commit()
@@ -217,15 +251,19 @@ def add_to_cart(db: Session, cart_id: int, item_data: CartItemCreate) -> CartIte
         return cart_item
 
 
-def update_cart_item(db: Session, item_id: int, item_data: CartItemUpdate) -> CartItem | None:
+def update_cart_item(
+    db: Session, item_id: int, item_data: CartItemUpdate
+) -> CartItem | None:
     """Update quantity item di cart."""
     db_item = db.query(CartItem).filter(CartItem.id == item_id).first()
-    
+
     if not db_item:
         return None
-    
+
     db_item.quantity = item_data.quantity
-    db_item.subtotal = db_item.price_at_time * item_data.quantity  # Perbaikan: Update subtotal
+    db_item.subtotal = (
+        db_item.price_at_time * item_data.quantity
+    )  # Perbaikan: Update subtotal
     db.commit()
     db.refresh(db_item)
     return db_item
@@ -234,10 +272,10 @@ def update_cart_item(db: Session, item_id: int, item_data: CartItemUpdate) -> Ca
 def remove_from_cart(db: Session, item_id: int) -> bool:
     """Hapus item dari cart."""
     db_item = db.query(CartItem).filter(CartItem.id == item_id).first()
-    
+
     if not db_item:
         return False
-    
+
     db.delete(db_item)
     db.commit()
     return True
@@ -259,39 +297,52 @@ def clear_cart(db: Session, cart_id: int) -> bool:
 
 # ==================== ORDER CRUD ====================
 
+
 def create_order(db: Session, user_id: int, order_data: OrderCreate) -> Order:
     """Buat order baru dari cart atau data pemesanan."""
     try:
         # Generate order_code unik (Perbaikan: order_code bukan order_number)
-        order_code = f"ORD-{datetime.now().strftime('%Y%m%d')}-{uuid.uuid4().hex[:8].upper()}"
-        
+        order_code = (
+            f"ORD-{datetime.now().strftime('%Y%m%d')}-{uuid.uuid4().hex[:8].upper()}"
+        )
+
         # Hitung total amount dari items
         total_amount = 0.0
         order_items = []
-        
+
         for item_data in order_data.items:
-            product = db.query(Product).filter(Product.id == item_data.product_id).first()
+            product = (
+                db.query(Product).filter(Product.id == item_data.product_id).first()
+            )
             if not product:
-                raise ValueError(f"Produk dengan ID {item_data.product_id} tidak ditemukan")
-            
+                raise ValueError(
+                    f"Produk dengan ID {item_data.product_id} tidak ditemukan"
+                )
+
             if product.stock < item_data.quantity:
-                raise ValueError(f"Stok {product.name} tidak cukup. Stok tersedia: {product.stock}, diminta: {item_data.quantity}")
-            
+                raise ValueError(
+                    f"Stok {product.name} tidak cukup. Stok tersedia: {product.stock}, diminta: {item_data.quantity}"
+                )
+
             # Kurangi stock
             product.stock -= item_data.quantity
-            
+
             # Hitung total dan subtotal
-            item_subtotal = product.price * item_data.quantity  # Perbaikan: Tambah subtotal
+            item_subtotal = (
+                product.price * item_data.quantity
+            )  # Perbaikan: Tambah subtotal
             total_amount += item_subtotal
-            
+
             # Simpan order item
-            order_items.append(OrderItem(
-                product_id=item_data.product_id,
-                quantity=item_data.quantity,
-                price_at_time=product.price,
-                subtotal=item_subtotal  # Perbaikan: Tambah subtotal
-            ))
-        
+            order_items.append(
+                OrderItem(
+                    product_id=item_data.product_id,
+                    quantity=item_data.quantity,
+                    price_at_time=product.price,
+                    subtotal=item_subtotal,  # Perbaikan: Tambah subtotal
+                )
+            )
+
         # Buat order (Perbaikan: order_code, shipping_address, recipient_phone, receipt_name)
         db_order = Order(
             user_id=user_id,
@@ -301,16 +352,16 @@ def create_order(db: Session, user_id: int, order_data: OrderCreate) -> Order:
             shipping_address=order_data.shipping_address,
             notes=order_data.notes,
             total_amount=total_amount,
-            status="pending"
+            status="pending",
         )
-        
+
         # Add items ke order
         db_order.items = order_items
         db.add(db_order)
         db.flush()  # Flush untuk validation sebelum commit
         db.commit()
         db.refresh(db_order)
-        
+
         print(f"✓ Order berhasil dibuat: {order_code} untuk user {user_id}")
         return db_order
     except Exception as e:
@@ -322,13 +373,13 @@ def create_order(db: Session, user_id: int, order_data: OrderCreate) -> Order:
 def get_orders(db: Session, user_id: int = None, skip: int = 0, limit: int = 20):
     """Ambil daftar orders dengan filter user dan pagination."""
     query = db.query(Order)
-    
+
     if user_id:
         query = query.filter(Order.user_id == user_id)
-    
+
     total = query.count()
     orders = query.order_by(Order.created_at.desc()).offset(skip).limit(limit).all()
-    
+
     return {"total": total, "orders": orders}
 
 
@@ -337,7 +388,9 @@ def get_order(db: Session, order_id: int) -> Order | None:
     return db.query(Order).filter(Order.id == order_id).first()
 
 
-def get_order_by_code(db: Session, order_code: str) -> Order | None:  # Perbaikan: order_code (bukan order_number)
+def get_order_by_code(
+    db: Session, order_code: str
+) -> Order | None:  # Perbaikan: order_code (bukan order_number)
     """Ambil order berdasarkan order_code."""
     return db.query(Order).filter(Order.order_code == order_code).first()
 
@@ -365,9 +418,10 @@ def delete_order(db: Session, order_id: int) -> bool:
 
 # ==================== PAYMENT CRUD ====================
 
+
 def create_payment(db: Session, payment_data: PaymentCreate) -> Payment:
     """Buat record pembayaran baru dengan status 'pending'.
-    
+
     paid_at akan diset otomatis saat admin verify payment.
     """
     try:
@@ -377,7 +431,7 @@ def create_payment(db: Session, payment_data: PaymentCreate) -> Payment:
             amount=payment_data.amount,
             proof_url=payment_data.proof_url,
             # paid_at TIDAK boleh diset di sini, hanya saat admin verify
-            payment_status="pending"
+            payment_status="pending",
         )
         db.add(db_payment)
         db.commit()
@@ -389,21 +443,27 @@ def create_payment(db: Session, payment_data: PaymentCreate) -> Payment:
         raise
 
 
-def get_payments(db: Session, order_id: int = None, user_id: int = None, skip: int = 0, limit: int = 20):
+def get_payments(
+    db: Session,
+    order_id: int = None,
+    user_id: int = None,
+    skip: int = 0,
+    limit: int = 20,
+):
     """Ambil daftar payments dengan filter order/user dan pagination."""
     query = db.query(Payment)
-    
+
     if order_id:
         query = query.filter(Payment.order_id == order_id)
-    
+
     # Jika user_id dikirim, filter payment yang terikat dengan order milik user (untuk customer)
     # Jika user_id tidak dikirim (None), get all payments (untuk admin)
     if user_id is not None:
         query = query.join(Order).filter(Order.user_id == user_id)
-    
+
     total = query.count()
     payments = query.order_by(Payment.created_at.desc()).offset(skip).limit(limit).all()
-    
+
     return {"total": total, "payments": payments}
 
 
@@ -412,29 +472,35 @@ def get_payment(db: Session, payment_id: int) -> Payment | None:
     return db.query(Payment).filter(Payment.id == payment_id).first()
 
 
-def update_payment_status(db: Session, payment_id: int, payment_status: str, verified_by: int = None, verified_at: datetime = None) -> Payment | None:
+def update_payment_status(
+    db: Session,
+    payment_id: int,
+    payment_status: str,
+    verified_by: int = None,
+    verified_at: datetime = None,
+) -> Payment | None:
     """Update status pembayaran, set verified_by dan paid_at saat completed."""
     try:
         db_payment = db.query(Payment).filter(Payment.id == payment_id).first()
         if not db_payment:
             print(f"Payment ID {payment_id} tidak ditemukan")
             return None
-        
+
         # Update status
         db_payment.payment_status = payment_status
-        
+
         # Set verified_by jika ada (biasanya admin yang verify)
         if verified_by is not None:
             db_payment.verified_by = verified_by
-        
+
         # Set verified_at jika ada
         if verified_at:
             db_payment.verified_at = verified_at
-        
+
         # Jika status berhasil dibayar, set paid_at
         if payment_status == "completed":
             db_payment.paid_at = datetime.now()
-        
+
         db_payment.updated_at = datetime.now()
         db.commit()
         db.refresh(db_payment)
@@ -458,7 +524,10 @@ def delete_payment(db: Session, payment_id: int) -> bool:
 
 # ==================== TESTIMONIAL CRUD ====================
 
-def create_testimonial(db: Session, user_id: int, testimonial_data: TestimonialCreate) -> Testimonial:
+
+def create_testimonial(
+    db: Session, user_id: int, testimonial_data: TestimonialCreate
+) -> Testimonial:
     """Buat testimonial/review produk baru."""
     db_testimonial = Testimonial(
         order_id=testimonial_data.order_id,  # Restore: order_id (relasi ke order)
@@ -466,7 +535,7 @@ def create_testimonial(db: Session, user_id: int, testimonial_data: TestimonialC
         user_id=user_id,
         rating=testimonial_data.rating,
         comment=testimonial_data.comment,
-        is_visible=True  # Default: visible, bisa di-hide oleh admin
+        is_visible=True,  # Default: visible, bisa di-hide oleh admin
     )
     db.add(db_testimonial)
     db.commit()
@@ -474,39 +543,52 @@ def create_testimonial(db: Session, user_id: int, testimonial_data: TestimonialC
     return db_testimonial
 
 
-def get_testimonials(db: Session, product_id: int = None, user_id: int = None, skip: int = 0, limit: int = 20, visible_only: bool = False):
+def get_testimonials(
+    db: Session,
+    product_id: int = None,
+    user_id: int = None,
+    skip: int = 0,
+    limit: int = 20,
+    visible_only: bool = False,
+):
     """Ambil daftar testimonials dengan filter product/user dan pagination.
-    
+
     Args:
         visible_only: Jika True, hanya tampilkan testimonial dengan is_visible=True
     """
     # Menggunakan query join agar mendapatkan Nama User dan Nama Produk (Perbaikan: Tambah user_name, product_name)
-    query = db.query(
-        Testimonial.id,
-        Testimonial.order_id,
-        Testimonial.product_id,
-        Testimonial.user_id,
-        User.name.label("user_name"),
-        Product.name.label("product_name"),
-        Testimonial.rating,
-        Testimonial.comment,
-        Testimonial.is_visible,
-        Testimonial.created_at,
-        Testimonial.updated_at
-    ).join(User, Testimonial.user_id == User.id).join(Product, Testimonial.product_id == Product.id)
-    
+    query = (
+        db.query(
+            Testimonial.id,
+            Testimonial.order_id,
+            Testimonial.product_id,
+            Testimonial.user_id,
+            User.name.label("user_name"),
+            Product.name.label("product_name"),
+            Testimonial.rating,
+            Testimonial.comment,
+            Testimonial.is_visible,
+            Testimonial.created_at,
+            Testimonial.updated_at,
+        )
+        .join(User, Testimonial.user_id == User.id)
+        .join(Product, Testimonial.product_id == Product.id)
+    )
+
     if product_id:
         query = query.filter(Testimonial.product_id == product_id)
-    
+
     if user_id:
         query = query.filter(Testimonial.user_id == user_id)
-    
+
     if visible_only:
         query = query.filter(Testimonial.is_visible == True)
-    
+
     total = query.count()
-    testimonials = query.order_by(Testimonial.created_at.desc()).offset(skip).limit(limit).all()
-    
+    testimonials = (
+        query.order_by(Testimonial.created_at.desc()).offset(skip).limit(limit).all()
+    )
+
     return {"total": total, "testimonials": testimonials}
 
 
@@ -515,9 +597,13 @@ def get_testimonial(db: Session, testimonial_id: int) -> Testimonial | None:
     return db.query(Testimonial).filter(Testimonial.id == testimonial_id).first()
 
 
-def update_testimonial(db: Session, testimonial_id: int, rating: int = None, comment: str = None) -> Testimonial | None:
+def update_testimonial(
+    db: Session, testimonial_id: int, rating: int = None, comment: str = None
+) -> Testimonial | None:
     """Update testimonial."""
-    db_testimonial = db.query(Testimonial).filter(Testimonial.id == testimonial_id).first()
+    db_testimonial = (
+        db.query(Testimonial).filter(Testimonial.id == testimonial_id).first()
+    )
     if db_testimonial:
         if rating is not None:
             db_testimonial.rating = rating
@@ -529,9 +615,13 @@ def update_testimonial(db: Session, testimonial_id: int, rating: int = None, com
     return db_testimonial
 
 
-def toggle_testimonial_visibility(db: Session, testimonial_id: int) -> Testimonial | None:
+def toggle_testimonial_visibility(
+    db: Session, testimonial_id: int
+) -> Testimonial | None:
     """Toggle visibility testimonial (admin control - hide/show)."""
-    db_testimonial = db.query(Testimonial).filter(Testimonial.id == testimonial_id).first()
+    db_testimonial = (
+        db.query(Testimonial).filter(Testimonial.id == testimonial_id).first()
+    )
     if db_testimonial:
         db_testimonial.is_visible = not db_testimonial.is_visible  # Toggle true/false
         db_testimonial.updated_at = datetime.now()
@@ -540,10 +630,11 @@ def toggle_testimonial_visibility(db: Session, testimonial_id: int) -> Testimoni
     return db_testimonial
 
 
-
 def delete_testimonial(db: Session, testimonial_id: int) -> bool:
     """Hapus testimonial."""
-    db_testimonial = db.query(Testimonial).filter(Testimonial.id == testimonial_id).first()
+    db_testimonial = (
+        db.query(Testimonial).filter(Testimonial.id == testimonial_id).first()
+    )
     if db_testimonial:
         db.delete(db_testimonial)
         db.commit()
