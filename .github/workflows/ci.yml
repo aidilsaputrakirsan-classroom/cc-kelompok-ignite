@@ -128,3 +128,79 @@ jobs:
         run: |
           echo "✅ All Docker images built successfully!"
           docker images | grep cloudapp
+
+
+# ── OPTIMASI 3: Notifikasi PR Comment ─────────────────────────
+  notify:
+    name: 💬 Notify PR
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      pull-requests: write
+      contents: read
+    needs: [test-backend, test-frontend, build-docker]
+    if: always() && github.event_name == 'pull_request'
+
+    steps:
+      - name: Build status summary
+        id: summary
+        run: |
+          BACKEND="${{ needs.test-backend.result }}"
+          FRONTEND="${{ needs.test-frontend.result }}"
+          DOCKER="${{ needs.build-docker.result }}"
+          icon() {
+            case "$1" in
+              success)   echo "✅" ;;
+              failure)   echo "❌" ;;
+              cancelled) echo "⚠️" ;;
+              skipped)   echo "⏭️" ;;
+              *)         echo "❓" ;;
+            esac
+          }
+
+          B=$(icon "$BACKEND")
+          F=$(icon "$FRONTEND")
+          D=$(icon "$DOCKER")
+
+          if [[ "$BACKEND" == "success" && "$FRONTEND" == "success" && "$DOCKER" == "success" ]]; then
+            OVERALL="✅ **CI PASSED** — Semua tahap berhasil. PR aman untuk di-review & merge."
+          else
+            OVERALL="❌ **CI FAILED** — Ada tahap yang gagal. Perbaiki sebelum merge."
+          fi
+
+          EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
+          cat >> $GITHUB_OUTPUT <<END_OUTPUT
+          body<<$EOF
+          ## 🤖 CI Pipeline Report
+
+          $OVERALL
+
+          | Job | Status |
+          |-----|--------|
+          | 🐍 Test Backend | $B \`$BACKEND\` |
+          | ⚛️ Test Frontend | $F \`$FRONTEND\` |
+          | 🐳 Build Docker | $D \`$DOCKER\` |
+          **Commit:** \`${{ github.sha }}\`
+          **Triggered by:** @${{ github.actor }}
+          **Workflow run:** [Lihat detail](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
+          ---
+          *Komentar ini dibuat otomatis oleh CI pipeline.*
+          $EOF
+          END_OUTPUT
+
+      - name: Find existing CI comment
+        uses: peter-evans/find-comment@v3
+        id: find_comment
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: "github-actions[bot]"
+          body-includes: "🤖 CI Pipeline Report"
+
+      - name: Create or update PR comment
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          comment-id: ${{ steps.find_comment.outputs.comment-id }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: ${{ steps.summary.outputs.body }}
+          edit-mode: replace
