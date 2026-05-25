@@ -129,36 +129,6 @@ jobs:
           echo "✅ All Docker images built successfully!"
           docker images | grep cloudapp
 
-  deploy:
-    name: 🚀 Deploy to Railway
-    runs-on: ubuntu-latest
-    needs: [test-backend, test-frontend, build-docker]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    # ↑ HANYA deploy saat push ke main (bukan saat PR)
-
-    steps:
-      - name: 📥 Checkout code
-        uses: actions/checkout@v4
-
-      - name: 🚂 Install Railway CLI
-        run: npm install -g @railway/cli
-
-      - name: 🚀 Deploy Backend
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-        run: |
-          railway up --project 3ec2162f-fc7a-4070-976a-65ea6b3ee926 --environment production --service backend backend --detach
-
-      - name: 🚀 Deploy Frontend
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-        run: |
-          railway up --project 3ec2162f-fc7a-4070-976a-65ea6b3ee926 --environment production --service frontend frontend --detach
-      - name: ✅ Deploy complete
-        run: |
-          echo "✅ Deployment successful!"
-          echo "Backend: https://cc-kelompok-ignite-production.up.railway.app"
-          echo "Frontend: https://aware-warmth-production-ebd3.up.railway.app"
 
 # ── OPTIMASI 3: Notifikasi PR Comment ─────────────────────────
   notify:
