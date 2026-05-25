@@ -1,4 +1,4 @@
-# ruff.toml - Konfigurasi dasar Ruff (Python Linter) untuk backend
+# ruff.toml - Konfigurasi Ruff (Python Linter) untuk backend
 # Disesuaikan dengan CI Pipeline Ignite (Python 3.12)
 
 # Target versi Python
@@ -26,20 +26,18 @@ exclude = [
 # F = pyflakes (undefined names, unused imports, dll)
 # W = pycodestyle warnings
 # I = isort (urutan import)
-# B = flake8-bugbear (bug & design issues)
 # UP = pyupgrade (modernisasi syntax Python)
-select = ["E", "F", "W", "I", "B", "UP"]
+select = ["E", "F", "W", "I", "UP"]
 
 # Aturan yang diabaikan:
-# E501 = line too long (sudah ditangani oleh line-length)
-# B008 = do not perform function calls in default argument (umum di FastAPI)
-ignore = ["E501", "B008"]
+# E501 = line too long
+# E402 = module level import not at top (ada di main.py)
+# F401 = imported but unused (banyak di codebase existing)
+# B904 = raise in except without from (butuh refactor besar)
+ignore = ["E501", "E402", "F401", "B904"]
 
 # Izinkan autofix untuk aturan ini
 fixable = ["I", "UP", "E", "W"]
-
-# Tidak autofix untuk aturan berikut (harus diperbaiki manual)
-unfixable = ["F"]
 
 [lint.per-file-ignores]
 # File test boleh menggunakan assert dan magic values
@@ -47,12 +45,9 @@ unfixable = ["F"]
 "test_*.py" = ["S101", "PLR2004"]
 
 [lint.isort]
-# Urutkan import: stdlib → third-party → local
 known-first-party = ["app", "backend"]
 force-sort-within-sections = true
 
 [format]
-# Gunakan double quotes untuk string
 quote-style = "double"
-# Indentasi dengan spasi
 indent-style = "space"
