@@ -1,0 +1,54 @@
+# ruff.toml - Konfigurasi Ruff (Python Linter) untuk backend
+# Disesuaikan dengan CI Pipeline Ignite (Python 3.12)
+
+# Target versi Python
+target-version = "py312"
+
+# Panjang baris maksimum
+line-length = 88
+
+# Direktori yang di-exclude dari linting
+exclude = [
+    ".git",
+    ".venv",
+    "venv",
+    "__pycache__",
+    "*.egg-info",
+    "dist",
+    "build",
+    "migrations",
+    "test.db",
+]
+
+[lint]
+# Aturan yang diaktifkan:
+# E = pycodestyle errors
+# F = pyflakes
+# W = pycodestyle warnings
+# I = isort
+# UP = pyupgrade
+select = ["E", "F", "W", "I", "UP"]
+
+# Aturan yang diabaikan (disesuaikan dengan codebase existing):
+# E501  = line too long
+# E402  = module level import not at top (ada di main.py)
+# E712  = avoid equality comparisons to True/False (pola SQLAlchemy)
+# F401  = imported but unused
+# F841  = local variable assigned but never used
+# B904  = raise in except without from
+ignore = ["E501", "E402", "E712", "F401", "F841", "B904"]
+
+# Izinkan autofix untuk aturan ini
+fixable = ["I", "UP", "E", "W"]
+
+[lint.per-file-ignores]
+"tests/*" = ["S101", "PLR2004"]
+"test_*.py" = ["S101", "PLR2004"]
+
+[lint.isort]
+known-first-party = ["app", "backend"]
+force-sort-within-sections = true
+
+[format]
+quote-style = "double"
+indent-style = "space"

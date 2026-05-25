@@ -1,15 +1,16 @@
 """
 Konfigurasi test — setup database test terpisah dari database utama.
 """
-import sys
+
 import os
 from pathlib import Path
+import sys
 
 # Add parent directory to path so imports work correctly
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-import pytest
 from fastapi.testclient import TestClient
+import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
@@ -43,6 +44,7 @@ def db_session():
 @pytest.fixture(scope="function")
 def client(db_session):
     """Test client dengan database override."""
+
     def override_get_db():
         try:
             yield db_session
@@ -59,15 +61,17 @@ def client(db_session):
 def auth_headers(client):
     """Helper: register + login, return auth headers."""
     # Register
-    client.post("/auth/register", json={
-        "email": "test@example.com",
-        "password": "TestPassword123",
-        "name": "Test User"
-    })
+    client.post(
+        "/auth/register",
+        json={
+            "email": "test@example.com",
+            "password": "TestPassword123",
+            "name": "Test User",
+        },
+    )
     # Login
-    response = client.post("/auth/login", json={
-        "email": "test@example.com",
-        "password": "TestPassword123"
-    })
+    response = client.post(
+        "/auth/login", json={"email": "test@example.com", "password": "TestPassword123"}
+    )
     token = response.json()["access_token"]
     return {"Authorization": f"Bearer {token}"}
