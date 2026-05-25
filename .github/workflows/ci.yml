@@ -247,9 +247,9 @@ jobs:
             ### 🔗 Production URLs
             | Service | URL |
             |---------|-----|
-            | 🖥️ Frontend | https://cc-kelompok-ignite-frontend.up.railway.app |
-            | ⚙️ Backend API | https://cc-kelompok-ignite-backend.up.railway.app |
-            | 📖 API Docs | https://cc-kelompok-ignite-backend.up.railway.app/docs |
+            | 🖥️ Frontend | https://aware-warmth-production-ebd3.up.railway.app |
+            | ⚙️ Backend API | https://cc-kelompok-ignite-production.up.railway.app |
+            | 📖 API Docs | https://cc-kelompok-ignite-production.up.railway.app/docs |
  
             ### 📦 Build Info
             - **Commit:** \`${shortSha}\` (${{ github.ref_name }})
