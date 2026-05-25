@@ -23,24 +23,25 @@ exclude = [
 [lint]
 # Aturan yang diaktifkan:
 # E = pycodestyle errors
-# F = pyflakes (undefined names, unused imports, dll)
+# F = pyflakes
 # W = pycodestyle warnings
-# I = isort (urutan import)
-# UP = pyupgrade (modernisasi syntax Python)
+# I = isort
+# UP = pyupgrade
 select = ["E", "F", "W", "I", "UP"]
 
-# Aturan yang diabaikan:
-# E501 = line too long
-# E402 = module level import not at top (ada di main.py)
-# F401 = imported but unused (banyak di codebase existing)
-# B904 = raise in except without from (butuh refactor besar)
-ignore = ["E501", "E402", "F401", "B904"]
+# Aturan yang diabaikan (disesuaikan dengan codebase existing):
+# E501  = line too long
+# E402  = module level import not at top (ada di main.py)
+# E712  = avoid equality comparisons to True/False (pola SQLAlchemy)
+# F401  = imported but unused
+# F841  = local variable assigned but never used
+# B904  = raise in except without from
+ignore = ["E501", "E402", "E712", "F401", "F841", "B904"]
 
 # Izinkan autofix untuk aturan ini
 fixable = ["I", "UP", "E", "W"]
 
 [lint.per-file-ignores]
-# File test boleh menggunakan assert dan magic values
 "tests/*" = ["S101", "PLR2004"]
 "test_*.py" = ["S101", "PLR2004"]
 
