@@ -159,6 +159,134 @@ jobs:
           echo "✅ All Docker images built successfully!"
           docker images | grep cloudapp
 
+  # ================================
+  # JOB 4: Deployment Summary (Tugas 11 — Lead CI/CD)
+  # ================================
+  deploy-summary:
+    name: 🚀 Deployment Summary
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      pull-requests: write
+      contents: read
+    needs: [lint, test-backend, test-frontend, build-docker]
+    if: always()
+ 
+    steps:
+      - name: 🕐 Generate timestamp
+        id: timestamp
+        run: |
+          echo "value=$(TZ='Asia/Jakarta' date '+%d %B %Y, %H:%M:%S WIB')" >> $GITHUB_OUTPUT
+ 
+      - name: 📋 Print deployment summary to job output
+        run: |
+          echo "=================================================="
+          echo "🚀 DEPLOYMENT SUMMARY"
+          echo "=================================================="
+          echo ""
+          echo "📦 Commit SHA  : ${{ github.sha }}"
+          echo "🌿 Branch      : ${{ github.ref_name }}"
+          echo "👤 Actor       : ${{ github.actor }}"
+          echo "🕐 Timestamp   : ${{ steps.timestamp.outputs.value }}"
+          echo ""
+          echo "🔗 URLs:"
+          echo "   • Backend API  : https://cc-kelompok-ignite-production.up.railway.app"
+          echo "   • Frontend     : https://aware-warmth-production-ebd3.up.railway.app "
+          echo "   • API Docs     : https://cc-kelompok-ignite-production.up.railway.app/docs"
+          echo ""
+          echo "📊 CI Status:"
+          echo "   • Lint         : ${{ needs.lint.result }}"
+          echo "   • Test Backend : ${{ needs.test-backend.result }}"
+          echo "   • Test Frontend: ${{ needs.test-frontend.result }}"
+          echo "   • Build Docker : ${{ needs.build-docker.result }}"
+          echo ""
+          echo "🔗 Workflow Run:"
+          echo "   ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          echo "=================================================="
+ 
+      - name: 💬 Post deployment summary as PR comment
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const lint     = "${{ needs.lint.result }}";
+            const backend  = "${{ needs.test-backend.result }}";
+            const frontend = "${{ needs.test-frontend.result }}";
+            const docker   = "${{ needs.build-docker.result }}";
+ 
+            const icon = (s) => ({
+              success:   "✅",
+              failure:   "❌",
+              cancelled: "⚠️",
+              skipped:   "⏭️",
+            }[s] ?? "❓");
+ 
+            const allGreen = [lint, backend, frontend, docker].every(s => s === "success");
+            const overall  = allGreen
+              ? "✅ **Semua tahap CI berhasil — siap untuk deploy!**"
+              : "❌ **Ada tahap yang gagal — perbaiki sebelum deploy.**";
+ 
+            const sha     = "${{ github.sha }}";
+            const shortSha = sha.substring(0, 7);
+            const actor   = "${{ github.actor }}";
+            const runUrl  = "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}";
+            const timestamp = "${{ steps.timestamp.outputs.value }}";
+ 
+            const body = `## 🚀 Deployment Summary
+ 
+            ${overall}
+ 
+            ### 📊 CI Status
+            | Job | Status |
+            |-----|--------|
+            | 🔍 Lint Backend | ${icon(lint)} \`${lint}\` |
+            | 🐍 Test Backend | ${icon(backend)} \`${backend}\` |
+            | ⚛️ Test Frontend | ${icon(frontend)} \`${frontend}\` |
+            | 🐳 Build Docker | ${icon(docker)} \`${docker}\` |
+ 
+            ### 🔗 Production URLs
+            | Service | URL |
+            |---------|-----|
+            | 🖥️ Frontend | https://aware-warmth-production-ebd3.up.railway.app |
+            | ⚙️ Backend API | https://cc-kelompok-ignite-production.up.railway.app |
+            | 📖 API Docs | https://cc-kelompok-ignite-production.up.railway.app/docs |
+ 
+            ### 📦 Build Info
+            - **Commit:** \`${shortSha}\` (${{ github.ref_name }})
+            - **Triggered by:** @${actor}
+            - **Timestamp:** ${timestamp}
+            - **Workflow:** [Lihat detail](${runUrl})
+ 
+            ---
+            *Summary ini dibuat otomatis oleh CI pipeline — Tugas 11 Lead CI/CD.*`;
+ 
+            // Cari komentar existing untuk di-update
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+ 
+            const existing = comments.find(c =>
+              c.user.login === "github-actions[bot]" &&
+              c.body.includes("🚀 Deployment Summary")
+            );
+ 
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
 
 # ── OPTIMASI 3: Notifikasi PR Comment ─────────────────────────
   notify:
