@@ -112,9 +112,6 @@ jobs:
       - name: Build frontend
         run: docker build -t cloudapp-frontend:ci ./frontend
 
-      - name: Build Frontend Docker
-        run: docker build -t cloudapp-frontend:ci ./frontend
-
   deploy:
     name: 🚀 Deploy to Railway
     runs-on: ubuntu-latest
