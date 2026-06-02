@@ -43,7 +43,7 @@ except Exception as e:
 app = FastAPI(
     title="Item Service",
     description="Inventory microservice — CRUD items with authentication",
-    version="2.0.0",
+    version="2.1.0",
 )
 
 
