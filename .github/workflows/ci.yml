@@ -147,7 +147,16 @@ jobs:
     steps:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
+        
+      # Build Microservices
+      - name: Build Auth Service
+        run: docker build -t auth-service:ci ./services/auth-service
+      - name: Build Item Service
+        run: docker build -t item-service:ci ./services/item-service
+      - name: Build Gateway
+        run: docker build -t gateway:ci ./services/gateway
 
+      # Build Monolith
       - name: 🐳 Build backend image
         run: docker build -t cloudapp-backend:ci ./backend
 
@@ -157,7 +166,7 @@ jobs:
       - name: ✅ Build success
         run: |
           echo "✅ All Docker images built successfully!"
-          docker images | grep cloudapp
+          docker images | grep -E "auth|item|gateway|cloudapp"
 
   # ================================
   # JOB 4: Deployment Summary (Tugas 11 — Lead CI/CD)
@@ -248,8 +257,8 @@ jobs:
             | Service | URL |
             |---------|-----|
             | 🖥️ Frontend | https://aware-warmth-production-ebd3.up.railway.app |
-            | ⚙️ Backend API | https://cc-kelompok-ignite-production.up.railway.app |
-            | 📖 API Docs | https://cc-kelompok-ignite-production.up.railway.app/docs |
+            | ⚙️ Backend API | https://cc-kelompok-ignite-production.app.railway.app |
+            | 📖 API Docs | https://cc-kelompok-ignite-production.app.railway.app/docs |
  
             ### 📦 Build Info
             - **Commit:** \`${shortSha}\` (${{ github.ref_name }})

@@ -111,3 +111,41 @@ class ProductResponse(ProductBase):
 class ProductListResponse(BaseModel):
     total: int
     products: list[ProductResponse]
+
+
+# ================= STATS RESPONSE =================
+
+
+class ItemStatsDetail(BaseModel):
+    """Model untuk item termahal/termurah"""
+
+    id: int
+    name: str
+    price: float
+    stock: int
+    category: str
+
+    class Config:
+        from_attributes = True
+
+
+class ItemStatsResponse(BaseModel):
+    """
+    Response model untuk stats endpoint.
+    Memberikan overview statistik inventory:
+    - total_items: jumlah total items
+    - total_value: nilai total inventory (price * stock)
+    - most_expensive: item dengan harga paling tinggi
+    - cheapest: item dengan harga paling rendah
+    """
+
+    total_items: int = Field(..., ge=0, description="Total jumlah item")
+    total_value: float = Field(
+        ..., ge=0, description="Total nilai inventory (price × stock)"
+    )
+    most_expensive: Optional[ItemStatsDetail] = Field(
+        None, description="Item dengan harga paling tinggi"
+    )
+    cheapest: Optional[ItemStatsDetail] = Field(
+        None, description="Item dengan harga paling rendah"
+    )
