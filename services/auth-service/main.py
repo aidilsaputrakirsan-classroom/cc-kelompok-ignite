@@ -121,7 +121,7 @@ def login(data: LoginRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=401, detail="Email atau password salah")
 
     token = create_access_token(
-        {"sub": str(user.id), "email": user.email, "role": user.role}
+        {"sub": str(user.id), "email": user.email, "role": user.role, "name": user.name}
     )
 
     return TokenResponse(access_token=token, user=user)
@@ -139,5 +139,8 @@ def verify_token(authorization: str = Header(...)):
     payload = decode_token(token)
 
     return TokenVerifyResponse(
-        user_id=int(payload["sub"]), email=payload["email"], role=payload["role"]
+        user_id=int(payload["sub"]), 
+        email=payload["email"], 
+        role=payload["role"],
+        name=payload["name"]
     )
