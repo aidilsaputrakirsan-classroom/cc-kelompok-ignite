@@ -121,6 +121,7 @@ export default function OrdersPage({ user, onLogout }) {
       processing: { bg: "#E3F2FD", color: "#1976D2", text: "Diproses" },
       shipped: { bg: "#E8F5E9", color: "#388E3C", text: "Dikirim" },
       delivered: { bg: "#F3E5F5", color: "#7B1FA2", text: "Tiba" },
+      cancelled: { bg: "#FFEBEE", color: "#C62828", text: "Dibatalkan" },
     }
     const style = statusMap[status] || statusMap.pending
     return (
@@ -247,9 +248,13 @@ export default function OrdersPage({ user, onLogout }) {
       </div>
     )
   }
-
+  
   // Show all order history entries
   const activeOrders = orders
+  // Filter: show active orders plus delivered and cancelled history orders
+  const visibleOrders = orders.filter(order =>
+    ["pending", "processing", "shipped", "delivered", "cancelled"].includes(order.status)
+  )
 
   return (
     <div style={styles.page}>
@@ -260,21 +265,23 @@ export default function OrdersPage({ user, onLogout }) {
         {orders.length === 0 ? (
           <section style={styles.emptyCard}>
             <p style={styles.emptyText}>Belum ada pesanan</p>
-            <button style={styles.button} onClick={() => navigate("/shop")}>
-              Belanja Sekarang
-            </button>
-          </section>
-        ) : activeOrders.length === 0 ? (
-          <section style={styles.emptyCard}>
-            <p style={styles.emptyText}>Tidak ada pesanan yang sedang diproses</p>
-            <button style={styles.button} onClick={() => navigate("/shop")}>
+            <button style={styles.button} onClick={() => navigate("/shop") }>
               Belanja Sekarang
             </button>
           </section>
         ) : (
-          <div style={styles.ordersList}>
-            {activeOrders.map((order) => (
-              <div key={order.id} style={styles.orderCard}>
+          <>
+            {visibleOrders.length === 0 ? (
+              <section style={styles.emptyCard}>
+                <p style={styles.emptyText}>Tidak ada pesanan yang sedang diproses</p>
+                <button style={styles.button} onClick={() => navigate("/shop") }>
+                  Belanja Sekarang
+                </button>
+              </section>
+            ) : (
+              <div style={styles.ordersList}>
+                {visibleOrders.map((order) => (
+                  <div key={order.id} style={styles.orderCard}>
                 <div style={styles.orderHeader}>
                   <div>
                     <h3 style={styles.orderTitle}>Pesanan #{order.id}</h3>
@@ -523,7 +530,9 @@ export default function OrdersPage({ user, onLogout }) {
                 </div>
               </div>
             ))}
-          </div>
+              </div>
+            )}
+          </>
         )}
       </main>
     </div>
