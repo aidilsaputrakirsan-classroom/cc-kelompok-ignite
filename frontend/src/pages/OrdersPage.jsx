@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom"
 import { useEffect, useState } from "react"
 import Header from "../components/Header"
-import { fetchMyOrders, getOrderItems, completePayment, createPayment, getPaymentsByOrder, createTestimonial, uploadImage } from "../services/api"
+import { fetchMyOrders, getOrderItems, createPayment, getPaymentsByOrder, createTestimonial, uploadImage } from "../services/api"
 import { toast } from "react-toastify"
 
 export default function OrdersPage({ user, onLogout }) {
@@ -238,17 +238,6 @@ export default function OrdersPage({ user, onLogout }) {
     }
   }
 
-  const handleCompletePayment = async (orderId) => {
-    try {
-      toast.loading("Menyelesaikan pembayaran...", { id: `complete_${orderId}` })
-      await completePayment(orderId)
-      toast.success("Pembayaran selesai! Order siap untuk testimonial.", { id: `complete_${orderId}` })
-      loadOrders()
-    } catch (err) {
-      toast.error(err?.message || "Gagal menyelesaikan pembayaran", { id: `complete_${orderId}` })
-    }
-  }
-
   if (loading) {
     return (
       <div style={styles.page}>
@@ -259,7 +248,9 @@ export default function OrdersPage({ user, onLogout }) {
       </div>
     )
   }
-
+  
+  // Show all order history entries
+  const activeOrders = orders
   // Filter: show active orders plus delivered and cancelled history orders
   const visibleOrders = orders.filter(order =>
     ["pending", "processing", "shipped", "delivered", "cancelled"].includes(order.status)
@@ -488,15 +479,6 @@ export default function OrdersPage({ user, onLogout }) {
                 {/* Actions based on order status */}
                 <div style={styles.actionsSection}>
                   {/* Step 3: Complete Payment (Admin marked as completed) */}
-                  {order.payments?.some(p => p.payment_status === "completed") && order.status !== "delivered" && (
-                    <button
-                      style={styles.secondaryButton}
-                      onClick={() => handleCompletePayment(order.id)}
-                    >
-                      ✓ Pembayaran Selesai - Tandai Tiba
-                    </button>
-                  )}
-
                   {/* Step 4: Testimonial (Order delivered + payment completed) */}
                   {order.status === "delivered" && order.payments?.some(p => p.payment_status === "completed") && (
                     <div style={styles.testimonialFormSection}>
