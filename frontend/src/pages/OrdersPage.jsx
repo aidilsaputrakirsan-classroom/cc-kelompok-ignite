@@ -16,9 +16,9 @@ export default function OrdersPage({ user, onLogout }) {
     loadOrders()
   }, [])
 
-  const loadOrders = async () => {
+  const loadOrders = async ({ showLoading = true } = {}) => {
     try {
-      setLoading(true)
+      if (showLoading) setLoading(true)
       const data = await fetchMyOrders()
       let orders = data?.orders || []  // Response format: { total, orders }
 
@@ -51,7 +51,7 @@ export default function OrdersPage({ user, onLogout }) {
       console.error("Error loading orders:", err)
       toast.error("Gagal memuat pesanan")
     } finally {
-      setLoading(false)
+      if (showLoading) setLoading(false)
     }
   }
 
@@ -179,7 +179,8 @@ export default function OrdersPage({ user, onLogout }) {
     }
 
     try {
-      toast.loading("Membuat pembayaran...", { id: `payment_${orderId}` })
+      const toastId = `payment_${orderId}`
+      toast.loading("Membuat pembayaran...", { id: toastId })
       let proof_url = data.proof_url || null
 
       if ((data.payment_method === "qris" || data.payment_method === "bank_transfer") && data.proof_file) {
@@ -200,11 +201,22 @@ export default function OrdersPage({ user, onLogout }) {
       }
 
       await createPayment(paymentData)
-      toast.success("Pembayaran berhasil dibuat! Tunggu admin verifikasi.", { id: `payment_${orderId}` })
+      toast.update(toastId, {
+        render: "Pembayaran berhasil dibuat! Tunggu admin verifikasi.",
+        type: "success",
+        isLoading: false,
+        autoClose: 2000,
+      })
       setPaymentForm({ ...paymentForm, [`payment_${orderId}`]: {} })
-      loadOrders()
+      await loadOrders({ showLoading: false })
     } catch (err) {
-      toast.error(err?.message || "Gagal membuat pembayaran", { id: `payment_${orderId}` })
+      const toastId = `payment_${orderId}`
+      toast.update(toastId, {
+        render: err?.message || "Gagal membuat pembayaran",
+        type: "error",
+        isLoading: false,
+        autoClose: 3000,
+      })
     }
   }
 
@@ -222,7 +234,8 @@ export default function OrdersPage({ user, onLogout }) {
     }
 
     try {
-      toast.loading("Mengirim testimonial...", { id: `testimonial_${orderId}` })
+      const toastId = `testimonial_${orderId}`
+      toast.loading("Mengirim testimonial...", { id: toastId })
       const testimonialData = {
         order_id: orderId,
         rating: parseInt(data.rating),
@@ -230,11 +243,22 @@ export default function OrdersPage({ user, onLogout }) {
         is_visible: true,
       }
       await createTestimonial(testimonialData)
-      toast.success("Testimonial berhasil dikirim!", { id: `testimonial_${orderId}` })
+      toast.update(toastId, {
+        render: "Testimonial berhasil dikirim!",
+        type: "success",
+        isLoading: false,
+        autoClose: 2000,
+      })
       setTestimonialForm({ ...testimonialForm, [formDataKey]: {} })
-      loadOrders()
+      await loadOrders({ showLoading: false })
     } catch (err) {
-      toast.error(err?.message || "Gagal mengirim testimonial", { id: `testimonial_${orderId}` })
+      const toastId = `testimonial_${orderId}`
+      toast.update(toastId, {
+        render: err?.message || "Gagal mengirim testimonial",
+        type: "error",
+        isLoading: false,
+        autoClose: 3000,
+      })
     }
   }
 
