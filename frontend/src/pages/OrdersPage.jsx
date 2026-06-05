@@ -211,8 +211,20 @@ export default function OrdersPage({ user, onLogout }) {
   const handleCreateTestimonial = async (orderId) => {
     const formDataKey = `testimonial_${orderId}`
     const data = testimonialForm[formDataKey] || {}
-    const order = orders.find((o) => o.id === orderId)
-    const productId = order?.items?.[0]?.product_id || order?.items?.[0]?.product?.id
+    let order = orders.find((o) => o.id === orderId)
+    let items = order?.items || []
+
+    if (!items || items.length === 0) {
+      try {
+        const itemsResponse = await getOrderItems(orderId)
+        items = itemsResponse?.items || []
+        order = { ...order, items }
+      } catch {
+        items = []
+      }
+    }
+
+    const productId = items[0]?.product_id || items[0]?.product?.id
 
     if (!productId) {
       toast.error("Produk order tidak ditemukan untuk testimonial", { id: `testimonial_${orderId}` })
