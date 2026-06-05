@@ -184,6 +184,8 @@ export default function OrdersPage({ user, onLogout }) {
     try {
       setSubmittingPayment(prev => ({ ...prev, [orderId]: true }))
       toastId = toast.loading("Membuat pembayaran...")
+      const toastId = `payment_${orderId}`
+      toast.loading("Membuat pembayaran...", { id: toastId })
       let proof_url = data.proof_url || null
 
       if ((data.payment_method === "qris" || data.payment_method === "bank_transfer") && data.proof_file) {
@@ -226,6 +228,15 @@ export default function OrdersPage({ user, onLogout }) {
       } else {
         toast.error(err?.message || "Gagal membuat pembayaran", { toastId: `payment_${orderId}` })
       }
+      await loadOrders({ showLoading: false })
+    } catch (err) {
+      const toastId = `payment_${orderId}`
+      toast.update(toastId, {
+        render: err?.message || "Gagal membuat pembayaran",
+        type: "error",
+        isLoading: false,
+        autoClose: 3000,
+      })
     }
   }
 
@@ -246,6 +257,8 @@ export default function OrdersPage({ user, onLogout }) {
     try {
       setSubmittingTestimonial(prev => ({ ...prev, [orderId]: true }))
       toastId = toast.loading("Mengirim testimonial...")
+      const toastId = `testimonial_${orderId}`
+      toast.loading("Mengirim testimonial...", { id: toastId })
       const testimonialData = {
         order_id: orderId,
         rating: parseInt(data.rating),
@@ -275,6 +288,15 @@ export default function OrdersPage({ user, onLogout }) {
       } else {
         toast.error(err?.message || "Gagal mengirim testimonial", { toastId: `testimonial_${orderId}` })
       }
+      await loadOrders({ showLoading: false })
+    } catch (err) {
+      const toastId = `testimonial_${orderId}`
+      toast.update(toastId, {
+        render: err?.message || "Gagal mengirim testimonial",
+        type: "error",
+        isLoading: false,
+        autoClose: 3000,
+      })
     }
   }
 
