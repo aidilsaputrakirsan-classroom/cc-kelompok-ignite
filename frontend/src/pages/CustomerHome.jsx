@@ -1,25 +1,38 @@
 import { useNavigate } from "react-router-dom"
 import { toast } from "react-toastify"
+import { useEffect, useState } from "react"
 import Header from "../components/Header"
 import ItemList from "../components/ItemList"
-
-const testimonials = [
-  {
-    name: "Siti M.",
-    text: "Snack ATHSNAC selalu menjadi oleh-oleh favorit keluarga kami. Rasanya enak dan kemasannya rapi.",
-  },
-  {
-    name: "Dedi W.",
-    text: "Pelayanan cepat dan produknya fresh. Sangat cocok untuk oleh-oleh ketika pulang kampung.",
-  },
-  {
-    name: "Rina P.",
-    text: "Suka sekali dengan variasi snacknya. Harganya terjangkau dan rasanya sangat khas Balikpapan.",
-  },
-]
+import { fetchPublicTestimonials } from "../services/api"
 
 export default function CustomerHome({ user, onLogout }) {
   const navigate = useNavigate()
+  const [testimonials, setTestimonials] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const loadTestimonials = async () => {
+      try {
+        setLoading(true)
+        const data = await fetchPublicTestimonials(0, 20)
+        if (data && data.testimonials) {
+          // Map API response to match UI format
+          const formattedTestimonials = data.testimonials.map((item) => ({
+            name: item.user_name || "Pelanggan",
+            text: item.comment || "",
+          }))
+          setTestimonials(formattedTestimonials)
+        }
+      } catch (error) {
+        console.error("Failed to load testimonials:", error)
+        setTestimonials([])
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadTestimonials()
+  }, [])
 
   const handleLogout = () => {
     onLogout?.()

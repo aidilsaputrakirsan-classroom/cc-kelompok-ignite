@@ -359,6 +359,12 @@ export async function getMyTestimonials() {
     return handleResponse(response)
 }
 
+export async function fetchPublicTestimonials(skip = 0, limit = 20) {
+    const params = new URLSearchParams({ skip, limit })
+    const response = await fetch(`${API_URL}/testimonials?${params}`)
+    return handleResponse(response)
+}
+
 export async function fetchAllPayments(skip = 0, limit = 100) {
     const params = new URLSearchParams({ skip, limit })
     const response = await fetch(`${API_URL}/payments?${params}`, {
