@@ -21,9 +21,11 @@ export default function ProfilePage({ user, onLogout }) {
   const [editing, setEditing] = useState(false)
 
   const handleLogout = () => {
-    onLogout?.()
-    navigate("/login", { replace: true })
-  }
+      clearToken()
+      onLogout?.()
+      toast.info("Anda telah logout", { position: "top-center" })
+      navigate("/login", { replace: true })
+    }
 
   const handleChange = (field) => (event) => {
     setFormData((prev) => ({ ...prev, [field]: event.target.value }))
@@ -64,10 +66,6 @@ export default function ProfilePage({ user, onLogout }) {
     })
     setEditing(false)
     setFormData((prev) => ({ ...prev, password: "" }))
-  }
-
-  const handleOrderHistory = () => {
-    navigate("/orders")
   }
 
   return (
@@ -154,11 +152,6 @@ export default function ProfilePage({ user, onLogout }) {
             ) : (
               <button type="button" onClick={handleEdit} style={styles.editButton}>
                 Edit Profil
-              </button>
-            )}
-            {user?.role?.toLowerCase() === "customer" && (
-              <button type="button" onClick={handleOrderHistory} style={styles.historyButton}>
-                📦 Riwayat Pesanan
               </button>
             )}
             <button type="button" onClick={handleLogout} style={styles.logoutButton}>
@@ -282,17 +275,6 @@ const styles = {
     borderRadius: "14px",
     backgroundColor: "var(--success-bg)",
     color: "white",
-    fontWeight: 700,
-    cursor: "pointer",
-  },
-  historyButton: {
-    flex: 1,
-    minWidth: "180px",
-    padding: "14px 22px",
-    border: "1px solid var(--brand)",
-    borderRadius: "14px",
-    backgroundColor: "var(--surface)",
-    color: "var(--brand)",
     fontWeight: 700,
     cursor: "pointer",
   },

@@ -75,6 +75,7 @@ function App() {
   }
 
   const handleLogout = () => {
+    console.log("App: handleLogout called")
     clearToken()
     setUser(null)
     toast.info("Anda telah logout", { position: "top-center" })
@@ -95,7 +96,7 @@ function App() {
   return (
     <>
       <Router>
-        <ToastContainer position="top-right" autoClose={3000} />
+        <ToastContainer position="top-center" autoClose={3000} />
 
         <Routes>
             <Route
