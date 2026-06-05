@@ -214,7 +214,12 @@ export default function OrdersPage({ user, onLogout }) {
     let order = orders.find((o) => o.id === orderId)
     let items = order?.items || []
 
-    if (!items || items.length === 0) {
+    const getProductIdFromItem = (item) =>
+      item?.product_id || item?.product?.id || item?.productId || item?.product?.product_id
+
+    const hasProductId = (item) => Boolean(getProductIdFromItem(item))
+
+    if (!items || items.length === 0 || !items.some(hasProductId)) {
       try {
         const itemsResponse = await getOrderItems(orderId)
         items = itemsResponse?.items || []
@@ -224,10 +229,7 @@ export default function OrdersPage({ user, onLogout }) {
       }
     }
 
-    const getProductIdFromItem = (item) =>
-      item?.product_id || item?.product?.id || item?.productId || item?.product?.product_id
-
-    const productId = items.reduce((found, item) => found || getProductIdFromItem(item), null)
+    const productId = items.map(getProductIdFromItem).find(Boolean)
 
     if (!productId) {
       toast.error("Produk order tidak ditemukan untuk testimonial", { id: `testimonial_${orderId}` })
