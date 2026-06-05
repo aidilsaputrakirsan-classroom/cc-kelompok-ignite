@@ -22,6 +22,7 @@ export default function ProfilePage({ user, onLogout }) {
 
   const handleLogout = () => {
     onLogout?.()
+    toast.info("Anda telah logout", { position: "top-center" })
     navigate("/login", { replace: true })
   }
 
