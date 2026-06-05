@@ -273,6 +273,7 @@ export default function OrdersPage({ user, onLogout }) {
           <>
             {visibleOrders.length === 0 ? (
               <section style={styles.emptyCard}>
+                <p style={styles.emptyText}>Tidak ada pesanan</p>
                 <p style={styles.emptyText}>Tidak ada pesanan yang sedang diproses</p>
                 <button style={styles.button} onClick={() => navigate("/shop") }>
                   Belanja Sekarang
