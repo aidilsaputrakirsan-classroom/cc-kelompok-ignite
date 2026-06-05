@@ -248,9 +248,6 @@ export default function OrdersPage({ user, onLogout }) {
       </div>
     )
   }
-
-  // Tampilkan semua pesanan (active dan history)
-  const visibleOrders = orders
   
   // Show all order history entries
   const activeOrders = orders
