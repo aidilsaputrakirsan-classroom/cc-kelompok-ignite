@@ -224,7 +224,10 @@ export default function OrdersPage({ user, onLogout }) {
       }
     }
 
-    const productId = items[0]?.product_id || items[0]?.product?.id
+    const getProductIdFromItem = (item) =>
+      item?.product_id || item?.product?.id || item?.productId || item?.product?.product_id
+
+    const productId = items.reduce((found, item) => found || getProductIdFromItem(item), null)
 
     if (!productId) {
       toast.error("Produk order tidak ditemukan untuk testimonial", { id: `testimonial_${orderId}` })
@@ -243,10 +246,9 @@ export default function OrdersPage({ user, onLogout }) {
       toast.loading("Mengirim testimonial...", { id: `testimonial_${orderId}` })
       const testimonialData = {
         order_id: orderId,
-        product_id: productId,
-        rating: parseInt(data.rating),
+        product_id: Number(productId),
+        rating: Number(data.rating),
         comment: data.comment,
-        is_visible: true,
       }
       await createTestimonial(testimonialData)
       toast.success("Testimonial berhasil dikirim!", { id: `testimonial_${orderId}` })
