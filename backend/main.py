@@ -1077,6 +1077,19 @@ def create_testimonial(
                 detail=f"Testimonial hanya bisa dibuat setelah order 'delivered'. Status saat ini: {order.status}",
             )
 
+        # Jika product_id tidak dikirim, ambil dari item order pertama
+        if testimonial.product_id is None:
+            if not order.items:
+                order.items = (
+                    db.query(OrderItem).filter(OrderItem.order_id == order.id).all()
+                )
+            if not order.items:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Order tidak memiliki item yang valid untuk testimonial",
+                )
+            testimonial.product_id = order.items[0].product_id
+
     return crud.create_testimonial(
         db=db, user_id=current_user.id, testimonial_data=testimonial
     )
