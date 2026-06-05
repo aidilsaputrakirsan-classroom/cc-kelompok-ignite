@@ -251,6 +251,13 @@ export default function OrdersPage({ user, onLogout }) {
 
   // Tampilkan semua pesanan (active dan history)
   const visibleOrders = orders
+  
+  // Show all order history entries
+  const activeOrders = orders
+  // Filter: show active orders plus delivered and cancelled history orders
+  const visibleOrders = orders.filter(order =>
+    ["pending", "processing", "shipped", "delivered", "cancelled"].includes(order.status)
+  )
 
   return (
     <div style={styles.page}>
@@ -270,6 +277,7 @@ export default function OrdersPage({ user, onLogout }) {
             {visibleOrders.length === 0 ? (
               <section style={styles.emptyCard}>
                 <p style={styles.emptyText}>Tidak ada pesanan</p>
+                <p style={styles.emptyText}>Tidak ada pesanan yang sedang diproses</p>
                 <button style={styles.button} onClick={() => navigate("/shop") }>
                   Belanja Sekarang
                 </button>
