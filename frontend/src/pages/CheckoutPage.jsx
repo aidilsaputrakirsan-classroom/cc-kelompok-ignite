@@ -87,14 +87,18 @@ export default function CheckoutPage({ user, onLogout }) {
         })),
       }
 
+      const toastId = "checkout"
       toast.loading("Memproses pesanan...", {
-        id: "checkout",
+        id: toastId,
       })
 
       const result = await createOrder(orderData)
 
-      toast.success("Pesanan berhasil dibuat!", {
-        id: "checkout",
+      toast.update(toastId, {
+        render: "Pesanan berhasil dibuat!",
+        type: "success",
+        isLoading: false,
+        autoClose: 2000,
       })
 
       setTimeout(() => {
@@ -107,14 +111,15 @@ export default function CheckoutPage({ user, onLogout }) {
     } catch (err) {
       console.error(err)
 
-      toast.error(
-        err?.message ||
+      toast.update("checkout", {
+        render:
+          err?.message ||
           err?.detail ||
           "Gagal membuat pesanan",
-        {
-          id: "checkout",
-        }
-      )
+        type: "error",
+        isLoading: false,
+        autoClose: 3000,
+      })
     }
   }
 
