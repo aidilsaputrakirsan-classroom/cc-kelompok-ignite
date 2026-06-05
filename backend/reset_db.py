@@ -7,11 +7,12 @@ Usage:
     python reset_db.py --seed-admin
 """
 
+from datetime import UTC, datetime, timezone
 import sys
-from database import engine, SessionLocal
-from models import Base, User
+
 from auth import hash_password
-from datetime import datetime, timezone
+from database import SessionLocal, engine
+from models import Base, User
 
 print("🔄 Reset Database...")
 print("Dropping all tables...")
@@ -38,12 +39,12 @@ print("\n✅ ERD Compliance: 100% Match! (8 tables, no legacy)")
 
 # Seed admin accounts jika parameter --seed-admin diberi
 if len(sys.argv) > 1 and sys.argv[1] == "--seed-admin":
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("🌱 Seeding admin accounts...")
-    print("="*60)
-    
+    print("=" * 60)
+
     db = SessionLocal()
-    
+
     admin_accounts = [
         {
             "email": "admin1@gmail.com",
@@ -56,34 +57,34 @@ if len(sys.argv) > 1 and sys.argv[1] == "--seed-admin":
             "password": "Admin12345",
         },
     ]
-    
+
     try:
         for admin in admin_accounts:
             hashed_password = hash_password(admin["password"])
-            
+
             new_admin = User(
                 email=admin["email"],
                 name=admin["name"],
                 password_hash=hashed_password,
                 role="admin",
                 is_active=True,
-                created_at=datetime.now(timezone.utc),
+                created_at=datetime.now(UTC),
             )
-            
+
             db.add(new_admin)
             print(f"✅ Akun admin '{admin['email']}' berhasil dibuat")
-        
+
         db.commit()
-        print("\n" + "="*60)
+        print("\n" + "=" * 60)
         print("✅ Admin accounts seeded successfully!")
-        print("="*60)
+        print("=" * 60)
         print("\n📝 Akun Admin yang tersedia:")
         print("-" * 60)
         for admin in admin_accounts:
             print(f"Email   : {admin['email']}")
             print(f"Password: {admin['password']}")
             print("-" * 60)
-        
+
     except Exception as e:
         db.rollback()
         print(f"❌ Error: {str(e)}")

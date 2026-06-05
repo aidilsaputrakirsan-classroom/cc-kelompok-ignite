@@ -4,13 +4,22 @@ Berkomunikasi dengan Auth Service untuk verifikasi token.
 """
 
 import os
+from datetime import datetime
 from fastapi import FastAPI, Depends, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
 from database import engine
 from models import Base
-from schemas import ProductCreate, ProductUpdate, ProductResponse, ProductListResponse
-from auth_client import verify_token_with_auth_service
+from schemas import (
+    ProductCreate,
+    ProductUpdate,
+    ProductResponse,
+    ProductListResponse,
+    ItemStatsResponse,
+)
+from auth_client import verify_token_with_auth_service, auth_circuit
+from database import get_db
+from sqlalchemy import text
 
 # ==================== AUTH DEPENDENCY ====================
 
@@ -21,7 +30,12 @@ def get_current_user(user_data: dict = Depends(verify_token_with_auth_service)):
 
 # ==================== DATABASE ====================
 
-Base.metadata.create_all(bind=engine)
+# Try to create tables, but don't fail if database is not available (for testing)
+try:
+    Base.metadata.create_all(bind=engine)
+except Exception as e:
+    print(f"Warning: Could not create database tables: {e}")
+    print("This is normal during testing with mock database")
 
 
 # ==================== FASTAPI APP ====================
@@ -29,7 +43,7 @@ Base.metadata.create_all(bind=engine)
 app = FastAPI(
     title="Item Service",
     description="Inventory microservice — CRUD items with authentication",
-    version="2.0.0",
+    version="2.1.0",
 )
 
 
@@ -56,11 +70,39 @@ app.add_middleware(
 
 
 @app.get("/health")
-def health_check():
+async def health_check():
+    """Health check dengan dependency status."""
+    # Check Auth Service
+    auth_status = auth_circuit.get_status()
+
+    # Check database
+    db_status = "connected"
+    try:
+        db = next(get_db())
+        db.execute(text("SELECT 1"))
+        db.close()
+    except Exception:
+        db_status = "disconnected"
+
+    overall = "healthy"
+    if auth_status["state"] != "CLOSED":
+        overall = "degraded"
+    if db_status != "connected":
+        overall = "unhealthy"
+
     return {
-        "status": "healthy",
+        "status": overall,
         "service": "item-service",
-        "version": "2.0.0",
+        "version": "2.1.0",
+        "dependencies": {
+            "auth-service": {
+                "status": "available" if auth_status["state"] == "CLOSED" else "unavailable",
+                "circuit_breaker": auth_status,
+            },
+            "database": {
+                "status": db_status,
+            },
+        },
     }
 
 
@@ -80,6 +122,8 @@ def create_item(
 ):
     global item_id_counter
 
+    now = datetime.utcnow()
+
     new_item = {
         "id": item_id_counter,
         "name": item.name,
@@ -90,9 +134,9 @@ def create_item(
         "stock": item.stock,
         "image_url": item.image_url,
         "is_active": item.is_active,
-        "owner_id": current_user["id"],
-        "created_at": None,
-        "updated_at": None,
+        "owner_id": current_user["user_id"],
+        "created_at": now,
+        "updated_at": now,
     }
 
     fake_items_db.append(new_item)
@@ -112,7 +156,7 @@ def get_items(
     current_user: dict = Depends(get_current_user),
 ):
     filtered = [
-        item for item in fake_items_db if item["owner_id"] == current_user["id"]
+        item for item in fake_items_db if item["owner_id"] == current_user["user_id"]
     ]
 
     if search:
@@ -127,6 +171,66 @@ def get_items(
     }
 
 
+# ==================== GET ITEMS STATS ====================
+
+
+@app.get("/items/stats", response_model=ItemStatsResponse)
+def get_items_stats(
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    Endpoint untuk mendapatkan statistik inventory pemilik.
+
+    Returns:
+    - total_items: Jumlah total item
+    - total_value: Total nilai inventory (price × stock)
+    - most_expensive: Item dengan harga tertinggi
+    - cheapest: Item dengan harga termurah
+    """
+    # Filter items milik user
+    user_items = [
+        item for item in fake_items_db if item["owner_id"] == current_user["user_id"]
+    ]
+
+    # Jika tidak ada items
+    if not user_items:
+        return {
+            "total_items": 0,
+            "total_value": 0.0,
+            "most_expensive": None,
+            "cheapest": None,
+        }
+
+    # Hitung total items dan total value
+    total_items = len(user_items)
+    total_value = sum(item["price"] * item["stock"] for item in user_items)
+
+    # Cari item termahal
+    most_expensive = max(user_items, key=lambda x: x["price"])
+
+    # Cari item termurah
+    cheapest = min(user_items, key=lambda x: x["price"])
+
+    return {
+        "total_items": total_items,
+        "total_value": total_value,
+        "most_expensive": {
+            "id": most_expensive["id"],
+            "name": most_expensive["name"],
+            "price": most_expensive["price"],
+            "stock": most_expensive["stock"],
+            "category": most_expensive["category"],
+        },
+        "cheapest": {
+            "id": cheapest["id"],
+            "name": cheapest["name"],
+            "price": cheapest["price"],
+            "stock": cheapest["stock"],
+            "category": cheapest["category"],
+        },
+    }
+
+
 # ==================== GET ITEM BY ID ====================
 
 
@@ -136,7 +240,7 @@ def get_item(
     current_user: dict = Depends(get_current_user),
 ):
     for item in fake_items_db:
-        if item["id"] == item_id and item["owner_id"] == current_user["id"]:
+        if item["id"] == item_id and item["owner_id"] == current_user["user_id"]:
             return item
 
     raise HTTPException(status_code=404, detail="Item not found")
@@ -152,7 +256,7 @@ def update_item(
     current_user: dict = Depends(get_current_user),
 ):
     for item in fake_items_db:
-        if item["id"] == item_id and item["owner_id"] == current_user["id"]:
+        if item["id"] == item_id and item["owner_id"] == current_user["user_id"]:
 
             update_fields = updated_data.model_dump(exclude_unset=True)
 
@@ -177,7 +281,7 @@ def delete_item(
         (
             item
             for item in fake_items_db
-            if (item["id"] == item_id and item["owner_id"] == current_user["id"])
+            if (item["id"] == item_id and item["owner_id"] == current_user["user_id"])
         ),
         None,
     )
@@ -188,7 +292,7 @@ def delete_item(
     fake_items_db = [
         item
         for item in fake_items_db
-        if not (item["id"] == item_id and item["owner_id"] == current_user["id"])
+        if not (item["id"] == item_id and item["owner_id"] == current_user["user_id"])
     ]
 
     return None

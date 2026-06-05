@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom"
 import { useEffect, useState } from "react"
 import Header from "../components/Header"
-import { fetchMyOrders, getOrderItems, completePayment, createPayment, getPaymentsByOrder, createTestimonial, uploadImage } from "../services/api"
+import { fetchMyOrders, getOrderItems, createPayment, getPaymentsByOrder, createTestimonial, uploadImage } from "../services/api"
 import { toast } from "react-toastify"
 
 export default function OrdersPage({ user, onLogout }) {
@@ -16,9 +16,9 @@ export default function OrdersPage({ user, onLogout }) {
     loadOrders()
   }, [])
 
-  const loadOrders = async () => {
+  const loadOrders = async ({ showLoading = true } = {}) => {
     try {
-      setLoading(true)
+      if (showLoading) setLoading(true)
       const data = await fetchMyOrders()
       let orders = data?.orders || []  // Response format: { total, orders }
 
@@ -51,7 +51,7 @@ export default function OrdersPage({ user, onLogout }) {
       console.error("Error loading orders:", err)
       toast.error("Gagal memuat pesanan")
     } finally {
-      setLoading(false)
+      if (showLoading) setLoading(false)
     }
   }
 
@@ -121,6 +121,7 @@ export default function OrdersPage({ user, onLogout }) {
       processing: { bg: "#E3F2FD", color: "#1976D2", text: "Diproses" },
       shipped: { bg: "#E8F5E9", color: "#388E3C", text: "Dikirim" },
       delivered: { bg: "#F3E5F5", color: "#7B1FA2", text: "Tiba" },
+      cancelled: { bg: "#FFEBEE", color: "#C62828", text: "Dibatalkan" },
     }
     const style = statusMap[status] || statusMap.pending
     return (
@@ -178,7 +179,8 @@ export default function OrdersPage({ user, onLogout }) {
     }
 
     try {
-      toast.loading("Membuat pembayaran...", { id: `payment_${orderId}` })
+      const toastId = `payment_${orderId}`
+      toast.loading("Membuat pembayaran...", { id: toastId })
       let proof_url = data.proof_url || null
 
       if ((data.payment_method === "qris" || data.payment_method === "bank_transfer") && data.proof_file) {
@@ -199,11 +201,22 @@ export default function OrdersPage({ user, onLogout }) {
       }
 
       await createPayment(paymentData)
-      toast.success("Pembayaran berhasil dibuat! Tunggu admin verifikasi.", { id: `payment_${orderId}` })
+      toast.update(toastId, {
+        render: "Pembayaran berhasil dibuat! Tunggu admin verifikasi.",
+        type: "success",
+        isLoading: false,
+        autoClose: 2000,
+      })
       setPaymentForm({ ...paymentForm, [`payment_${orderId}`]: {} })
-      loadOrders()
+      await loadOrders({ showLoading: false })
     } catch (err) {
-      toast.error(err?.message || "Gagal membuat pembayaran", { id: `payment_${orderId}` })
+      const toastId = `payment_${orderId}`
+      toast.update(toastId, {
+        render: err?.message || "Gagal membuat pembayaran",
+        type: "error",
+        isLoading: false,
+        autoClose: 3000,
+      })
     }
   }
 
@@ -221,7 +234,8 @@ export default function OrdersPage({ user, onLogout }) {
     }
 
     try {
-      toast.loading("Mengirim testimonial...", { id: `testimonial_${orderId}` })
+      const toastId = `testimonial_${orderId}`
+      toast.loading("Mengirim testimonial...", { id: toastId })
       const testimonialData = {
         order_id: orderId,
         rating: parseInt(data.rating),
@@ -229,22 +243,22 @@ export default function OrdersPage({ user, onLogout }) {
         is_visible: true,
       }
       await createTestimonial(testimonialData)
-      toast.success("Testimonial berhasil dikirim!", { id: `testimonial_${orderId}` })
+      toast.update(toastId, {
+        render: "Testimonial berhasil dikirim!",
+        type: "success",
+        isLoading: false,
+        autoClose: 2000,
+      })
       setTestimonialForm({ ...testimonialForm, [formDataKey]: {} })
-      loadOrders()
+      await loadOrders({ showLoading: false })
     } catch (err) {
-      toast.error(err?.message || "Gagal mengirim testimonial", { id: `testimonial_${orderId}` })
-    }
-  }
-
-  const handleCompletePayment = async (orderId) => {
-    try {
-      toast.loading("Menyelesaikan pembayaran...", { id: `complete_${orderId}` })
-      await completePayment(orderId)
-      toast.success("Pembayaran selesai! Order siap untuk testimonial.", { id: `complete_${orderId}` })
-      loadOrders()
-    } catch (err) {
-      toast.error(err?.message || "Gagal menyelesaikan pembayaran", { id: `complete_${orderId}` })
+      const toastId = `testimonial_${orderId}`
+      toast.update(toastId, {
+        render: err?.message || "Gagal mengirim testimonial",
+        type: "error",
+        isLoading: false,
+        autoClose: 3000,
+      })
     }
   }
 
@@ -258,10 +272,12 @@ export default function OrdersPage({ user, onLogout }) {
       </div>
     )
   }
-
-  // Filter: show only active orders (pending, processing, shipped)
-  const activeOrders = orders.filter(order => 
-    ["pending", "processing", "shipped"].includes(order.status)
+  
+  // Show all order history entries
+  const activeOrders = orders
+  // Filter: show active orders plus delivered and cancelled history orders
+  const visibleOrders = orders.filter(order =>
+    ["pending", "processing", "shipped", "delivered", "cancelled"].includes(order.status)
   )
 
   return (
@@ -273,21 +289,24 @@ export default function OrdersPage({ user, onLogout }) {
         {orders.length === 0 ? (
           <section style={styles.emptyCard}>
             <p style={styles.emptyText}>Belum ada pesanan</p>
-            <button style={styles.button} onClick={() => navigate("/shop")}>
-              Belanja Sekarang
-            </button>
-          </section>
-        ) : activeOrders.length === 0 ? (
-          <section style={styles.emptyCard}>
-            <p style={styles.emptyText}>Tidak ada pesanan yang sedang diproses</p>
-            <button style={styles.button} onClick={() => navigate("/shop")}>
+            <button style={styles.button} onClick={() => navigate("/shop") }>
               Belanja Sekarang
             </button>
           </section>
         ) : (
-          <div style={styles.ordersList}>
-            {activeOrders.map((order) => (
-              <div key={order.id} style={styles.orderCard}>
+          <>
+            {visibleOrders.length === 0 ? (
+              <section style={styles.emptyCard}>
+                <p style={styles.emptyText}>Tidak ada pesanan</p>
+                <p style={styles.emptyText}>Tidak ada pesanan yang sedang diproses</p>
+                <button style={styles.button} onClick={() => navigate("/shop") }>
+                  Belanja Sekarang
+                </button>
+              </section>
+            ) : (
+              <div style={styles.ordersList}>
+                {visibleOrders.map((order) => (
+                  <div key={order.id} style={styles.orderCard}>
                 <div style={styles.orderHeader}>
                   <div>
                     <h3 style={styles.orderTitle}>Pesanan #{order.id}</h3>
@@ -485,15 +504,6 @@ export default function OrdersPage({ user, onLogout }) {
                 {/* Actions based on order status */}
                 <div style={styles.actionsSection}>
                   {/* Step 3: Complete Payment (Admin marked as completed) */}
-                  {order.payments?.some(p => p.payment_status === "completed") && order.status !== "delivered" && (
-                    <button
-                      style={styles.secondaryButton}
-                      onClick={() => handleCompletePayment(order.id)}
-                    >
-                      ✓ Pembayaran Selesai - Tandai Tiba
-                    </button>
-                  )}
-
                   {/* Step 4: Testimonial (Order delivered + payment completed) */}
                   {order.status === "delivered" && order.payments?.some(p => p.payment_status === "completed") && (
                     <div style={styles.testimonialFormSection}>
@@ -545,7 +555,9 @@ export default function OrdersPage({ user, onLogout }) {
                 </div>
               </div>
             ))}
-          </div>
+              </div>
+            )}
+          </>
         )}
       </main>
     </div>

@@ -137,15 +137,6 @@ export default function ProductDetailPage({ user, onLogout }) {
                   </div>
                 </div>
 
-                <div style={styles.ratingBox}>
-                  <div style={styles.stars}>
-                    {"★★★★☆".split("").map((s, i) => (
-                      <span key={i} style={s === "★" ? styles.starActive : styles.starInactive}>{s}</span>
-                    ))}
-                  </div>
-                  <span style={styles.reviewText}>25 Ulasan</span>
-                </div>
-
                 <div style={styles.descriptionBox}>
                    <h3 style={styles.sectionTitle}>Deskripsi</h3>
                    <p style={styles.descriptionText}>

@@ -1,12 +1,12 @@
+from datetime import UTC, datetime, timedelta, timezone
 import os
-from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from dotenv import load_dotenv
+from fastapi import Depends, HTTPException, Security, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
-from fastapi import Depends, HTTPException, status, Security
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 
 from database import get_db
@@ -29,6 +29,7 @@ security = HTTPBearer()
 
 # ==================== PASSWORD ====================
 
+
 def hash_password(password: str) -> str:
     return pwd_context.hash(password)
 
@@ -39,10 +40,11 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 # ==================== JWT TOKEN ====================
 
-def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
+
+def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
     to_encode = data.copy()
 
-    expire = datetime.now(timezone.utc) + (
+    expire = datetime.now(UTC) + (
         expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     )
 
@@ -64,6 +66,7 @@ def decode_token(token: str) -> dict:
 
 
 # ==================== DEPENDENCY ====================
+
 
 def get_current_user(
     credentials: HTTPAuthorizationCredentials = Security(security),
@@ -121,7 +124,7 @@ def get_current_admin(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Hanya admin yang dapat mengakses endpoint ini",
         )
-    
+
     return current_user
 
 
@@ -137,5 +140,5 @@ def get_current_customer(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Hanya customer yang dapat mengakses endpoint ini",
         )
-    
+
     return current_user
