@@ -351,7 +351,7 @@ class PaymentListResponse(BaseModel):
 
 class TestimonialCreate(BaseModel):
     order_id: int | None = Field(None, gt=0)
-    product_id: int = Field(..., gt=0)
+    product_id: int | None = Field(None, gt=0)
     rating: int = Field(..., ge=1, le=5, examples=[5, 4, 3])
 
     comment: str | None = Field(
