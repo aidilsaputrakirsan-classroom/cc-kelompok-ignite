@@ -17,6 +17,7 @@ export default function CheckoutPage({ user, onLogout }) {
     notes: "",
     shipping_method: "pickup",
   })
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     if (selectedItems.length === 0) {
@@ -52,33 +53,35 @@ export default function CheckoutPage({ user, onLogout }) {
 
     if (!formData.receipt_name.trim()) {
       toast.error("Nama penerima harus diisi", {
-        id: "checkout",
+        toastId: "checkout",
       })
       return
     }
 
     if (!formData.recipient_phone.trim()) {
       toast.error("Nomor telepon harus diisi", {
-        id: "checkout",
+        toastId: "checkout",
       })
       return
     }
 
     if (!formData.shipping_address.trim()) {
       toast.error("Alamat pengiriman harus diisi", {
-        id: "checkout",
+        toastId: "checkout",
       })
       return
     }
 
     if (selectedItems.length === 0) {
       toast.error("Tidak ada produk untuk dipesan", {
-        id: "checkout",
+        toastId: "checkout",
       })
       return
     }
 
+    let toastId = null
     try {
+      setLoading(true)
       const orderData = {
         ...formData,
         items: selectedItems.map((item) => ({
@@ -87,10 +90,7 @@ export default function CheckoutPage({ user, onLogout }) {
         })),
       }
 
-      const toastId = "checkout"
-      toast.loading("Memproses pesanan...", {
-        id: toastId,
-      })
+      toastId = toast.loading("Memproses pesanan...")
 
       const result = await createOrder(orderData)
 
@@ -101,6 +101,8 @@ export default function CheckoutPage({ user, onLogout }) {
         autoClose: 2000,
       })
 
+      setLoading(false)
+
       setTimeout(() => {
         navigate("/orders", {
           state: {
@@ -110,16 +112,26 @@ export default function CheckoutPage({ user, onLogout }) {
       }, 1000)
     } catch (err) {
       console.error(err)
+      setLoading(false)
 
-      toast.update("checkout", {
-        render:
+      if (toastId) {
+        toast.update(toastId, {
+          render:
+            err?.message ||
+            err?.detail ||
+            "Gagal membuat pesanan",
+          type: "error",
+          isLoading: false,
+          autoClose: 3000,
+        })
+      } else {
+        toast.error(
           err?.message ||
           err?.detail ||
           "Gagal membuat pesanan",
-        type: "error",
-        isLoading: false,
-        autoClose: 3000,
-      })
+          { toastId: "checkout" }
+        )
+      }
     }
   }
 
@@ -285,9 +297,14 @@ export default function CheckoutPage({ user, onLogout }) {
           {/* BUTTON */}
           <button
             type="submit"
-            style={styles.submitBtn}
+            style={{
+              ...styles.submitBtn,
+              backgroundColor: loading ? "#CCCCCC" : styles.submitBtn.backgroundColor,
+              cursor: loading ? "not-allowed" : styles.submitBtn.cursor,
+            }}
+            disabled={loading}
           >
-            Lanjut ke Pembayaran
+            {loading ? "Memproses..." : "Lanjut ke Pembayaran"}
           </button>
         </form>
       </main>
