@@ -133,30 +133,32 @@ export default function CheckoutPage({ user, onLogout }) {
 
             <div style={styles.divider}></div>
 
-            <div style={styles.inputGroup}>
-              <label style={styles.inputLabel}>Nama Penerima</label>
-              <input
-                type="text"
-                name="receipt_name"
-                value={formData.receipt_name}
-                onChange={handleChange}
-                placeholder="Masukkan nama penerima"
-                style={styles.inputField}
-                required
-              />
-            </div>
+            <div style={styles.dualInputRow}>
+              <div style={styles.inputGroup}>
+                <label style={styles.inputLabel}>Nama Penerima</label>
+                <input
+                  type="text"
+                  name="receipt_name"
+                  value={formData.receipt_name}
+                  onChange={handleChange}
+                  placeholder="Masukkan nama penerima"
+                  style={styles.inputField}
+                  required
+                />
+              </div>
 
-            <div style={styles.inputGroup}>
-              <label style={styles.inputLabel}>Nomor Telepon</label>
-              <input
-                type="tel"
-                name="recipient_phone"
-                value={formData.recipient_phone}
-                onChange={handleChange}
-                placeholder="Masukkan nomor telepon"
-                style={styles.inputField}
-                required
-              />
+              <div style={styles.inputGroup}>
+                <label style={styles.inputLabel}>Nomor Telepon</label>
+                <input
+                  type="tel"
+                  name="recipient_phone"
+                  value={formData.recipient_phone}
+                  onChange={handleChange}
+                  placeholder="Masukkan nomor telepon"
+                  style={styles.inputField}
+                  required
+                />
+              </div>
             </div>
 
             <div style={styles.inputGroup}>
@@ -463,35 +465,54 @@ const styles = {
   /* CUSTOMER INFO */
   customerInfoSection: {
     backgroundColor: "#ffffff",
-    padding: "18px",
-    borderRadius: "10px",
+    padding: "22px",
+    borderRadius: "16px",
     border: "1px solid #f0d4b5",
+    display: "grid",
+    gap: "20px",
+  },
+
+  dualInputRow: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+    gap: "18px",
+    width: "100%",
   },
 
   inputLabel: {
-    fontSize: "1rem",
+    display: "block",
+    marginBottom: "8px",
+    fontSize: "0.95rem",
     color: "#6a4d3a",
     fontWeight: "600",
   },
 
   inputField: {
-    padding: "12px",
+    width: "100%",
+    padding: "14px 16px",
     border: "1px solid #e2c5a7",
-    borderRadius: "8px",
+    borderRadius: "12px",
     fontSize: "1rem",
     backgroundColor: "#fefefe",
+    color: "#3f2d1f",
     outline: "none",
+    boxSizing: "border-box",
+    transition: "border-color 0.2s ease, box-shadow 0.2s ease",
   },
 
   textareaField: {
-    padding: "12px",
+    width: "100%",
+    padding: "14px 16px",
     border: "1px solid #e2c5a7",
-    borderRadius: "8px",
+    borderRadius: "12px",
     fontSize: "1rem",
     backgroundColor: "#fefefe",
+    color: "#3f2d1f",
     outline: "none",
-    minHeight: "80px",
+    minHeight: "140px",
     resize: "vertical",
+    boxSizing: "border-box",
+    transition: "border-color 0.2s ease, box-shadow 0.2s ease",
   },
 
   notesTextarea: {
