@@ -87,14 +87,18 @@ export default function CheckoutPage({ user, onLogout }) {
         })),
       }
 
+      const toastId = "checkout"
       toast.loading("Memproses pesanan...", {
-        id: "checkout",
+        id: toastId,
       })
 
       const result = await createOrder(orderData)
 
-      toast.success("Pesanan berhasil dibuat!", {
-        id: "checkout",
+      toast.update(toastId, {
+        render: "Pesanan berhasil dibuat!",
+        type: "success",
+        isLoading: false,
+        autoClose: 2000,
       })
 
       setTimeout(() => {
@@ -107,14 +111,15 @@ export default function CheckoutPage({ user, onLogout }) {
     } catch (err) {
       console.error(err)
 
-      toast.error(
-        err?.message ||
+      toast.update("checkout", {
+        render:
+          err?.message ||
           err?.detail ||
           "Gagal membuat pesanan",
-        {
-          id: "checkout",
-        }
-      )
+        type: "error",
+        isLoading: false,
+        autoClose: 3000,
+      })
     }
   }
 
@@ -133,30 +138,32 @@ export default function CheckoutPage({ user, onLogout }) {
 
             <div style={styles.divider}></div>
 
-            <div style={styles.inputGroup}>
-              <label style={styles.inputLabel}>Nama Penerima</label>
-              <input
-                type="text"
-                name="receipt_name"
-                value={formData.receipt_name}
-                onChange={handleChange}
-                placeholder="Masukkan nama penerima"
-                style={styles.inputField}
-                required
-              />
-            </div>
+            <div style={styles.dualInputRow}>
+              <div style={styles.inputGroup}>
+                <label style={styles.inputLabel}>Nama Penerima</label>
+                <input
+                  type="text"
+                  name="receipt_name"
+                  value={formData.receipt_name}
+                  onChange={handleChange}
+                  placeholder="Masukkan nama penerima"
+                  style={styles.inputField}
+                  required
+                />
+              </div>
 
-            <div style={styles.inputGroup}>
-              <label style={styles.inputLabel}>Nomor Telepon</label>
-              <input
-                type="tel"
-                name="recipient_phone"
-                value={formData.recipient_phone}
-                onChange={handleChange}
-                placeholder="Masukkan nomor telepon"
-                style={styles.inputField}
-                required
-              />
+              <div style={styles.inputGroup}>
+                <label style={styles.inputLabel}>Nomor Telepon</label>
+                <input
+                  type="tel"
+                  name="recipient_phone"
+                  value={formData.recipient_phone}
+                  onChange={handleChange}
+                  placeholder="Masukkan nomor telepon"
+                  style={styles.inputField}
+                  required
+                />
+              </div>
             </div>
 
             <div style={styles.inputGroup}>
@@ -291,8 +298,6 @@ export default function CheckoutPage({ user, onLogout }) {
 const styles = {
   page: {
     minHeight: "100vh",
-    backgroundColor: "var(--bg-page)",
-    paddingBottom: "80px",
     backgroundColor: "#f6efe6",
     paddingBottom: "40px",
   },
@@ -320,11 +325,6 @@ const styles = {
     borderRadius: "24px",
     border: "1px solid var(--border-card)",
     boxShadow: "0 10px 30px rgba(0,0,0,0.06)",
-  },
-  sectionTitle: {
-    fontSize: "1.3rem",
-    margin: "0 0 20px 0",
-    color: "var(--text-primary)",
   },
   inputGroup: {
     marginBottom: "20px",
@@ -363,16 +363,13 @@ const styles = {
     top: "100px",
   },
   summaryCard: {
-    backgroundColor: "var(--surface)",
+    backgroundColor: "#ffffff",
     padding: "24px",
     borderRadius: "24px",
-    border: "1px solid #F57C00",
-    boxShadow: "0 15px 40px rgba(245, 124, 0, 0.08)",
-    width: "100%",
-    padding: "24px",
-    boxSizing: "border-box",
     border: "1px solid var(--brand)",
     boxShadow: "var(--summary-shadow)",
+    width: "100%",
+    boxSizing: "border-box",
   },
 
   form: {
@@ -382,13 +379,6 @@ const styles = {
     maxWidth: "600px",
     margin: "0 auto",
   },
-  itemRow: { 
-    display: "flex",
-    justifyContent: "space-between",
-    fontSize: "0.95rem",
-    color: "#70503C",
-  },
-
   /* STORE HEADER */
   storeBox: {
     backgroundColor: "#ffffff",
@@ -415,7 +405,6 @@ const styles = {
 
   infoText: {
     margin: "5px 0",
-    color: "#4a3425",
     fontSize: "1rem",
     lineHeight: "1.5",
     color: "var(--text-secondary)",
@@ -440,8 +429,6 @@ const styles = {
   divider: {
     width: "100%",
     height: "1px",
-    backgroundColor: "var(--divider)",
-    margin: "0 0 16px 0",
     backgroundColor: "#e2c5a7",
     margin: "10px 0",
   },
@@ -475,8 +462,6 @@ const styles = {
   },
   totalPrice: {
     fontSize: "1.4rem",
-    fontWeight: 800,
-    color: "#F57C00",
     fontWeight: "700",
     color: "#2b1a11",
     paddingTop: "6px",
@@ -485,43 +470,54 @@ const styles = {
   /* CUSTOMER INFO */
   customerInfoSection: {
     backgroundColor: "#ffffff",
-    padding: "18px",
-    borderRadius: "10px",
+    padding: "22px",
+    borderRadius: "16px",
     border: "1px solid #f0d4b5",
+    display: "grid",
+    gap: "20px",
   },
 
-  inputGroup: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "8px",
-    marginBottom: "16px",
-    color: "var(--brand)",
+  dualInputRow: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+    gap: "18px",
+    width: "100%",
   },
 
   inputLabel: {
-    fontSize: "1rem",
+    display: "block",
+    marginBottom: "8px",
+    fontSize: "0.95rem",
     color: "#6a4d3a",
     fontWeight: "600",
   },
 
   inputField: {
-    padding: "12px",
+    width: "100%",
+    padding: "14px 16px",
     border: "1px solid #e2c5a7",
-    borderRadius: "8px",
+    borderRadius: "12px",
     fontSize: "1rem",
     backgroundColor: "#fefefe",
+    color: "#3f2d1f",
     outline: "none",
+    boxSizing: "border-box",
+    transition: "border-color 0.2s ease, box-shadow 0.2s ease",
   },
 
   textareaField: {
-    padding: "12px",
+    width: "100%",
+    padding: "14px 16px",
     border: "1px solid #e2c5a7",
-    borderRadius: "8px",
+    borderRadius: "12px",
     fontSize: "1rem",
     backgroundColor: "#fefefe",
+    color: "#3f2d1f",
     outline: "none",
-    minHeight: "80px",
+    minHeight: "140px",
     resize: "vertical",
+    boxSizing: "border-box",
+    transition: "border-color 0.2s ease, box-shadow 0.2s ease",
   },
 
   notesTextarea: {
@@ -591,13 +587,11 @@ const styles = {
   submitBtn: {
     width: "100%",
     padding: "16px",
-    backgroundColor: "var(--brand)",
-    color: "white",
+    backgroundColor: "#f58600",
+    color: "#ffffff",
     height: "52px",
     border: "none",
     borderRadius: "10px",
-    backgroundColor: "#f58600",
-    color: "#ffffff",
     fontSize: "1rem",
     fontWeight: "700",
     cursor: "pointer",
