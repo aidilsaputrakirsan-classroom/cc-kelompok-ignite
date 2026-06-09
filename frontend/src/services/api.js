@@ -1,5 +1,15 @@
 export const API_URL = import.meta.env.VITE_API_URL || "http://localhost"
 
+// ==================== ERROR TYPES ====================
+
+export class ServiceUnavailableError extends Error {
+    constructor(message = "Layanan sedang tidak tersedia. Silakan coba beberapa saat lagi.") {
+        super(message)
+        this.name = "ServiceUnavailableError"
+        this.status = 503
+    }
+}
+
 // ==================== TOKEN MANAGEMENT ====================
 
 export function setToken(token) {
@@ -28,6 +38,10 @@ function authHeaders() {
 // ==================== HELPER ====================
 
 async function handleResponse(response) {
+    if (response.status === 503) {
+        throw new ServiceUnavailableError()
+    }
+
     if (response.status === 401) {
         clearToken()
     }
@@ -112,6 +126,11 @@ export async function getMe() {
         const response = await fetch(`${API_URL}/auth/me`, {
             headers: authHeaders(),
         })
+
+        // 503 on auth endpoint: do NOT clear token, propagate as ServiceUnavailableError
+        if (response.status === 503) {
+            throw new ServiceUnavailableError()
+        }
 
         return handleResponse(response)
     } catch (err) {
