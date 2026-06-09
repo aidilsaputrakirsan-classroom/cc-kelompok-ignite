@@ -267,7 +267,12 @@ export default function AdminDashboard({ user, onLogout }) {
         {activeMenu === "customers" && <AdminCustomers />}
         {activeMenu === "testimonials" && <AdminTestimonials />}
 
-        {activeMenu !== "dashboard" && activeMenu !== "products" && (
+        {activeMenu !== "dashboard" &&
+          activeMenu !== "products" &&
+          activeMenu !== "orders" &&
+          activeMenu !== "payments" &&
+          activeMenu !== "customers" &&
+          activeMenu !== "testimonials" && (
           <div style={styles.loadingBox}>
             <p style={styles.loadingText}>Fitur {activeMenu} sedang dalam pengembangan</p>
           </div>
