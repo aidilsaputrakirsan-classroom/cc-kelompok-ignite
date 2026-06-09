@@ -4,6 +4,13 @@ import { vi } from "vitest"
 
 vi.mock("../services/api", () => ({
     fetchItems: vi.fn(),
+    ServiceUnavailableError: class ServiceUnavailableError extends Error {
+        constructor(message = "Layanan sedang tidak tersedia. Silakan coba beberapa saat lagi.") {
+            super(message)
+            this.name = "ServiceUnavailableError"
+            this.status = 503
+        }
+    },
 }))
 
 vi.mock("./ItemCard", () => ({
@@ -69,7 +76,7 @@ describe("ItemList Component", () => {
 
         await waitFor(() => {
             expect(
-                screen.getByText(/Terjadi kesalahan/)
+                screen.getByText(/Gagal memuat produk/)
             ).toBeInTheDocument()
         })
     })
