@@ -11,6 +11,8 @@ export default function OrdersPage({ user, onLogout }) {
   const [expandedOrder, setExpandedOrder] = useState(null)
   const [paymentForm, setPaymentForm] = useState({})
   const [testimonialForm, setTestimonialForm] = useState({})
+  const [submittingPayment, setSubmittingPayment] = useState({})
+  const [submittingTestimonial, setSubmittingTestimonial] = useState({})
 
   useEffect(() => {
     loadOrders()
@@ -161,6 +163,8 @@ export default function OrdersPage({ user, onLogout }) {
   }
 
   const handleCreatePayment = async (orderId, order) => {
+    if (submittingPayment[orderId]) return
+
     const data = getPaymentFormData(orderId)
 
     if (!data.payment_method) {
@@ -178,9 +182,11 @@ export default function OrdersPage({ user, onLogout }) {
       return
     }
 
+    const toastId = `payment_${orderId}`
+    setSubmittingPayment((prev) => ({ ...prev, [orderId]: true }))
+
     try {
-      const toastId = `payment_${orderId}`
-      toast.loading("Membuat pembayaran...", { id: toastId })
+      toast.loading("Memproses pembayaran...", { id: toastId, autoClose: false })
       let proof_url = data.proof_url || null
 
       if ((data.payment_method === "qris" || data.payment_method === "bank_transfer") && data.proof_file) {
@@ -202,7 +208,7 @@ export default function OrdersPage({ user, onLogout }) {
 
       await createPayment(paymentData)
       toast.update(toastId, {
-        render: "Pembayaran berhasil dibuat! Tunggu admin verifikasi.",
+        render: "Pembayaran berhasil dilakukan!",
         type: "success",
         isLoading: false,
         autoClose: 2000,
@@ -210,17 +216,20 @@ export default function OrdersPage({ user, onLogout }) {
       setPaymentForm({ ...paymentForm, [`payment_${orderId}`]: {} })
       await loadOrders({ showLoading: false })
     } catch (err) {
-      const toastId = `payment_${orderId}`
       toast.update(toastId, {
         render: err?.message || "Gagal membuat pembayaran",
         type: "error",
         isLoading: false,
         autoClose: 3000,
       })
+    } finally {
+      setSubmittingPayment((prev) => ({ ...prev, [orderId]: false }))
     }
   }
 
   const handleCreateTestimonial = async (orderId) => {
+    if (submittingTestimonial[orderId]) return
+
     const formDataKey = `testimonial_${orderId}`
     const data = testimonialForm[formDataKey] || {}
 
@@ -233,9 +242,11 @@ export default function OrdersPage({ user, onLogout }) {
       return
     }
 
+    const toastId = `testimonial_${orderId}`
+    setSubmittingTestimonial((prev) => ({ ...prev, [orderId]: true }))
+
     try {
-      const toastId = `testimonial_${orderId}`
-      toast.loading("Mengirim testimonial...", { id: toastId })
+      toast.loading("Mengirim testimoni...", { id: toastId, autoClose: false })
       const testimonialData = {
         order_id: orderId,
         rating: parseInt(data.rating),
@@ -244,7 +255,7 @@ export default function OrdersPage({ user, onLogout }) {
       }
       await createTestimonial(testimonialData)
       toast.update(toastId, {
-        render: "Testimonial berhasil dikirim!",
+        render: "Testimoni berhasil ditambahkan!",
         type: "success",
         isLoading: false,
         autoClose: 2000,
@@ -252,13 +263,14 @@ export default function OrdersPage({ user, onLogout }) {
       setTestimonialForm({ ...testimonialForm, [formDataKey]: {} })
       await loadOrders({ showLoading: false })
     } catch (err) {
-      const toastId = `testimonial_${orderId}`
       toast.update(toastId, {
         render: err?.message || "Gagal mengirim testimonial",
         type: "error",
         isLoading: false,
         autoClose: 3000,
       })
+    } finally {
+      setSubmittingTestimonial((prev) => ({ ...prev, [orderId]: false }))
     }
   }
 
@@ -438,13 +450,16 @@ export default function OrdersPage({ user, onLogout }) {
                     )}
 
                     <button
+                      disabled={!!submittingPayment[order.id]}
                       style={{
                         ...styles.primaryButton,
                         marginTop: "16px",
+                        opacity: submittingPayment[order.id] ? 0.7 : 1,
+                        cursor: submittingPayment[order.id] ? "not-allowed" : "pointer",
                       }}
                       onClick={() => handleCreatePayment(order.id, order)}
                     >
-                      💳 Buat Pembayaran
+                      {submittingPayment[order.id] ? "Memproses..." : "💳 Buat Pembayaran"}
                     </button>
                   </div>
                 )}
@@ -545,10 +560,15 @@ export default function OrdersPage({ user, onLogout }) {
                         />
                       </div>
                       <button
-                        style={styles.primaryButton}
+                        disabled={!!submittingTestimonial[order.id]}
+                        style={{
+                          ...styles.primaryButton,
+                          opacity: submittingTestimonial[order.id] ? 0.7 : 1,
+                          cursor: submittingTestimonial[order.id] ? "not-allowed" : "pointer",
+                        }}
                         onClick={() => handleCreateTestimonial(order.id)}
                       >
-                        📝 Kirim Testimonial
+                        {submittingTestimonial[order.id] ? "Mengirim..." : "📝 Kirim Testimonial"}
                       </button>
                     </div>
                   )}

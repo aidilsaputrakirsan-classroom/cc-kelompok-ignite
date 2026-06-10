@@ -18,6 +18,8 @@ export default function CheckoutPage({ user, onLogout }) {
     shipping_method: "pickup",
   })
 
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
   useEffect(() => {
     if (selectedItems.length === 0) {
       toast.warn("Tidak ada produk untuk di-checkout")
@@ -50,6 +52,8 @@ export default function CheckoutPage({ user, onLogout }) {
   const handleSubmit = async (e) => {
     e.preventDefault()
 
+    if (isSubmitting) return
+
     if (!formData.receipt_name.trim()) {
       toast.error("Nama penerima harus diisi", {
         id: "checkout",
@@ -78,6 +82,9 @@ export default function CheckoutPage({ user, onLogout }) {
       return
     }
 
+    const toastId = "checkout"
+    setIsSubmitting(true)
+
     try {
       const orderData = {
         ...formData,
@@ -87,9 +94,9 @@ export default function CheckoutPage({ user, onLogout }) {
         })),
       }
 
-      const toastId = "checkout"
       toast.loading("Memproses pesanan...", {
         id: toastId,
+        autoClose: false,
       })
 
       const result = await createOrder(orderData)
@@ -98,7 +105,7 @@ export default function CheckoutPage({ user, onLogout }) {
         render: "Pesanan berhasil dibuat!",
         type: "success",
         isLoading: false,
-        autoClose: 2000,
+        autoClose: 2500,
       })
 
       setTimeout(() => {
@@ -107,11 +114,11 @@ export default function CheckoutPage({ user, onLogout }) {
             orderId: result?.id,
           },
         })
-      }, 1000)
+      }, 2500)
     } catch (err) {
       console.error(err)
 
-      toast.update("checkout", {
+      toast.update(toastId, {
         render:
           err?.message ||
           err?.detail ||
@@ -120,6 +127,8 @@ export default function CheckoutPage({ user, onLogout }) {
         isLoading: false,
         autoClose: 3000,
       })
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -285,9 +294,14 @@ export default function CheckoutPage({ user, onLogout }) {
           {/* BUTTON */}
           <button
             type="submit"
-            style={styles.submitBtn}
+            disabled={isSubmitting}
+            style={{
+              ...styles.submitBtn,
+              opacity: isSubmitting ? 0.7 : 1,
+              cursor: isSubmitting ? "not-allowed" : "pointer",
+            }}
           >
-            Lanjut ke Pembayaran
+            {isSubmitting ? "Memproses..." : "Lanjut ke Pembayaran"}
           </button>
         </form>
       </main>
