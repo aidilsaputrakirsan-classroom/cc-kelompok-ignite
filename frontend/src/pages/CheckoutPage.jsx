@@ -114,7 +114,7 @@ export default function CheckoutPage({ user, onLogout }) {
         render: "Pesanan berhasil dibuat!",
         type: "success",
         isLoading: false,
-        autoClose: 2,
+        autoClose: 2000,
       })
 
       setTimeout(() => {
@@ -134,7 +134,7 @@ export default function CheckoutPage({ user, onLogout }) {
           "Gagal membuat pesanan",
         type: "error",
         isLoading: false,
-        autoClose: 3,
+        autoClose: 3000,
       })
     } finally {
       setIsSubmitting(false)
@@ -727,4 +727,4 @@ if (!document.getElementById("checkout-back-responsive")) {
     }
   `
   document.head.appendChild(s)
-}
+}
