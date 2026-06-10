@@ -105,7 +105,7 @@ export default function CheckoutPage({ user, onLogout }) {
         render: "Pesanan berhasil dibuat!",
         type: "success",
         isLoading: false,
-        autoClose: 2000,
+        autoClose: 2500,
       })
 
       setTimeout(() => {
@@ -114,7 +114,7 @@ export default function CheckoutPage({ user, onLogout }) {
             orderId: result?.id,
           },
         })
-      }, 1000)
+      }, 2500)
     } catch (err) {
       console.error(err)
 

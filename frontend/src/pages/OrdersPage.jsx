@@ -186,7 +186,7 @@ export default function OrdersPage({ user, onLogout }) {
     setSubmittingPayment((prev) => ({ ...prev, [orderId]: true }))
 
     try {
-      toast.loading("Membuat pembayaran...", { id: toastId, autoClose: false })
+      toast.loading("Memproses pembayaran...", { id: toastId, autoClose: false })
       let proof_url = data.proof_url || null
 
       if ((data.payment_method === "qris" || data.payment_method === "bank_transfer") && data.proof_file) {
@@ -208,7 +208,7 @@ export default function OrdersPage({ user, onLogout }) {
 
       await createPayment(paymentData)
       toast.update(toastId, {
-        render: "Pembayaran berhasil dibuat! Tunggu admin verifikasi.",
+        render: "Pembayaran berhasil dilakukan!",
         type: "success",
         isLoading: false,
         autoClose: 2000,
@@ -246,7 +246,7 @@ export default function OrdersPage({ user, onLogout }) {
     setSubmittingTestimonial((prev) => ({ ...prev, [orderId]: true }))
 
     try {
-      toast.loading("Mengirim testimonial...", { id: toastId, autoClose: false })
+      toast.loading("Mengirim testimoni...", { id: toastId, autoClose: false })
       const testimonialData = {
         order_id: orderId,
         rating: parseInt(data.rating),
@@ -255,7 +255,7 @@ export default function OrdersPage({ user, onLogout }) {
       }
       await createTestimonial(testimonialData)
       toast.update(toastId, {
-        render: "Testimonial berhasil dikirim!",
+        render: "Testimoni berhasil ditambahkan!",
         type: "success",
         isLoading: false,
         autoClose: 2000,
