@@ -1,0 +1,21 @@
+# Dockerfile.dev - Frontend
+# Hot-reload menggunakan React dev server (CRA) atau Vite
+
+FROM node:20-alpine AS development
+
+WORKDIR /app
+
+# Install dependencies dulu (layer cache)
+COPY package*.json ./
+RUN npm install
+
+# Source code di-mount via volume (docker-compose.dev.yml)
+# COPY src/ tidak diperlukan di development
+
+EXPOSE 3000
+
+# Untuk Create React App
+CMD ["npm", "start"]
+
+# Uncomment baris berikut jika menggunakan Vite:
+# CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]

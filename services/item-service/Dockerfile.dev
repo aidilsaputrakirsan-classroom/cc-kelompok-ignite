@@ -1,0 +1,19 @@
+# Dockerfile.dev - Item Service
+# Hot-reload menggunakan nodemon
+
+FROM node:20-alpine AS development
+
+WORKDIR /app
+
+# Install dependencies dulu (layer cache)
+COPY package*.json ./
+RUN npm install
+
+# Install nodemon secara global untuk hot-reload
+RUN npm install -g nodemon
+
+# Source code di-mount via volume (docker-compose.dev.yml)
+
+EXPOSE 8002
+
+CMD ["nodemon", "--watch", "src", "--ext", "ts,js,json", "--exec", "ts-node src/index.ts"]
