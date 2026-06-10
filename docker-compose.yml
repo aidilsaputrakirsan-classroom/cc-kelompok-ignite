@@ -10,7 +10,7 @@
 # 5. frontend: React app (port 3000)
 # 6. gateway: Nginx reverse proxy (port 80)
 
-name: cloud-team-ignite
+
 
 services:
   # ================================
