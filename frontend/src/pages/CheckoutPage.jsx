@@ -105,7 +105,7 @@ export default function CheckoutPage({ user, onLogout }) {
         render: "Pesanan berhasil dibuat!",
         type: "success",
         isLoading: false,
-        autoClose: 2500,
+        autoClose: 2,
       })
 
       setTimeout(() => {
@@ -125,7 +125,7 @@ export default function CheckoutPage({ user, onLogout }) {
           "Gagal membuat pesanan",
         type: "error",
         isLoading: false,
-        autoClose: 3000,
+        autoClose: 3,
       })
     } finally {
       setIsSubmitting(false)
