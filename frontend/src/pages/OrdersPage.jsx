@@ -211,7 +211,7 @@ export default function OrdersPage({ user, onLogout }) {
         render: "Pembayaran berhasil dilakukan!",
         type: "success",
         isLoading: false,
-        autoClose: 2000,
+        autoClose: 2,
       })
       setPaymentForm({ ...paymentForm, [`payment_${orderId}`]: {} })
       await loadOrders({ showLoading: false })
@@ -220,7 +220,7 @@ export default function OrdersPage({ user, onLogout }) {
         render: err?.message || "Gagal membuat pembayaran",
         type: "error",
         isLoading: false,
-        autoClose: 3000,
+        autoClose: 3,
       })
     } finally {
       setSubmittingPayment((prev) => ({ ...prev, [orderId]: false }))
@@ -258,7 +258,7 @@ export default function OrdersPage({ user, onLogout }) {
         render: "Testimoni berhasil ditambahkan!",
         type: "success",
         isLoading: false,
-        autoClose: 2000,
+        autoClose: 2,
       })
       setTestimonialForm({ ...testimonialForm, [formDataKey]: {} })
       await loadOrders({ showLoading: false })
@@ -267,7 +267,7 @@ export default function OrdersPage({ user, onLogout }) {
         render: err?.message || "Gagal mengirim testimonial",
         type: "error",
         isLoading: false,
-        autoClose: 3000,
+        autoClose: 3,
       })
     } finally {
       setSubmittingTestimonial((prev) => ({ ...prev, [orderId]: false }))
