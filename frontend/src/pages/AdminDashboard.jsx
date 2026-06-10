@@ -7,6 +7,7 @@ import AdminOrders from "./AdminOrders"
 import AdminPayments from "./AdminPayments"
 import AdminCustomers from "./AdminCustomers"
 import AdminTestimonials from "./AdminTestimonials"
+import LogoutConfirmModal from "../components/LogoutConfirmModal"
 
 const menuItems = [
   { label: "Dashboard", key: "dashboard" },
@@ -40,6 +41,7 @@ function getLast7Days() {
 
 export default function AdminDashboard({ user, onLogout }) {
   const [activeMenu, setActiveMenu] = useState("dashboard")
+  const [showLogoutModal, setShowLogoutModal] = useState(false)
   const navigate = useNavigate()
 
   const [loading, setLoading] = useState(true)
@@ -112,10 +114,17 @@ export default function AdminDashboard({ user, onLogout }) {
     loadDashboard()
   }, [])
 
+  // Buka modal konfirmasi (tidak langsung logout)
   const handleLogout = () => {
+    setShowLogoutModal(true)
+  }
+
+  // Eksekusi logout setelah konfirmasi
+  const doLogout = () => {
+    setShowLogoutModal(false)
     clearToken()
     onLogout?.()
-    toast.info("Anda telah logout", { position: "top-center" })
+    toast.success("Berhasil logout", { position: "top-center" })
     navigate("/login", { replace: true })
   }
 
@@ -140,12 +149,12 @@ export default function AdminDashboard({ user, onLogout }) {
   return (
     <div style={styles.page}>
       {/* ===== SIDEBAR ===== */}
-      <aside style={styles.sidebar}>
-        <div style={styles.sidebarHeader}>
+      <aside className="admin-sidebar" style={styles.sidebar}>
+        <div className="admin-sidebar-header" style={styles.sidebarHeader}>
           <span style={styles.sidebarTitle}>ATHSNAC ADMIN</span>
         </div>
 
-        <nav style={styles.menu}>
+        <nav className="admin-menu" style={styles.menu}>
           {menuItems.map((item) => (
             <button
               key={item.key}
@@ -167,7 +176,7 @@ export default function AdminDashboard({ user, onLogout }) {
       </aside>
 
       {/* ===== MAIN ===== */}
-      <main style={styles.main}>
+      <main className="admin-main" style={styles.main}>
         {activeMenu === "dashboard" && (
           <>
             <header style={styles.hero}>
@@ -278,6 +287,13 @@ export default function AdminDashboard({ user, onLogout }) {
           </div>
         )}
       </main>
+
+      {/* ===== MODAL KONFIRMASI LOGOUT ===== */}
+      <LogoutConfirmModal
+        isOpen={showLogoutModal}
+        onCancel={() => setShowLogoutModal(false)}
+        onConfirm={doLogout}
+      />
     </div>
   )
 }
@@ -301,6 +317,14 @@ const styles = {
     flexDirection: "column",
     gap: "10px",
     borderRight: "1px solid #F3D2B3",
+    /* Fixed sidebar: selalu terlihat di layar */
+    position: "fixed",
+    top: 0,
+    left: 0,
+    height: "100vh",
+    overflowY: "auto",
+    zIndex: 100,
+    boxSizing: "border-box",
   },
   sidebarHeader: {
     padding: "18px 16px",
@@ -353,12 +377,15 @@ const styles = {
 
   /* ===== MAIN ===== */
   main: {
-    flex: 1,
+    marginLeft: "240px",   /* sesuai lebar sidebar yang fixed */
+    minHeight: "100vh",
     padding: "32px 28px",
     display: "flex",
     flexDirection: "column",
     gap: "24px",
     overflowY: "auto",
+    flex: 1,
+    boxSizing: "border-box",
   },
   hero: {
     display: "flex",
@@ -544,10 +571,57 @@ const styles = {
   },
 }
 
-// Inject spinner animation once
+// Inject spinner animation + responsive sidebar styles once
 if (!document.getElementById("admin-spin-anim")) {
   const s = document.createElement("style")
   s.id = "admin-spin-anim"
-  s.innerHTML = `@keyframes spin { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }`
+  s.innerHTML = `
+    @keyframes spin { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
+
+    /* ===== RESPONSIVE: Tablet & Mobile ===== */
+    @media (max-width: 768px) {
+      /* Sidebar menjadi bar horizontal di atas */
+      .admin-sidebar {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        height: auto !important;
+        max-height: 100vh !important;
+        flex-direction: row !important;
+        flex-wrap: wrap !important;
+        padding: 10px 12px !important;
+        gap: 6px !important;
+        border-right: none !important;
+        border-bottom: 1px solid #F3D2B3 !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        z-index: 200 !important;
+        align-items: center !important;
+      }
+      .admin-sidebar-header {
+        display: none !important;
+      }
+      .admin-menu {
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        gap: 4px !important;
+        overflow-x: auto !important;
+      }
+      .admin-main {
+        margin-left: 0 !important;
+        margin-top: 72px !important;
+        min-height: calc(100vh - 72px) !important;
+        padding: 16px 12px !important;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .admin-main {
+        margin-top: 80px !important;
+        padding: 12px 8px !important;
+      }
+    }
+  `
   document.head.appendChild(s)
 }
