@@ -2,10 +2,13 @@ import { Link, useNavigate } from "react-router-dom"
 import { toast } from "react-toastify"
 import { useState } from "react"
 import { useTheme } from "../context/ThemeContext"
+import LogoutConfirmModal from "./LogoutConfirmModal"
+import { clearToken } from "../services/api"
 
 function Header({ user, onLogout, totalItems = 0, onCartClick }) {
     const [hoveredLink, setHoveredLink] = useState(null)
     const [hoveredToggle, setHoveredToggle] = useState(false)
+    const [showLogoutModal, setShowLogoutModal] = useState(false)
     const navigate = useNavigate()
 
     // ✅ FIX: sesuai ThemeContext
@@ -25,7 +28,22 @@ function Header({ user, onLogout, totalItems = 0, onCartClick }) {
         }
     }
 
+    // Buka modal konfirmasi logout
+    const handleLogoutRequest = () => {
+        setShowLogoutModal(true)
+    }
+
+    // Eksekusi logout setelah dikonfirmasi
+    const doLogout = () => {
+        setShowLogoutModal(false)
+        clearToken()
+        onLogout?.()
+        toast.success("Berhasil logout", { position: "top-center" })
+        navigate("/login", { replace: true })
+    }
+
     return (
+        <>
         <header style={styles.header}>
             <h1 style={styles.title}>ATHSNACK</h1>
 
@@ -137,6 +155,14 @@ function Header({ user, onLogout, totalItems = 0, onCartClick }) {
                 )}
             </div>
         </header>
+
+        {/* Modal konfirmasi logout — ditampilkan saat handleLogoutRequest dipanggil */}
+        <LogoutConfirmModal
+            isOpen={showLogoutModal}
+            onCancel={() => setShowLogoutModal(false)}
+            onConfirm={doLogout}
+        />
+        </>
     )
 }
 

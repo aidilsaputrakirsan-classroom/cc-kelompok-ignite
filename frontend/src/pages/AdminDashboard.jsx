@@ -7,6 +7,7 @@ import AdminOrders from "./AdminOrders"
 import AdminPayments from "./AdminPayments"
 import AdminCustomers from "./AdminCustomers"
 import AdminTestimonials from "./AdminTestimonials"
+import LogoutConfirmModal from "../components/LogoutConfirmModal"
 
 const menuItems = [
   { label: "Dashboard", key: "dashboard" },
@@ -40,6 +41,7 @@ function getLast7Days() {
 
 export default function AdminDashboard({ user, onLogout }) {
   const [activeMenu, setActiveMenu] = useState("dashboard")
+  const [showLogoutModal, setShowLogoutModal] = useState(false)
   const navigate = useNavigate()
 
   const [loading, setLoading] = useState(true)
@@ -112,10 +114,17 @@ export default function AdminDashboard({ user, onLogout }) {
     loadDashboard()
   }, [])
 
+  // Buka modal konfirmasi (tidak langsung logout)
   const handleLogout = () => {
+    setShowLogoutModal(true)
+  }
+
+  // Eksekusi logout setelah konfirmasi
+  const doLogout = () => {
+    setShowLogoutModal(false)
     clearToken()
     onLogout?.()
-    toast.info("Anda telah logout", { position: "top-center" })
+    toast.success("Berhasil logout", { position: "top-center" })
     navigate("/login", { replace: true })
   }
 
@@ -278,6 +287,13 @@ export default function AdminDashboard({ user, onLogout }) {
           </div>
         )}
       </main>
+
+      {/* ===== MODAL KONFIRMASI LOGOUT ===== */}
+      <LogoutConfirmModal
+        isOpen={showLogoutModal}
+        onCancel={() => setShowLogoutModal(false)}
+        onConfirm={doLogout}
+      />
     </div>
   )
 }
