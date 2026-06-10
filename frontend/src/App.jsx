@@ -20,7 +20,7 @@ import CheckoutPage from "./pages/CheckoutPage"
 import ProtectedRoute from "./components/ProtectedRoute"
 
 import {
-  login, register, getMe, checkHealth, getToken, clearToken
+  login, register, getMe, checkHealth, getToken, clearToken, ServiceUnavailableError
 } from "./services/api"
 
 function App() {
@@ -29,6 +29,7 @@ function App() {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
   const [isConnected, setIsConnected] = useState(false)
+  const [authServiceUnavailable, setAuthServiceUnavailable] = useState(false)
 
   // 🌍 APPLY THEME GLOBAL KE SEMUA HALAMAN
   useEffect(() => {
@@ -42,9 +43,14 @@ function App() {
     if (token) {
       getMe()
         .then(userData => setUser(userData))
-        .catch(() => {
-          clearToken()
-          setUser(null)
+        .catch((err) => {
+          if (err instanceof ServiceUnavailableError) {
+            // Auth service 503: keep token, keep session, show banner only
+            setAuthServiceUnavailable(true)
+          } else {
+            clearToken()
+            setUser(null)
+          }
         })
         .finally(() => setLoading(false))
     } else {
@@ -93,6 +99,19 @@ function App() {
 
   return (
     <>
+      {authServiceUnavailable && (
+        <div style={styles.serviceUnavailableBanner}>
+          <span style={styles.bannerIcon}>⚠️</span>
+          <span>Some features temporarily unavailable</span>
+          <button
+            style={styles.bannerDismiss}
+            onClick={() => setAuthServiceUnavailable(false)}
+            aria-label="Tutup banner"
+          >
+            ✕
+          </button>
+        </div>
+      )}
       <Router>
         <ToastContainer position="top-right" autoClose={3000} />
 
@@ -254,6 +273,37 @@ const styles = {
     animation: "spin 1s linear infinite",
     marginBottom: "20px",
   },
+  serviceUnavailableBanner: {
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+    padding: "10px 20px",
+    backgroundColor: "#FFF3CD",
+    color: "#856404",
+    borderBottom: "1px solid #FFEAA7",
+    fontSize: "0.95rem",
+    fontWeight: 600,
+    position: "sticky",
+    top: 0,
+    zIndex: 9999,
+    justifyContent: "center",
+  },
+  bannerIcon: {
+    fontSize: "1rem",
+  },
+  bannerDismiss: {
+    marginLeft: "auto",
+    background: "none",
+    border: "none",
+    color: "#856404",
+    cursor: "pointer",
+    fontSize: "1rem",
+    padding: "2px 6px",
+    borderRadius: "4px",
+    fontWeight: 700,
+    lineHeight: 1,
+  },
 }
+
 
 export default App
