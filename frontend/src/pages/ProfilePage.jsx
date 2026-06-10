@@ -1,7 +1,9 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { toast } from "react-toastify"
+import { clearToken } from "../services/api"
 import Header from "../components/Header"
+import LogoutConfirmModal from "../components/LogoutConfirmModal"
 
 export default function ProfilePage({ user, onLogout }) {
   const navigate = useNavigate()
@@ -19,10 +21,19 @@ export default function ProfilePage({ user, onLogout }) {
     password: "",
   })
   const [editing, setEditing] = useState(false)
+  const [showLogoutModal, setShowLogoutModal] = useState(false)
 
+  // Buka modal konfirmasi (tidak langsung logout)
   const handleLogout = () => {
+    setShowLogoutModal(true)
+  }
+
+  // Eksekusi logout setelah dikonfirmasi
+  const doLogout = () => {
+    setShowLogoutModal(false)
+    clearToken()
     onLogout?.()
-    toast.info("Anda telah logout", { position: "top-center" })
+    toast.success("Berhasil logout", { position: "top-center" })
     navigate("/login", { replace: true })
   }
 
@@ -72,6 +83,7 @@ export default function ProfilePage({ user, onLogout }) {
   }
 
   return (
+    <>
     <div style={styles.page}>
       <Header user={user} onLogout={onLogout} />
       <main style={styles.main}>
@@ -169,6 +181,14 @@ export default function ProfilePage({ user, onLogout }) {
         </section>
       </main>
     </div>
+
+      {/* Modal konfirmasi logout */}
+      <LogoutConfirmModal
+        isOpen={showLogoutModal}
+        onCancel={() => setShowLogoutModal(false)}
+        onConfirm={doLogout}
+      />
+    </>
   )
 }
 
