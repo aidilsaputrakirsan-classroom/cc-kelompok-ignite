@@ -1,0 +1,142 @@
+# ==============================================
+# Docker Compose Override — Development
+# Cloud Team IGNITE
+# ==============================================
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+#
+# Override ini menyesuaikan konfigurasi production untuk kebutuhan
+# development: hot-reload, resource limits longgar, port DB terbuka.
+
+services:
+  # ================================
+  # DATABASES
+  # ================================
+  auth-db:
+    # Expose port ke host agar bisa diakses langsung (DBeaver, psql, dll.)
+    # Di production port ini tidak perlu expose karena sudah ada di compose utama
+    ports:
+      - "5434:5432"
+    environment:
+      POSTGRES_DB: auth_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - auth_db_data_dev:/var/lib/postgresql/data
+      # Seed/migration script otomatis dijalankan saat container pertama dibuat
+      - ./services/auth-service/db/init:/docker-entrypoint-initdb.d
+    deploy:
+      resources:
+        limits:
+          cpus: '1.00'
+          memory: 512M
+
+  item-db:
+    ports:
+      - "5435:5432"
+    environment:
+      POSTGRES_DB: item_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - item_db_data_dev:/var/lib/postgresql/data
+      - ./services/item-service/db/init:/docker-entrypoint-initdb.d
+    deploy:
+      resources:
+        limits:
+          cpus: '1.00'
+          memory: 512M
+
+  # ================================
+  # BACKEND SERVICES
+  # ================================
+  auth-service:
+    build:
+      context: ./services/auth-service
+      dockerfile: Dockerfile.dev           # Gunakan Dockerfile khusus dev
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@auth-db:5432/auth_db
+      SECRET_KEY: dev-secret-key-not-for-production
+      CORS_ORIGINS: "http://localhost,http://localhost:5173,http://localhost:3000"
+      DEBUG: "true"
+    volumes:
+      # Hot-reload: mount seluruh folder backend ke /app di container
+      # (struktur flat: main.py, auth.py, models.py, dll. langsung di root)
+      - ./services/auth-service:/app
+      # Jangan override venv yang sudah di-install di dalam image
+      - /app/venv
+    command: uvicorn main:app --host 0.0.0.0 --port 8001 --reload
+    ports:
+      - "8001:8001"                        # Expose langsung untuk testing manual
+    deploy:
+      resources:
+        limits:
+          cpus: '1.00'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+
+  item-service:
+    build:
+      context: ./services/item-service
+      dockerfile: Dockerfile.dev
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@item-db:5432/item_db
+      AUTH_SERVICE_URL: http://auth-service:8001
+      CORS_ORIGINS: "http://localhost,http://localhost:5173,http://localhost:3000"
+      DEBUG: "true"
+    volumes:
+      - ./services/item-service:/app
+      - /app/venv
+    command: uvicorn main:app --host 0.0.0.0 --port 8002 --reload
+    ports:
+      - "8002:8002"                        # Expose langsung untuk testing manual
+    deploy:
+      resources:
+        limits:
+          cpus: '1.00'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+
+  # ================================
+  # FRONTEND
+  # ================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    environment:
+      VITE_API_URL: http://localhost
+      VITE_DEV_MODE: "true"
+    volumes:
+      # Hot-reload: mount seluruh folder frontend ke /app di container
+      - ./frontend:/app
+      # Jangan override node_modules yang sudah di-install di dalam image
+      - /app/node_modules
+    ports:
+      - "5173:5173"                        # Port default Vite dev server
+    stdin_open: true
+    tty: true
+    deploy:
+      resources:
+        limits:
+          cpus: '1.00'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+
+  # ================================
+  # GATEWAY
+  # ================================
+  gateway:
+    volumes:
+      # Hot-reload nginx config: langsung reload tanpa rebuild image
+      - ./services/gateway/nginx.dev.conf:/etc/nginx/conf.d/default.conf:ro
+
+volumes:
+  auth_db_data_dev:
+  item_db_data_dev:
