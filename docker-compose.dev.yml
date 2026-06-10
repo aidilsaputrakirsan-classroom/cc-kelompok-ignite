@@ -1,6 +1,6 @@
 # ==============================================
 # Docker Compose Override — Development
-# Cloud Team XX
+# Cloud Team IGNITE
 # ==============================================
 # Usage:
 #   docker compose -f docker-compose.yml -f docker-compose.dev.yml up
