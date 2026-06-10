@@ -14,6 +14,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
 import jwt
+import logging
+from metrics import metrics
 
 from database import engine, get_db, Base
 from models import User
@@ -24,7 +26,12 @@ from schemas import (
     TokenResponse,
     TokenVerifyResponse,
 )
+from logging_config import setup_logging
+from logging_middleware import RequestLoggingMiddleware
 
+# Setup structured logging
+setup_logging()
+logger = logging.getLogger(__name__)
 # =========================
 # INIT DB
 # =========================
@@ -48,7 +55,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
+# Logging middleware (setelah CORS)
+app.add_middleware(RequestLoggingMiddleware)
 # =========================
 # SECURITY
 # =========================
@@ -85,7 +93,12 @@ def decode_token(token: str):
 def health():
     return {"service": "auth-service", "status": "healthy"}
 
-
+@app.get("/metrics")
+def get_metrics():
+    return {
+        "service": "auth-service",
+        **metrics.get_metrics(),
+    }
 # =========================
 # REGISTER
 # =========================
