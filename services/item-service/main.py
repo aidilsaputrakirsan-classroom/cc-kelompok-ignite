@@ -4,6 +4,7 @@ Berkomunikasi dengan Auth Service untuk verifikasi token.
 """
 
 import os
+import logging
 from datetime import datetime
 from fastapi import FastAPI, Depends, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -20,7 +21,23 @@ from schemas import (
 from auth_client import verify_token_with_auth_service, auth_circuit
 from database import get_db
 from sqlalchemy import text
+from logging_config import setup_logging
+from logging_middleware import RequestLoggingMiddleware
+from metrics import metrics
+setup_logging()
+logger = logging.getLogger(__name__)
 
+from fastapi import FastAPI
+
+# ==================== FASTAPI APP ====================
+
+app = FastAPI(
+    title="Item Service",
+    description="Inventory microservice — CRUD items with authentication",
+    version="2.1.0",
+)
+
+app.add_middleware(RequestLoggingMiddleware)
 # ==================== AUTH DEPENDENCY ====================
 
 
@@ -36,15 +53,6 @@ try:
 except Exception as e:
     print(f"Warning: Could not create database tables: {e}")
     print("This is normal during testing with mock database")
-
-
-# ==================== FASTAPI APP ====================
-
-app = FastAPI(
-    title="Item Service",
-    description="Inventory microservice — CRUD items with authentication",
-    version="2.1.0",
-)
 
 
 # ==================== CORS ====================
@@ -104,7 +112,12 @@ async def health_check():
             },
         },
     }
-
+@app.get("/items/metrics")
+async def get_metrics():
+    return {
+        "service": "item-service",
+        **metrics.get_metrics(),
+    }
 
 # ==================== FAKE DATABASE ====================
 
