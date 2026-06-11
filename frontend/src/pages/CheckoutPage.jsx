@@ -738,4 +738,3 @@ if (!document.getElementById("checkout-back-responsive")) {
   `
   document.head.appendChild(s)
 }
-}
