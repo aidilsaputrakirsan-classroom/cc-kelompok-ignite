@@ -182,8 +182,6 @@ export default function CheckoutPage({ user, onLogout }) {
 
           {/* KOLOM KANAN — Form Checkout */}
           <form onSubmit={handleSubmit} style={styles.form}>
-      <main style={styles.main}>
-        <form onSubmit={handleSubmit} style={styles.form}>
 
           {/* CUSTOMER INFO */}
           <section style={styles.customerInfoSection}>
