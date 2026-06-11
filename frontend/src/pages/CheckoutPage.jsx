@@ -89,10 +89,6 @@ export default function CheckoutPage({ user, onLogout }) {
       return
     }
 
-    const toastId = toast.info("Memproses pesanan...", {
-      autoClose: false,
-      closeButton: false,
-    })
     setIsSubmitting(true)
 
     try {
@@ -118,6 +114,10 @@ export default function CheckoutPage({ user, onLogout }) {
         type: "success",
         autoClose: 3000,
         closeButton: true,
+      const result = await createOrder(orderData)
+
+      toast.success("Pesanan berhasil dibuat! Mengarahkan ke halaman pesanan...", {
+        autoClose: 2000,
       })
 
       setTimeout(() => {
@@ -132,6 +132,8 @@ export default function CheckoutPage({ user, onLogout }) {
         type: "error",
         autoClose: 4000,
         closeButton: true,
+      toast.error(err?.message || err?.detail || "Gagal membuat pesanan. Silakan coba lagi.", {
+        autoClose: 3000,
       })
     } finally {
       setIsSubmitting(false)
@@ -406,12 +408,7 @@ const styles = {
     transform: "translateX(-2px)",
   },
 
-  /* Form kolom kanan */
-  form: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "18px",
-  },
+
 
   title: {
     fontSize: "2rem",
