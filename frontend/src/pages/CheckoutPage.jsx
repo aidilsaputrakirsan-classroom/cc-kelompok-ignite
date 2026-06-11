@@ -100,44 +100,6 @@ export default function CheckoutPage({ user, onLogout }) {
         })),
       }
 
-      setIsSubmitting(true)
-
-try {
-  const orderData = {
-    ...formData,
-    items: selectedItems.map((item) => ({
-      product_id: item.product_id || item.id,
-      quantity: item.quantity,
-    })),
-  }
-
-  const toastId = toast.loading("Memproses pesanan...", {
-    autoClose: false,
-  })
-
-  const result = await createOrder(orderData)
-
-  toast.update(toastId, {
-    render: "Pesanan berhasil dibuat! Mengarahkan ke halaman pesanan...",
-    type: "success",
-    autoClose: 3000,
-    closeButton: true,
-  })
-
-  setTimeout(() => {
-    navigate("/orders", {
-      state: { orderId: result?.id },
-    })
-  }, 2500)
-} catch (err) {
-  console.error(err)
-  toast.error(err?.message || err?.detail || "Gagal membuat pesanan. Silakan coba lagi.", {
-    autoClose: 3000,
-  })
-} finally {
-  setIsSubmitting(false)
-}
-
   return (
     <div style={styles.page}>
       <Header user={user} onLogout={onLogout} />
