@@ -171,7 +171,7 @@ def team_info():
 
 
 @app.post("/upload-image", tags=["System"])
-def upload_image(file: UploadFile = File(...)):
+async def upload_image(file: UploadFile = File(...)):
     """
     Upload file gambar dan simpan ke dalam server backend.
     Mengembalikan URL relatif untuk disimpan ke DB.
