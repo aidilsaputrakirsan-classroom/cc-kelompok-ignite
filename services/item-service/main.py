@@ -5,9 +5,12 @@ Berkomunikasi dengan Auth Service untuk verifikasi token.
 
 import os
 import logging
+import shutil
+import uuid
 from datetime import datetime
-from fastapi import FastAPI, Depends, HTTPException, Query
+from fastapi import FastAPI, Depends, HTTPException, Query, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from database import engine
 from models import Base
@@ -38,6 +41,15 @@ app = FastAPI(
 )
 
 app.add_middleware(RequestLoggingMiddleware)
+
+# ==================== UPLOAD DIRECTORY ====================
+
+UPLOAD_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "uploads")
+if not os.path.exists(UPLOAD_DIR):
+    os.makedirs(UPLOAD_DIR)
+
+# Mount folder direktori untuk serve gambar secara statis
+app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 # ==================== AUTH DEPENDENCY ====================
 
 
@@ -112,6 +124,38 @@ async def health_check():
             },
         },
     }
+
+
+# ==================== IMAGE UPLOAD ====================
+
+
+@app.post("/upload-image", tags=["Items"])
+async def upload_image(file: UploadFile = File(...)):
+    """
+    Upload file gambar dan simpan ke dalam server.
+    Mengembalikan URL relatif untuk disimpan ke DB.
+    """
+    try:
+        # Validasi ekstensi
+        ext = file.filename.split(".")[-1].lower()
+        if ext not in ["jpg", "jpeg", "png", "webp"]:
+            raise HTTPException(
+                status_code=400,
+                detail="Format file tidak didukung (harus JPG/PNG/WEBP)",
+            )
+
+        # Membuat nama file unik
+        unique_filename = f"{uuid.uuid4().hex}.{ext}"
+        filepath = os.path.join(UPLOAD_DIR, unique_filename)
+
+        # Simpan file
+        with open(filepath, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+
+        # Mengembalikan url rute mount kita
+        return {"url": f"/uploads/{unique_filename}"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 @app.get("/items/metrics")
 async def get_metrics():
     return {

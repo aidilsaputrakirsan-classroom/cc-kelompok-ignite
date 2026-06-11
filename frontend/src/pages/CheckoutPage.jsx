@@ -8,10 +8,10 @@ import { showLoadingWithClose } from "../components/LoadingToast"
 export default function CheckoutPage({ user, onLogout }) {
   const location = useLocation()
   const navigate = useNavigate()
-
   const selectedItems = location.state?.selectedItems || []
   const [backBtnHovered, setBackBtnHovered] = useState(false)
-
+  const selectedItems = location.state?.selectedItems || []
+  const [backBtnHovered, setBackBtnHovered] = useState(false)
   const handleBack = () => {
     if (window.history.length > 1) {
       navigate(-1)
@@ -105,6 +105,11 @@ export default function CheckoutPage({ user, onLogout }) {
       }
 
       showLoadingWithClose(toastId, "Memproses pesanan...")
+      toast.loading("Memproses pesanan...", {
+        id: toastId,
+        autoClose: false,
+      })
+      showLoadingWithClose(toastId, "Memproses pesanan...", "Pesanan berhasil dibuat!")
 
       const result = await createOrder(orderData)
 
@@ -113,6 +118,7 @@ export default function CheckoutPage({ user, onLogout }) {
         type: "success",
         isLoading: false,
         autoClose: 2000,
+        autoClose: 2,
       })
 
       setTimeout(() => {
@@ -133,6 +139,7 @@ export default function CheckoutPage({ user, onLogout }) {
         type: "error",
         isLoading: false,
         autoClose: 3000,
+        autoClose: 3,
       })
     } finally {
       setIsSubmitting(false)
@@ -142,7 +149,6 @@ export default function CheckoutPage({ user, onLogout }) {
   return (
     <div style={styles.page}>
       <Header user={user} onLogout={onLogout} />
-
       <main style={styles.main} className="checkout-main">
         {/* ===== OUTER LAYOUT: Back Button + Form sejajar ===== */}
         <div style={styles.outerLayout} className="checkout-outer-layout">
@@ -479,6 +485,15 @@ const styles = {
     width: "100%",
     boxSizing: "border-box",
   },
+  
+  form: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "18px",
+    maxWidth: "600px",
+    margin: "0 auto",
+  },
+
   /* STORE HEADER */
   storeBox: {
     backgroundColor: "#ffffff",

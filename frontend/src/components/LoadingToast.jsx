@@ -14,6 +14,25 @@ import { toast } from "react-toastify"
  */
 export function showLoadingWithClose(toastId, loadingMessage) {
   const LoadingContent = ({ closeToast }) => (
+ * Ketika tombol X ditekan, loading ditutup dan ditampilkan notifikasi sukses sesuai aksi.
+ *
+ * @param {string} toastId        - ID unik untuk toast (dipakai juga saat update)
+ * @param {string} loadingMessage - Pesan yang tampil saat loading
+ * @param {string} successMessage - Pesan sukses yang tampil saat pengguna klik X
+ * @returns {string} toastId yang sama, untuk dipakai di toast.update()
+ */
+export function showLoadingWithClose(toastId, loadingMessage, successMessage) {
+  const handleClose = () => {
+    toast.update(toastId, {
+      render: successMessage,
+      type: "success",
+      isLoading: false,
+      autoClose: 3000,
+      closeButton: true,
+    })
+  }
+
+  const LoadingContent = () => (
     <div style={contentStyles.wrapper}>
       <span style={contentStyles.message}>{loadingMessage}</span>
       <button
@@ -24,6 +43,10 @@ export function showLoadingWithClose(toastId, loadingMessage) {
         }}
         style={contentStyles.closeBtn}
         title="Tutup loading"
+          handleClose()
+        }}
+        style={contentStyles.closeBtn}
+        title="Tutup loading dan tampilkan sukses"
         aria-label="Tutup loading"
       >
         ✕
