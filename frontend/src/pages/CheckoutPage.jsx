@@ -7,10 +7,8 @@ import { toast } from "react-toastify"
 export default function CheckoutPage({ user, onLogout }) {
   const location = useLocation()
   const navigate = useNavigate()
-
   const selectedItems = location.state?.selectedItems || []
   const [backBtnHovered, setBackBtnHovered] = useState(false)
-
   const handleBack = () => {
     if (window.history.length > 1) {
       navigate(-1)
@@ -106,13 +104,29 @@ export default function CheckoutPage({ user, onLogout }) {
         })),
       }
 
+<<<<<<< HEAD
+=======
+      showLoadingWithClose(toastId, "Memproses pesanan...")
+      toast.loading("Memproses pesanan...", {
+        id: toastId,
+        autoClose: false,
+      })
+      showLoadingWithClose(toastId, "Memproses pesanan...", "Pesanan berhasil dibuat!")
+
+>>>>>>> aa13bee418367659a5131727c8799d7d6ddeaaf6
       const result = await createOrder(orderData)
 
       toast.update(toastId, {
         render: "Pesanan berhasil dibuat! Mengarahkan ke halaman pesanan...",
         type: "success",
+<<<<<<< HEAD
         autoClose: 3000,
         closeButton: true,
+=======
+        isLoading: false,
+        autoClose: 2000,
+        autoClose: 2,
+>>>>>>> aa13bee418367659a5131727c8799d7d6ddeaaf6
       })
 
       setTimeout(() => {
@@ -125,8 +139,14 @@ export default function CheckoutPage({ user, onLogout }) {
       toast.update(toastId, {
         render: err?.message || err?.detail || "Gagal membuat pesanan. Silakan coba lagi.",
         type: "error",
+<<<<<<< HEAD
         autoClose: 4000,
         closeButton: true,
+=======
+        isLoading: false,
+        autoClose: 3000,
+        autoClose: 3,
+>>>>>>> aa13bee418367659a5131727c8799d7d6ddeaaf6
       })
     } finally {
       setIsSubmitting(false)
@@ -136,7 +156,6 @@ export default function CheckoutPage({ user, onLogout }) {
   return (
     <div style={styles.page}>
       <Header user={user} onLogout={onLogout} />
-
       <main style={styles.main} className="checkout-main">
         {/* ===== OUTER LAYOUT: Back Button + Form sejajar ===== */}
         <div style={styles.outerLayout} className="checkout-outer-layout">
@@ -473,6 +492,15 @@ const styles = {
     width: "100%",
     boxSizing: "border-box",
   },
+  
+  form: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "18px",
+    maxWidth: "600px",
+    margin: "0 auto",
+  },
+
   /* STORE HEADER */
   storeBox: {
     backgroundColor: "#ffffff",
