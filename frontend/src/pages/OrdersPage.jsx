@@ -189,12 +189,9 @@ export default function OrdersPage({ user, onLogout }) {
     setSubmittingPayment((prev) => ({ ...prev, [orderId]: true }))
 
     try {
-<<<<<<< HEAD
-=======
 
       showLoadingWithClose(toastId, "Memproses pembayaran...")
       showLoadingWithClose(toastId, "Memproses pembayaran...", "Pembayaran berhasil dilakukan!")
->>>>>>> aa13bee418367659a5131727c8799d7d6ddeaaf6
       let proof_url = data.proof_url || null
 
       if ((data.payment_method === "qris" || data.payment_method === "bank_transfer") && data.proof_file) {
@@ -257,12 +254,9 @@ export default function OrdersPage({ user, onLogout }) {
     setSubmittingTestimonial((prev) => ({ ...prev, [orderId]: true }))
 
     try {
-<<<<<<< HEAD
-=======
 
       showLoadingWithClose(toastId, "Mengirim testimoni...")
       showLoadingWithClose(toastId, "Mengirim testimoni...", "Testimoni berhasil ditambahkan!")
->>>>>>> aa13bee418367659a5131727c8799d7d6ddeaaf6
       const testimonialData = {
         order_id: orderId,
         rating: parseInt(data.rating),
