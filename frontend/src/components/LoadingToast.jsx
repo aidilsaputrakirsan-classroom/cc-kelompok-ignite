@@ -4,17 +4,8 @@ import { toast } from "react-toastify"
  * Menampilkan toast loading dengan tombol X (close manual).
  *
  * ✅ Logika yang benar:
- *  - Tombol X HANYA menutup loading state (toast.dismiss)
- *  - Notifikasi sukses/gagal tetap muncul dari toast.update() setelah API selesai
+ *  - Tombol X menutup loading dan menampilkan notifikasi sukses
  *  - Jika user klik X lalu API berhasil: toast baru dengan ID yang sama akan muncul
- *
- * @param {string} toastId        - ID unik untuk toast (dipakai juga saat update)
- * @param {string} loadingMessage - Pesan yang tampil saat loading
- * @returns {string} toastId yang sama, untuk dipakai di toast.update()
- */
-export function showLoadingWithClose(toastId, loadingMessage) {
-  const LoadingContent = ({ closeToast }) => (
- * Ketika tombol X ditekan, loading ditutup dan ditampilkan notifikasi sukses sesuai aksi.
  *
  * @param {string} toastId        - ID unik untuk toast (dipakai juga saat update)
  * @param {string} loadingMessage - Pesan yang tampil saat loading
@@ -38,11 +29,6 @@ export function showLoadingWithClose(toastId, loadingMessage, successMessage) {
       <button
         onClick={(e) => {
           e.stopPropagation()
-          // Hanya dismiss loading — notifikasi sukses/gagal dari toast.update() tetap muncul
-          toast.dismiss(toastId)
-        }}
-        style={contentStyles.closeBtn}
-        title="Tutup loading"
           handleClose()
         }}
         style={contentStyles.closeBtn}
