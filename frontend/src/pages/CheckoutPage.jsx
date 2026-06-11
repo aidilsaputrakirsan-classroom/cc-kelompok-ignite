@@ -100,45 +100,43 @@ export default function CheckoutPage({ user, onLogout }) {
         })),
       }
 
-      showLoadingWithClose(toastId, "Memproses pesanan...")
-      toast.loading("Memproses pesanan...", {
-        id: toastId,
-        autoClose: false,
-      })
-      showLoadingWithClose(toastId, "Memproses pesanan...", "Pesanan berhasil dibuat!")
+      setIsSubmitting(true)
 
-      const result = await createOrder(orderData)
-
-      toast.update(toastId, {
-        render: "Pesanan berhasil dibuat! Mengarahkan ke halaman pesanan...",
-        type: "success",
-        autoClose: 3000,
-        closeButton: true,
-      const result = await createOrder(orderData)
-
-      toast.success("Pesanan berhasil dibuat! Mengarahkan ke halaman pesanan...", {
-        autoClose: 2000,
-      })
-
-      setTimeout(() => {
-        navigate("/orders", {
-          state: { orderId: result?.id },
-        })
-      }, 2500)
-    } catch (err) {
-      console.error(err)
-      toast.update(toastId, {
-        render: err?.message || err?.detail || "Gagal membuat pesanan. Silakan coba lagi.",
-        type: "error",
-        autoClose: 4000,
-        closeButton: true,
-      toast.error(err?.message || err?.detail || "Gagal membuat pesanan. Silakan coba lagi.", {
-        autoClose: 3000,
-      })
-    } finally {
-      setIsSubmitting(false)
-    }
+try {
+  const orderData = {
+    ...formData,
+    items: selectedItems.map((item) => ({
+      product_id: item.product_id || item.id,
+      quantity: item.quantity,
+    })),
   }
+
+  const toastId = toast.loading("Memproses pesanan...", {
+    autoClose: false,
+  })
+
+  const result = await createOrder(orderData)
+
+  toast.update(toastId, {
+    render: "Pesanan berhasil dibuat! Mengarahkan ke halaman pesanan...",
+    type: "success",
+    autoClose: 3000,
+    closeButton: true,
+  })
+
+  setTimeout(() => {
+    navigate("/orders", {
+      state: { orderId: result?.id },
+    })
+  }, 2500)
+} catch (err) {
+  console.error(err)
+  toast.error(err?.message || err?.detail || "Gagal membuat pesanan. Silakan coba lagi.", {
+    autoClose: 3000,
+  })
+} finally {
+  setIsSubmitting(false)
+}
 
   return (
     <div style={styles.page}>
