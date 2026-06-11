@@ -10,8 +10,6 @@ export default function CheckoutPage({ user, onLogout }) {
   const navigate = useNavigate()
   const selectedItems = location.state?.selectedItems || []
   const [backBtnHovered, setBackBtnHovered] = useState(false)
-  const selectedItems = location.state?.selectedItems || []
-  const [backBtnHovered, setBackBtnHovered] = useState(false)
   const handleBack = () => {
     if (window.history.length > 1) {
       navigate(-1)
