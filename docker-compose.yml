@@ -104,6 +104,8 @@ services:
       CORS_ORIGINS: "http://localhost,http://localhost:5173"
     ports:
       - "8002:8002"
+    volumes:
+      - item_uploads:/app/uploads
     depends_on:
       item-db:
         condition: service_healthy
@@ -185,3 +187,4 @@ services:
 volumes:
   auth_db_data:
   item_db_data:
+  item_uploads:
