@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom"
 import Header from "../components/Header"
 import { createOrder } from "../services/api"
 import { toast } from "react-toastify"
+import { showLoadingWithClose } from "../components/LoadingToast"
 
 export default function CheckoutPage({ user, onLogout }) {
   const location = useLocation()
@@ -103,10 +104,7 @@ export default function CheckoutPage({ user, onLogout }) {
         })),
       }
 
-      toast.loading("Memproses pesanan...", {
-        id: toastId,
-        autoClose: false,
-      })
+      showLoadingWithClose(toastId, "Memproses pesanan...")
 
       const result = await createOrder(orderData)
 

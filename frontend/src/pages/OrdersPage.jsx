@@ -3,6 +3,7 @@ import { useEffect, useState } from "react"
 import Header from "../components/Header"
 import { fetchMyOrders, getOrderItems, createPayment, getPaymentsByOrder, createTestimonial, uploadImage } from "../services/api"
 import { toast } from "react-toastify"
+import { showLoadingWithClose } from "../components/LoadingToast"
 
 export default function OrdersPage({ user, onLogout }) {
   const navigate = useNavigate()
@@ -186,7 +187,7 @@ export default function OrdersPage({ user, onLogout }) {
     setSubmittingPayment((prev) => ({ ...prev, [orderId]: true }))
 
     try {
-      toast.loading("Memproses pembayaran...", { id: toastId, autoClose: false })
+      showLoadingWithClose(toastId, "Memproses pembayaran...")
       let proof_url = data.proof_url || null
 
       if ((data.payment_method === "qris" || data.payment_method === "bank_transfer") && data.proof_file) {
@@ -246,7 +247,7 @@ export default function OrdersPage({ user, onLogout }) {
     setSubmittingTestimonial((prev) => ({ ...prev, [orderId]: true }))
 
     try {
-      toast.loading("Mengirim testimoni...", { id: toastId, autoClose: false })
+      showLoadingWithClose(toastId, "Mengirim testimoni...")
       const testimonialData = {
         order_id: orderId,
         rating: parseInt(data.rating),
