@@ -8,8 +8,15 @@ import { showLoadingWithClose } from "../components/LoadingToast"
 export default function CheckoutPage({ user, onLogout }) {
   const location = useLocation()
   const navigate = useNavigate()
-
   const selectedItems = location.state?.selectedItems || []
+  const [backBtnHovered, setBackBtnHovered] = useState(false)
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1)
+    } else {
+      navigate("/cart")
+    }
+  }
 
   const [formData, setFormData] = useState({
     receipt_name: user?.name || "",
@@ -95,6 +102,10 @@ export default function CheckoutPage({ user, onLogout }) {
         })),
       }
 
+      toast.loading("Memproses pesanan...", {
+        id: toastId,
+        autoClose: false,
+      })
       showLoadingWithClose(toastId, "Memproses pesanan...", "Pesanan berhasil dibuat!")
 
       const result = await createOrder(orderData)
@@ -103,6 +114,7 @@ export default function CheckoutPage({ user, onLogout }) {
         render: "Pesanan berhasil dibuat!",
         type: "success",
         isLoading: false,
+        autoClose: 2000,
         autoClose: 2,
       })
 
@@ -123,6 +135,7 @@ export default function CheckoutPage({ user, onLogout }) {
           "Gagal membuat pesanan",
         type: "error",
         isLoading: false,
+        autoClose: 3000,
         autoClose: 3,
       })
     } finally {
@@ -133,9 +146,42 @@ export default function CheckoutPage({ user, onLogout }) {
   return (
     <div style={styles.page}>
       <Header user={user} onLogout={onLogout} />
+      <main style={styles.main} className="checkout-main">
+        {/* ===== OUTER LAYOUT: Back Button + Form sejajar ===== */}
+        <div style={styles.outerLayout} className="checkout-outer-layout">
 
-      <main style={styles.main}>
-        <form onSubmit={handleSubmit} style={styles.form}>
+          {/* KOLOM KIRI — Tombol Kembali */}
+          <div style={styles.backColumn} className="checkout-back-col">
+            <button
+              type="button"
+              id="checkout-back-btn"
+              onClick={handleBack}
+              style={{
+                ...styles.backBtn,
+                ...(backBtnHovered ? styles.backBtnHover : {}),
+              }}
+              onMouseEnter={() => setBackBtnHovered(true)}
+              onMouseLeave={() => setBackBtnHovered(false)}
+              title="Kembali ke halaman sebelumnya"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                width="18"
+                height="18"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <polyline points="15 18 9 12 15 6" />
+              </svg>
+              <span>Kembali</span>
+            </button>
+          </div>
+
+          {/* KOLOM KANAN — Form Checkout */}
+          <form onSubmit={handleSubmit} style={styles.form}>
 
           {/* CUSTOMER INFO */}
           <section style={styles.customerInfoSection}>
@@ -301,7 +347,8 @@ export default function CheckoutPage({ user, onLogout }) {
           >
             {isSubmitting ? "Memproses..." : "Lanjut ke Pembayaran"}
           </button>
-        </form>
+          </form>
+        </div>{/* end outerLayout */}
       </main>
     </div>
   )
@@ -319,6 +366,58 @@ const styles = {
     margin: "0 auto",
     padding: "40px 24px",
   },
+
+  /* ===== OUTER GRID: tombol kiri + form kanan ===== */
+  outerLayout: {
+    display: "grid",
+    gridTemplateColumns: "140px 1fr",
+    gap: "24px",
+    alignItems: "start",
+  },
+
+  /* Kolom kiri — sticky agar tombol tetap kelihatan saat scroll form */
+  backColumn: {
+    position: "sticky",
+    top: "24px",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "flex-start",
+  },
+
+  /* Tombol ← Kembali */
+  backBtn: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "6px",
+    padding: "10px 16px",
+    borderRadius: "14px",
+    border: "1.5px solid #f0d4b5",
+    backgroundColor: "#ffffff",
+    color: "#c06000",
+    fontWeight: 700,
+    fontSize: "0.92rem",
+    cursor: "pointer",
+    transition: "all 0.2s ease",
+    fontFamily: "Inter, system-ui, sans-serif",
+    whiteSpace: "nowrap",
+    boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+  },
+
+  backBtnHover: {
+    backgroundColor: "#fff4e6",
+    borderColor: "#f58600",
+    color: "#f58600",
+    boxShadow: "0 4px 14px rgba(245,134,0,0.18)",
+    transform: "translateX(-2px)",
+  },
+
+  /* Form kolom kanan */
+  form: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "18px",
+  },
+
   title: {
     fontSize: "2rem",
     color: "var(--text-primary)",
@@ -391,6 +490,7 @@ const styles = {
     maxWidth: "600px",
     margin: "0 auto",
   },
+
   /* STORE HEADER */
   storeBox: {
     backgroundColor: "#ffffff",
@@ -613,4 +713,28 @@ const styles = {
   hiddenFields: {
     display: "none",
   },
+}
+
+/* ===== RESPONSIVE: di mobile tombol Kembali pindah ke atas form ===== */
+if (!document.getElementById("checkout-back-responsive")) {
+  const s = document.createElement("style")
+  s.id = "checkout-back-responsive"
+  s.innerHTML = `
+    @media (max-width: 640px) {
+      /* Ubah grid jadi 1 kolom (tombol di atas, form di bawah) */
+      .checkout-outer-layout {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+      }
+      /* Tombol tidak perlu sticky di mobile */
+      .checkout-back-col {
+        position: static !important;
+      }
+      /* Kurangi padding main di mobile */
+      .checkout-main {
+        padding: 20px 16px !important;
+      }
+    }
+  `
+  document.head.appendChild(s)
 }
