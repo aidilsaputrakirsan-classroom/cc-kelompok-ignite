@@ -3,7 +3,6 @@ import { useEffect, useState } from "react"
 import Header from "../components/Header"
 import { fetchMyOrders, getOrderItems, createPayment, getPaymentsByOrder, createTestimonial, uploadImage } from "../services/api"
 import { toast } from "react-toastify"
-import { showLoadingWithClose } from "../components/LoadingToast"
 
 export default function OrdersPage({ user, onLogout }) {
   const navigate = useNavigate()
@@ -183,7 +182,10 @@ export default function OrdersPage({ user, onLogout }) {
       return
     }
 
-    const toastId = `payment_${orderId}`
+    const toastId = toast.info("Memproses pembayaran...", {
+      autoClose: false,
+      closeButton: false,
+    })
     setSubmittingPayment((prev) => ({ ...prev, [orderId]: true }))
 
     try {
@@ -213,17 +215,17 @@ export default function OrdersPage({ user, onLogout }) {
       toast.update(toastId, {
         render: "Pembayaran berhasil dilakukan!",
         type: "success",
-        isLoading: false,
-        autoClose: 2000,
+        autoClose: 3000,
+        closeButton: true,
       })
       setPaymentForm({ ...paymentForm, [`payment_${orderId}`]: {} })
       await loadOrders({ showLoading: false })
     } catch (err) {
       toast.update(toastId, {
-        render: err?.message || "Gagal membuat pembayaran",
+        render: err?.message || "Gagal membuat pembayaran. Silakan coba lagi.",
         type: "error",
-        isLoading: false,
-        autoClose: 3000,
+        autoClose: 4000,
+        closeButton: true,
       })
     } finally {
       setSubmittingPayment((prev) => ({ ...prev, [orderId]: false }))
@@ -245,7 +247,10 @@ export default function OrdersPage({ user, onLogout }) {
       return
     }
 
-    const toastId = `testimonial_${orderId}`
+    const toastId = toast.info("Mengirim testimoni...", {
+      autoClose: false,
+      closeButton: false,
+    })
     setSubmittingTestimonial((prev) => ({ ...prev, [orderId]: true }))
 
     try {
@@ -260,19 +265,19 @@ export default function OrdersPage({ user, onLogout }) {
       }
       await createTestimonial(testimonialData)
       toast.update(toastId, {
-        render: "Testimoni berhasil ditambahkan!",
+        render: "Testimoni berhasil dikirim! Terima kasih atas ulasan Anda.",
         type: "success",
-        isLoading: false,
-        autoClose: 2000,
+        autoClose: 3000,
+        closeButton: true,
       })
       setTestimonialForm({ ...testimonialForm, [formDataKey]: {} })
       await loadOrders({ showLoading: false })
     } catch (err) {
       toast.update(toastId, {
-        render: err?.message || "Gagal mengirim testimonial",
+        render: err?.message || "Gagal mengirim testimoni. Silakan coba lagi.",
         type: "error",
-        isLoading: false,
-        autoClose: 3000,
+        autoClose: 4000,
+        closeButton: true,
       })
     } finally {
       setSubmittingTestimonial((prev) => ({ ...prev, [orderId]: false }))
