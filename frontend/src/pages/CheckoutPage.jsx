@@ -102,6 +102,7 @@ export default function CheckoutPage({ user, onLogout }) {
         })),
       }
 
+      showLoadingWithClose(toastId, "Memproses pesanan...")
       toast.loading("Memproses pesanan...", {
         id: toastId,
         autoClose: false,
@@ -482,7 +483,7 @@ const styles = {
     width: "100%",
     boxSizing: "border-box",
   },
-
+  
   form: {
     display: "flex",
     flexDirection: "column",

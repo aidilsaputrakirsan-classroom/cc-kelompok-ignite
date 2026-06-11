@@ -187,6 +187,8 @@ export default function OrdersPage({ user, onLogout }) {
     setSubmittingPayment((prev) => ({ ...prev, [orderId]: true }))
 
     try {
+
+      showLoadingWithClose(toastId, "Memproses pembayaran...")
       showLoadingWithClose(toastId, "Memproses pembayaran...", "Pembayaran berhasil dilakukan!")
       let proof_url = data.proof_url || null
 
@@ -247,6 +249,8 @@ export default function OrdersPage({ user, onLogout }) {
     setSubmittingTestimonial((prev) => ({ ...prev, [orderId]: true }))
 
     try {
+
+      showLoadingWithClose(toastId, "Mengirim testimoni...")
       showLoadingWithClose(toastId, "Mengirim testimoni...", "Testimoni berhasil ditambahkan!")
       const testimonialData = {
         order_id: orderId,

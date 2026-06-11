@@ -2,7 +2,10 @@ import { toast } from "react-toastify"
 
 /**
  * Menampilkan toast loading dengan tombol X (close manual).
- * Ketika tombol X ditekan, loading ditutup dan ditampilkan notifikasi sukses sesuai aksi.
+ *
+ * ✅ Logika yang benar:
+ *  - Tombol X menutup loading dan menampilkan notifikasi sukses
+ *  - Jika user klik X lalu API berhasil: toast baru dengan ID yang sama akan muncul
  *
  * @param {string} toastId        - ID unik untuk toast (dipakai juga saat update)
  * @param {string} loadingMessage - Pesan yang tampil saat loading
@@ -41,6 +44,7 @@ export function showLoadingWithClose(toastId, loadingMessage, successMessage) {
     id: toastId,
     autoClose: false,
     closeButton: false,
+    draggable: false,
   })
 
   return toastId
@@ -53,10 +57,14 @@ const contentStyles = {
     justifyContent: "space-between",
     gap: "12px",
     width: "100%",
+    minWidth: 0,
   },
   message: {
     flex: 1,
     fontSize: "0.95rem",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
   },
   closeBtn: {
     background: "rgba(0,0,0,0.12)",
