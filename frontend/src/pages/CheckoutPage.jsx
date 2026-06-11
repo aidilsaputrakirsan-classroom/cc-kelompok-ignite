@@ -349,7 +349,6 @@ export default function CheckoutPage({ user, onLogout }) {
           </button>
           </form>
         </div>{/* end outerLayout */}
-        </form>
       </main>
     </div>
   )
