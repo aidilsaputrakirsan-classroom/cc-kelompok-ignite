@@ -116,11 +116,9 @@ function App() {
         <ToastContainer
           position="top-right"
           autoClose={3000}
-          closeOnClick={false}
           pauseOnHover={false}
           pauseOnFocusLoss={false}
           newestOnTop={true}
-          limit={5}
         />
 
         <Routes>

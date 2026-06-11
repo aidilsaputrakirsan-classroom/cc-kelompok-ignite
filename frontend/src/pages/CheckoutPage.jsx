@@ -3,7 +3,6 @@ import { useLocation, useNavigate } from "react-router-dom"
 import Header from "../components/Header"
 import { createOrder } from "../services/api"
 import { toast } from "react-toastify"
-import { showLoadingWithClose } from "../components/LoadingToast"
 
 export default function CheckoutPage({ user, onLogout }) {
   const location = useLocation()
@@ -92,7 +91,10 @@ export default function CheckoutPage({ user, onLogout }) {
       return
     }
 
-    const toastId = "checkout"
+    const toastId = toast.info("Memproses pesanan...", {
+      autoClose: false,
+      closeButton: false,
+    })
     setIsSubmitting(true)
 
     try {
@@ -104,35 +106,27 @@ export default function CheckoutPage({ user, onLogout }) {
         })),
       }
 
-      showLoadingWithClose(toastId, "Memproses pesanan...")
-
       const result = await createOrder(orderData)
 
       toast.update(toastId, {
-        render: "Pesanan berhasil dibuat!",
+        render: "Pesanan berhasil dibuat! Mengarahkan ke halaman pesanan...",
         type: "success",
-        isLoading: false,
-        autoClose: 2000,
+        autoClose: 3000,
+        closeButton: true,
       })
 
       setTimeout(() => {
         navigate("/orders", {
-          state: {
-            orderId: result?.id,
-          },
+          state: { orderId: result?.id },
         })
       }, 2500)
     } catch (err) {
       console.error(err)
-
       toast.update(toastId, {
-        render:
-          err?.message ||
-          err?.detail ||
-          "Gagal membuat pesanan",
+        render: err?.message || err?.detail || "Gagal membuat pesanan. Silakan coba lagi.",
         type: "error",
-        isLoading: false,
-        autoClose: 3000,
+        autoClose: 4000,
+        closeButton: true,
       })
     } finally {
       setIsSubmitting(false)
