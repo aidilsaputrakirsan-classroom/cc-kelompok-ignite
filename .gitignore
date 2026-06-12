@@ -27,4 +27,4 @@ backend/test.db
 
 # OS
 .DS_Store
-Thumbs.db
+Thumbs.db.env.prod
