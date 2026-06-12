@@ -97,12 +97,13 @@ export default function AdminSystemStatus() {
 
   // Auto Refresh & Countdown Timer
   useEffect(() => {
+    // Initial fetch
     fetchStatus()
 
     const timer = setInterval(() => {
       setSecondsToRefresh((prev) => {
         if (prev <= 1) {
-          fetchStatus()
+          fetchStatus() // Trigger refresh
           return 10
         }
         return prev - 1
