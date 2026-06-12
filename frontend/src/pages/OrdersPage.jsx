@@ -182,11 +182,10 @@ export default function OrdersPage({ user, onLogout }) {
       return
     }
 
+    const toastId = toast.loading("Memproses pembayaran...")
     setSubmittingPayment((prev) => ({ ...prev, [orderId]: true }))
 
     try {
-      showLoadingWithClose(toastId, "Memproses pembayaran...")
-      showLoadingWithClose(toastId, "Memproses pembayaran...", "Pembayaran berhasil dilakukan!")
       let proof_url = data.proof_url || null
 
       if ((data.payment_method === "qris" || data.payment_method === "bank_transfer") && data.proof_file) {
@@ -207,6 +206,7 @@ export default function OrdersPage({ user, onLogout }) {
       }
 
       await createPayment(paymentData)
+      toast.dismiss(toastId)
       toast.success("Pembayaran berhasil dilakukan!", {
         autoClose: 3000,
         closeButton: true,
@@ -214,6 +214,7 @@ export default function OrdersPage({ user, onLogout }) {
       setPaymentForm({ ...paymentForm, [`payment_${orderId}`]: {} })
       await loadOrders({ showLoading: false })
     } catch (err) {
+      toast.dismiss(toastId)
       toast.error(err?.message || "Gagal membuat pembayaran. Silakan coba lagi.", {
         autoClose: 4000,
         closeButton: true,
@@ -238,11 +239,10 @@ export default function OrdersPage({ user, onLogout }) {
       return
     }
 
+    const toastId = toast.loading("Mengirim testimoni...")
     setSubmittingTestimonial((prev) => ({ ...prev, [orderId]: true }))
 
     try {
-      showLoadingWithClose(toastId, "Mengirim testimoni...")
-      showLoadingWithClose(toastId, "Mengirim testimoni...", "Testimoni berhasil ditambahkan!")
       const testimonialData = {
         order_id: orderId,
         rating: parseInt(data.rating),
@@ -250,6 +250,7 @@ export default function OrdersPage({ user, onLogout }) {
         is_visible: true,
       }
       await createTestimonial(testimonialData)
+      toast.dismiss(toastId)
       toast.success("Testimoni berhasil dikirim! Terima kasih atas ulasan Anda.", {
         autoClose: 3000,
         closeButton: true,
@@ -257,6 +258,7 @@ export default function OrdersPage({ user, onLogout }) {
       setTestimonialForm({ ...testimonialForm, [formDataKey]: {} })
       await loadOrders({ showLoading: false })
     } catch (err) {
+      toast.dismiss(toastId)
       toast.error(err?.message || "Gagal mengirim testimoni. Silakan coba lagi.", {
         autoClose: 4000,
         closeButton: true,
