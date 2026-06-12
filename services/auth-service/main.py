@@ -13,6 +13,7 @@ from fastapi import FastAPI, Depends, HTTPException, Header
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
+from sqlalchemy import text
 import jwt
 import logging
 from metrics import metrics
@@ -90,11 +91,29 @@ def decode_token(token: str):
 # HEALTH CHECK
 # =========================
 @app.get("/health")
-def health():
-    return {"service": "auth-service", "status": "healthy"}
+def health(db: Session = Depends(get_db)):
+    """
+    Health check dengan status database untuk Auth Service.
+    """
+    db_status = "connected"
+    try:
+        db.execute(text("SELECT 1"))
+    except Exception as e:
+        logger.error(f"Auth Service health check DB error: {e}")
+        db_status = "disconnected"
+
+    return {
+        "status": "healthy" if db_status == "connected" else "unhealthy",
+        "service": "auth-service",
+        "dependencies": {
+            "database": {"status": db_status}
+        }
+    }
+
 
 @app.get("/metrics")
 def get_metrics():
+    """Ekspos metrik runtime untuk monitoring."""
     return {
         "service": "auth-service",
         **metrics.get_metrics(),
