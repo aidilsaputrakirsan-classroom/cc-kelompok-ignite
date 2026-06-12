@@ -3,7 +3,6 @@ import { useLocation, useNavigate } from "react-router-dom"
 import Header from "../components/Header"
 import { createOrder } from "../services/api"
 import { toast } from "react-toastify"
-import { showLoadingWithClose } from "../components/LoadingToast"
 
 export default function CheckoutPage({ user, onLogout }) {
   const location = useLocation()
@@ -90,7 +89,7 @@ export default function CheckoutPage({ user, onLogout }) {
       return
     }
 
-    const toastId = "checkout"
+    const toastId = toast.loading("Memproses pesanan...")
     setIsSubmitting(true)
 
     try {
@@ -102,41 +101,22 @@ export default function CheckoutPage({ user, onLogout }) {
         })),
       }
 
-      toast.loading("Memproses pesanan...", {
-        id: toastId,
-        autoClose: false,
-      })
-      showLoadingWithClose(toastId, "Memproses pesanan...", "Pesanan berhasil dibuat!")
-
       const result = await createOrder(orderData)
-
-      toast.update(toastId, {
-        render: "Pesanan berhasil dibuat!",
-        type: "success",
-        isLoading: false,
+      toast.dismiss(toastId)
+      toast.success("Pesanan berhasil dibuat! Mengarahkan ke halaman pesanan...", {
         autoClose: 2000,
-        autoClose: 2,
       })
 
       setTimeout(() => {
         navigate("/orders", {
-          state: {
-            orderId: result?.id,
-          },
+          state: { orderId: result?.id },
         })
-      }, 2500)
+      }, 2000)
     } catch (err) {
       console.error(err)
-
-      toast.update(toastId, {
-        render:
-          err?.message ||
-          err?.detail ||
-          "Gagal membuat pesanan",
-        type: "error",
-        isLoading: false,
+      toast.dismiss(toastId)
+      toast.error(err?.message || err?.detail || "Gagal membuat pesanan. Silakan coba lagi.", {
         autoClose: 3000,
-        autoClose: 3,
       })
     } finally {
       setIsSubmitting(false)
@@ -367,7 +347,6 @@ const styles = {
     padding: "40px 24px",
   },
 
-  /* ===== OUTER GRID: tombol kiri + form kanan ===== */
   outerLayout: {
     display: "grid",
     gridTemplateColumns: "140px 1fr",
@@ -375,7 +354,6 @@ const styles = {
     alignItems: "start",
   },
 
-  /* Kolom kiri — sticky agar tombol tetap kelihatan saat scroll form */
   backColumn: {
     position: "sticky",
     top: "24px",
@@ -384,7 +362,6 @@ const styles = {
     alignItems: "flex-start",
   },
 
-  /* Tombol ← Kembali */
   backBtn: {
     display: "inline-flex",
     alignItems: "center",
@@ -411,78 +388,6 @@ const styles = {
     transform: "translateX(-2px)",
   },
 
-  /* Form kolom kanan */
-  form: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "18px",
-  },
-
-  title: {
-    fontSize: "2rem",
-    color: "var(--text-primary)",
-    marginBottom: "32px",
-    fontWeight: 800,
-  },
-  container: {
-    display: "grid",
-    gridTemplateColumns: "1.5fr 1fr",
-    gap: "32px",
-    alignItems: "start",
-  },
-  formSection: {
-    backgroundColor: "var(--surface)",
-    padding: "32px",
-    borderRadius: "24px",
-    border: "1px solid var(--border-card)",
-    boxShadow: "0 10px 30px rgba(0,0,0,0.06)",
-  },
-  inputGroup: {
-    marginBottom: "20px",
-  },
-  label: {
-    display: "block",
-    marginBottom: "8px",
-    color: "var(--text-muted)",
-    fontWeight: 600,
-    fontSize: "0.9rem",
-  },
-  input: {
-    width: "100%",
-    padding: "14px",
-    borderRadius: "12px",
-    border: "1px solid var(--border-input)",
-    fontSize: "1rem",
-    backgroundColor: "var(--surface-input)",
-    color: "var(--text-dark)",
-    boxSizing: "border-box",
-  },
-  textarea: {
-    width: "100%",
-    minHeight: "100px",
-    padding: "14px",
-    borderRadius: "12px",
-    border: "1px solid var(--border-input)",
-    fontSize: "1rem",
-    backgroundColor: "var(--surface-input)",
-    color: "var(--text-dark)",
-    resize: "vertical",
-    boxSizing: "border-box",
-  },
-  summarySection: {
-    position: "sticky",
-    top: "100px",
-  },
-  summaryCard: {
-    backgroundColor: "#ffffff",
-    padding: "24px",
-    borderRadius: "24px",
-    border: "1px solid var(--brand)",
-    boxShadow: "var(--summary-shadow)",
-    width: "100%",
-    boxSizing: "border-box",
-  },
-
   form: {
     display: "flex",
     flexDirection: "column",
@@ -491,38 +396,6 @@ const styles = {
     margin: "0 auto",
   },
 
-  /* STORE HEADER */
-  storeBox: {
-    backgroundColor: "#ffffff",
-    padding: "26px",
-    borderRadius: "10px",
-    border: "1px solid #f0d4b5",
-  },
-
-  storeTitle: {
-    margin: 0,
-    fontSize: "2rem",
-    fontWeight: "800",
-    color: "#f58600",
-    letterSpacing: "1px",
-  },
-
-  /* INFO BOX */
-  infoBox: {
-    backgroundColor: "#ffffff",
-    padding: "22px 26px",
-    borderRadius: "10px",
-    border: "1px solid #f0d4b5",
-  },
-
-  infoText: {
-    margin: "5px 0",
-    fontSize: "1rem",
-    lineHeight: "1.5",
-    color: "var(--text-secondary)",
-  },
-
-  /* SUMMARY */
   summaryBox: {
     backgroundColor: "#ffffff",
     padding: "18px",
@@ -572,14 +445,7 @@ const styles = {
     fontWeight: 700,
     color: "var(--text-primary)",
   },
-  totalPrice: {
-    fontSize: "1.4rem",
-    fontWeight: "700",
-    color: "#2b1a11",
-    paddingTop: "6px",
-  },
 
-  /* CUSTOMER INFO */
   customerInfoSection: {
     backgroundColor: "#ffffff",
     padding: "22px",
@@ -594,6 +460,10 @@ const styles = {
     gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
     gap: "18px",
     width: "100%",
+  },
+
+  inputGroup: {
+    marginBottom: "20px",
   },
 
   inputLabel: {
@@ -632,6 +502,24 @@ const styles = {
     transition: "border-color 0.2s ease, box-shadow 0.2s ease",
   },
 
+  notesSection: {
+    backgroundColor: "#ffffff",
+    padding: "18px",
+    borderRadius: "10px",
+    border: "1px solid #f0d4b5",
+    display: "flex",
+    flexDirection: "column",
+    gap: "10px",
+  },
+
+  notesLabel: {
+    display: "block",
+    marginBottom: "8px",
+    fontSize: "0.95rem",
+    color: "#6a4d3a",
+    fontWeight: "600",
+  },
+
   notesTextarea: {
     width: "100%",
     minHeight: "60px",
@@ -646,7 +534,6 @@ const styles = {
     color: "#4a3425",
   },
 
-  /* SHIPPING */
   shippingSection: {
     display: "flex",
     flexDirection: "column",
@@ -695,7 +582,6 @@ const styles = {
     color: "#6a4d3a",
   },
 
-  /* BUTTON */
   submitBtn: {
     width: "100%",
     padding: "16px",
