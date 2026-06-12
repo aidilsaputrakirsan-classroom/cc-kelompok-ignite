@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react"
-import { fetchAllPayments, updatePaymentStatus, API_URL } from "../services/api"
+import { fetchAllPayments, fetchAllOrders, updatePaymentStatus, API_URL } from "../services/api"
 import { toast } from "react-toastify"
 
 // ── helpers ────────────────────────────────────────────────
@@ -46,8 +46,24 @@ export default function AdminPayments() {
   const loadPayments = useCallback(async () => {
     setLoading(true)
     try {
-      const data = await fetchAllPayments(0, 100)
-      setPayments(data.payments ?? [])
+      const [paymentsData, ordersData] = await Promise.all([
+        fetchAllPayments(0, 100),
+        fetchAllOrders(0, 100)
+      ])
+      
+      const ordersMap = {}
+      if (ordersData && ordersData.orders) {
+        ordersData.orders.forEach(order => {
+          ordersMap[order.id] = order
+        })
+      }
+
+      const enrichedPayments = (paymentsData.payments ?? []).map(p => ({
+        ...p,
+        order: ordersMap[p.order_id]
+      }))
+
+      setPayments(enrichedPayments)
     } catch {
       toast.error("Gagal memuat daftar pembayaran")
     } finally {
@@ -129,7 +145,9 @@ export default function AdminPayments() {
               <div key={p.id} style={s.paymentCard}>
                 <div style={s.cardHeader}>
                   <div style={s.codeGroup}>
-                    <strong style={s.orderCode}>{p.order?.order_code || "KODE TIDAK ADA"}</strong>
+                    <strong style={s.orderCode}>
+                      {p.order_id ? `ATH-${String(p.order_id).padStart(10, "0")}` : "KODE TIDAK ADA"}
+                    </strong>
                     <p style={s.customerName}>{p.order?.receipt_name || "Tanpa Nama"}</p>
                     <p style={s.paymentMethod}>{p.payment_method || "QRIS"}</p>
                   </div>

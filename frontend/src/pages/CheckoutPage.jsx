@@ -102,7 +102,6 @@ export default function CheckoutPage({ user, onLogout }) {
       }
 
       const result = await createOrder(orderData)
-
       toast.dismiss(toastId)
       toast.success("Pesanan berhasil dibuat! Mengarahkan ke halaman pesanan...", {
         autoClose: 2000,
