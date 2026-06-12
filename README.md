@@ -13,9 +13,9 @@ ATHSNAC (E-Commerce UMKM RAZ'Q) adalah platform e-commerce berbasis website yang
 
 | Service | URL | Status |
 |---------|-----|--------|
-| 🎨 **Frontend** | https://aware-warmth-production-ebd3.up.railway.app | ![Status](https://img.shields.io/website?url=https%3A%2F%2Faware-warmth-production-ebd3.up.railway.app) |
-| 🔧 **Backend API** | https://cc-kelompok-ignite-production.up.railway.app | ![Status](https://img.shields.io/website?url=https%3A%2F%2Fcc-kelompok-ignite-production.up.railway.app) |
-| 📚 **API Docs (Swagger)** | https://cc-kelompok-ignite-production.up.railway.app/docs | ✅ Live |
+| 🎨 **Frontend** | frontend-production-590ab.up.railway.app | ![Status](https://img.shields.io/website?url=https%3A%2F%2Faware-warmth-production-ebd3.up.railway.app) |
+| 🔧 **Backend API** | backend-production-69096.up.railway.app | ![Status](https://img.shields.io/website?url=https%3A%2F%2Fcc-kelompok-ignite-production.up.railway.app) |
+| 📚 **API Docs (Swagger)** | backend-production-69096.up.railway.app/docs | ✅ Live |
 
 **Cara Mengakses:**
 1. Klik Frontend URL di atas
