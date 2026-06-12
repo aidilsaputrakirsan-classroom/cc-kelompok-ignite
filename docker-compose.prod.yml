@@ -1,17 +1,133 @@
-# Production overrides — gunakan dengan:
-# docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+# ==============================================
+# Docker Compose Override — Production
+# Cloud Team XX
+# ==============================================
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# Override ini menerapkan konfigurasi production:
+# - Tidak ada port exposure kecuali gateway (port 80)
+# - Production environment variables dari .env file
+# - Resource limits lebih ketat
+# - Restart policy: always (bukan unless-stopped)
+# - Image tag dari registry (bukan build lokal)
 
 services:
-  backend:
-    environment:
-      - DEBUG=false
-      - CORS_ORIGINS=https://yourdomain.com
-    restart: always
-
-  frontend:
-    restart: always
-
-  db:
-    restart: always
-    # Tidak expose port ke host di production
+  # ================================
+  # DATABASES
+  # ================================
+  auth-db:
+    # Production: tidak expose port DB ke host (hanya internal Docker network)
     ports: !reset []
+    environment:
+      POSTGRES_DB: auth_db
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '1.00'
+          memory: 512M
+        reservations:
+          cpus: '0.50'
+          memory: 256M
+
+  item-db:
+    ports: !reset []
+    environment:
+      POSTGRES_DB: item_db
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '1.00'
+          memory: 512M
+        reservations:
+          cpus: '0.50'
+          memory: 256M
+
+  # ================================
+  # BACKEND SERVICES
+  # ================================
+  auth-service:
+    # Production: tidak build lokal, pakai image dari registry
+    build: !reset null
+    image: ${REGISTRY:-ghcr.io}/${IMAGE_PREFIX:-cc-kelompok-ignite}/auth-service:${IMAGE_TAG:-latest}
+    environment:
+      DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@auth-db:5432/auth_db
+      SECRET_KEY: ${SECRET_KEY}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 256M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+
+  item-service:
+    build: !reset null
+    image: ${REGISTRY:-ghcr.io}/${IMAGE_PREFIX:-cc-kelompok-ignite}/item-service:${IMAGE_TAG:-latest}
+    environment:
+      DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@item-db:5432/item_db
+      AUTH_SERVICE_URL: http://auth-service:8001
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 256M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+
+  # ================================
+  # FRONTEND
+  # ================================
+  frontend:
+    build: !reset null
+    image: ${REGISTRY:-ghcr.io}/${IMAGE_PREFIX:-cc-kelompok-ignite}/frontend:${IMAGE_TAG:-latest}
+    # Production: tidak expose port langsung, semua lewat gateway
+    ports: !reset []
+    environment:
+      VITE_API_URL: ${VITE_API_URL:-http://localhost}
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:80 || exit 1"]
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128M
+        reservations:
+          cpus: '0.10'
+          memory: 64M
+
+  # ================================
+  # API GATEWAY
+  # ================================
+  gateway:
+    # Production: hanya gateway yang expose port ke luar
+    ports:
+      - "80:80"
+      - "443:443"                            # HTTPS untuk production
+    volumes:
+      - ./services/gateway/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./services/gateway/certs:/etc/nginx/certs:ro   # SSL certificates
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 64M
+        reservations:
+          cpus: '0.10'
+          memory: 32M
