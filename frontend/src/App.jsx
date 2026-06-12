@@ -113,7 +113,13 @@ function App() {
         </div>
       )}
       <Router>
-        <ToastContainer position="top-right" autoClose={3000} />
+        <ToastContainer
+          position="top-right"
+          autoClose={3000}
+          pauseOnHover={false}
+          pauseOnFocusLoss={false}
+          newestOnTop={true}
+        />
 
         <Routes>
             <Route

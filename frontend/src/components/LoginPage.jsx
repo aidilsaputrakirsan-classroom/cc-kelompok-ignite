@@ -92,9 +92,11 @@ function LoginPage({ onLogin }) {
             <button type="button" style={styles.backButton} onClick={() => navigate("/login")}>
               ← Kembali
             </button>
-            <div style={styles.registerText}>
-              Belum punya akun? <Link to="/register" style={styles.linkText}>Daftar</Link>
-            </div>
+            {!isAdmin && (
+              <div style={styles.registerText}>
+                Belum punya akun? <Link to="/register" style={styles.linkText}>Daftar</Link>
+              </div>
+            )}
           </div>
 
           <button type="submit" style={styles.button} disabled={loading}>
