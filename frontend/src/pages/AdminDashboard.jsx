@@ -18,6 +18,7 @@ const menuItems = [
   { label: "Pembayaran", key: "payments" },
   { label: "Pelanggan", key: "customers" },
   { label: "Testimoni", key: "testimonials" },
+  { label: "System Status", key: "system-status" },
 ]
 
 function formatRupiah(amount) {
