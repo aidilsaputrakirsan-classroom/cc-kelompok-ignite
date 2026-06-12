@@ -69,6 +69,29 @@ services:
   # ================================
   # BACKEND SERVICES
   # ================================
+  backend:
+    build: ./backend
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@item-db:5432/item_db
+      SECRET_KEY: ${SECRET_KEY:-dev-secret-key-change-in-production}
+      CORS_ORIGINS: "http://localhost,http://localhost:5173"
+    ports:
+      - "8000:8000"
+    volumes:
+      - backend_uploads:/app/uploads
+    depends_on:
+      item-db:
+        condition: service_healthy
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 256M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+
   auth-service:
     build: ./services/auth-service
     environment:
@@ -188,3 +211,4 @@ volumes:
   auth_db_data:
   item_db_data:
   item_uploads:
+  backend_uploads:
