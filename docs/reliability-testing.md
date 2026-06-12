@@ -1,8 +1,8 @@
-# Dokumentasi Reliability Testing ATHSNACK
+# Dokumentasi Reliability Testing ATHSNAC
 
 ## Pengenalan
 
-**Pengujian Keandalan (Reliability Testing)** memastikan bahwa aplikasi ATHSNACK dapat:
+**Pengujian Keandalan (Reliability Testing)** memastikan bahwa aplikasi ATHSNAC dapat:
 - ✅ Menangani kegagalan dengan baik (tidak crash total)
 - ✅ Tidak menyebabkan kegagalan berantai (saat satu layanan bermasalah)
 - ✅ Tetap memberikan pelayanan terbatas kepada pengguna saat ada masalah
@@ -136,3 +136,372 @@ STATUS BERKURANG (Layanan Autentikasi Down)
 - ✅ Tidak membuat pengguna bingung dengan layanan "ghost"
 
 ---
+
+# 4. Arsitektur Reliability
+
+```mermaid
+flowchart LR
+
+USER[User]
+
+GW[Gateway]
+
+AUTH[Auth Service]
+ITEM[Item Service]
+
+ADB[(Auth Database)]
+IDB[(Item Database)]
+
+USER --> GW
+
+GW --> AUTH
+GW --> ITEM
+
+AUTH --> ADB
+ITEM --> IDB
+
+ITEM -. Verify Token .-> AUTH
+
+ITEM -. Retry Mechanism .-> AUTH
+ITEM -. Circuit Breaker .-> AUTH
+```
+
+---
+
+# 5. Environment Pengujian
+
+## Services
+
+| Service       | Port |
+| ------------- | ---- |
+| Gateway       | 80   |
+| Auth Service  | 8001 |
+| Item Service  | 8002 |
+| Auth Database | 5434 |
+| Item Database | 5435 |
+
+## Platform
+
+* Docker Compose
+* FastAPI
+* PostgreSQL
+* Nginx Gateway
+* Windows 11 + WSL2
+
+---
+
+# 6. Health Check Testing
+
+## Tujuan
+
+Memastikan seluruh service berjalan dalam kondisi sehat (healthy).
+
+## Cara Reproduce
+
+```bash
+docker compose ps
+```
+
+atau
+
+```bash
+curl http://localhost/health
+```
+
+## Expected Behavior
+
+Semua service menunjukkan status healthy.
+
+## Hasil
+
+Seluruh service berhasil berjalan dan health endpoint dapat diakses.
+
+## Bukti Pengujian
+
+File:
+
+![Health Check](./images/microservice-reliability/health-check-test.png)
+
+## Status
+
+✅ PASS
+
+---
+
+# 7. Register Service Testing
+
+## Tujuan
+
+Memastikan Auth Service dapat melakukan registrasi user baru.
+
+## Cara Reproduce
+
+```bash
+curl -X POST http://localhost/auth/register \
+-H "Content-Type: application/json" \
+-d "{\"email\":\"baru123@example.com\",\"password\":\"12345678\",\"name\":\"Test Baru\"}"
+```
+
+## Expected Behavior
+
+User baru berhasil dibuat dan data user dikembalikan.
+
+## Hasil
+
+Response:
+
+```json
+{
+  "id": 2,
+  "email": "baru123@example.com",
+  "name": "Test Baru"
+}
+```
+
+## Bukti Pengujian
+
+File:
+
+![Register Test](images/microservice-reliability/regist-test.png)
+
+## Status
+
+✅ PASS
+
+---
+
+# 8. Login Service Testing
+
+## Tujuan
+
+Memastikan Auth Service dapat menghasilkan JWT Token.
+
+## Cara Reproduce
+
+```bash
+curl -X POST http://localhost/auth/login \
+-H "Content-Type: application/json" \
+-d "{\"email\":\"user1@test.com\",\"password\":\"password123\"}"
+```
+
+## Expected Behavior
+
+Sistem mengembalikan JWT Token.
+
+## Hasil
+
+JWT Token berhasil diterbitkan.
+
+## Bukti Pengujian
+
+File:
+
+![Login Test](images/microservice-reliability/login-test.png)
+
+## Status
+
+✅ PASS
+
+---
+
+# 9. Inter-Service Communication Testing
+
+## Tujuan
+
+Memastikan Item Service dapat berkomunikasi dengan Auth Service melalui endpoint verify.
+
+## Cara Reproduce
+
+```bash
+curl http://localhost/auth/verify \
+-H "Authorization: Bearer TOKEN"
+```
+
+## Expected Behavior
+
+Token berhasil diverifikasi.
+
+## Hasil
+
+Response:
+
+```json
+{
+  "user_id": 5,
+  "email": "user1@test.com",
+  "role": "customer"
+}
+```
+
+Item Service berhasil memperoleh informasi user dari Auth Service.
+
+## Bukti Pengujian
+
+File:
+
+![Inter Service Communication Test](images/microservice-reliability/inter-service-communication-test.png)
+
+## Status
+
+✅ PASS
+
+---
+
+# 10. Failure Test (Service Down)
+
+## Tujuan
+
+Memastikan sistem dapat menangani kondisi ketika Auth Service mati.
+
+## Cara Reproduce
+
+Matikan Auth Service:
+
+```bash
+docker stop cloud-team-ignite-auth-service-1
+```
+
+Kemudian lakukan request ke Item Service.
+
+## Expected Behavior
+
+Request ditolak dengan pesan error yang jelas.
+
+Item Service tidak crash.
+
+Gateway tetap berjalan.
+
+## Hasil
+
+Request gagal sesuai ekspektasi.
+
+Service lain tetap aktif.
+
+## Bukti Pengujian
+
+File:
+
+![Failure Test](images/microservice-reliability/failure-test.png)
+
+## Status
+
+✅ PASS
+
+---
+
+# 11. Timeout Test
+
+## Tujuan
+
+Memastikan sistem dapat menangani kondisi timeout antar service.
+
+## Cara Reproduce
+
+Simulasikan Auth Service lambat atau tidak merespons.
+
+Kemudian akses endpoint Item Service yang memerlukan autentikasi.
+
+```bash
+curl http://localhost/items \
+-H "Authorization: Bearer TOKEN"
+```
+
+## Expected Behavior
+
+Request dihentikan setelah timeout tercapai.
+
+Sistem tidak menunggu tanpa batas.
+
+## Hasil
+
+Item Service mengembalikan error timeout dengan benar.
+
+Contoh:
+
+```json
+{
+  "detail": "Auth Service timeout"
+}
+```
+
+## Status
+
+✅ PASS
+
+---
+
+# 12. Recovery Test
+
+## Tujuan
+
+Memastikan sistem dapat pulih kembali setelah service yang gagal dinyalakan ulang.
+
+## Cara Reproduce
+
+Jalankan kembali Auth Service:
+
+```bash
+docker start cloud-team-ignite-auth-service-1
+```
+
+Lakukan kembali request verify dan item.
+
+## Expected Behavior
+
+Komunikasi antar service kembali normal.
+
+## Hasil
+
+Auth Service kembali healthy.
+
+Inter-service communication kembali berjalan.
+
+Request berhasil diproses.
+
+## Bukti Pengujian
+
+File:
+
+![Recovery Test](images/microservice-reliability/recovery-test.png)
+
+## Status
+
+✅ PASS
+
+---
+
+# 13. Ringkasan Hasil Pengujian
+
+| Test Case                           | Result |
+| ----------------------------------- | ------ |
+| Health Check Testing                | PASS   |
+| Register Testing                    | PASS   |
+| Login Testing                       | PASS   |
+| Inter-Service Communication Testing | PASS   |
+| Failure Testing                     | PASS   |
+| Timeout Testing                     | PASS   |
+| Recovery Testing                    | PASS   |
+
+## Total
+
+* Total Test Case: 7
+* Passed: 7
+* Failed: 0
+
+### Success Rate
+
+100%
+
+---
+
+# 14. Kesimpulan
+
+Berdasarkan hasil pengujian reliability yang dilakukan pada arsitektur microservices ATHSNAC, seluruh skenario pengujian berhasil dijalankan dengan baik.
+
+Sistem mampu:
+
+* Melakukan komunikasi antar service secara normal.
+* Menangani kegagalan service tanpa menyebabkan crash pada sistem lain.
+* Menampilkan status kesehatan service dengan benar.
+* Melakukan recovery setelah service kembali aktif.
+* Menjalankan mekanisme reliability berupa Retry, Circuit Breaker, dan Graceful Degradation.
