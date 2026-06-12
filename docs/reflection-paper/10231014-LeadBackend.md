@@ -1,9 +1,9 @@
 # Reflection Paper – Lead Backend
 
-**Nama:** Andini Permata Dewanti
-**NIM:** 10231014
-**Peran:** Lead Backend 
-**Proyek:** ATHSNACK
+**Nama:** Andini Permata Dewanti;
+**NIM:** 10231014;
+**Peran:** Lead Backend;
+**Proyek:** ATHSNACK;
 **Mata Kuliah:** Cloud Computing
 
 ---
