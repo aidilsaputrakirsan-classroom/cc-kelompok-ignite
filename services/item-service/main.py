@@ -11,6 +11,7 @@ from datetime import datetime
 from fastapi import FastAPI, Depends, HTTPException, Query, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+import httpx
 
 from database import engine
 from models import Base
@@ -21,7 +22,7 @@ from schemas import (
     ProductListResponse,
     ItemStatsResponse,
 )
-from auth_client import verify_token_with_auth_service, auth_circuit
+from auth_client import verify_token_with_auth_service, auth_circuit, AUTH_SERVICE_URL
 from database import get_db, SessionLocal
 from sqlalchemy.orm import Session
 from models import Product

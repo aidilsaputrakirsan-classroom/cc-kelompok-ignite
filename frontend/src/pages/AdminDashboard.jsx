@@ -11,13 +11,13 @@ import AdminSystemStatus from "./AdminSystemStatus"
 import LogoutConfirmModal from "../components/LogoutConfirmModal"
 
 const menuItems = [
-  { label: "System Status", key: "system-status" },
   { label: "Dashboard", key: "dashboard" },
   { label: "Produk", key: "products" },
   { label: "Pesanan", key: "orders" },
   { label: "Pembayaran", key: "payments" },
   { label: "Pelanggan", key: "customers" },
   { label: "Testimoni", key: "testimonials" },
+  { label: "System Status", key: "system-status" },
 ]
 
 function formatRupiah(amount) {
