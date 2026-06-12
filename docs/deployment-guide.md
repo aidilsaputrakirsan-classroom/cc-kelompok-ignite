@@ -239,281 +239,650 @@ NODE_ENV=production
 RAILWAY_TOKEN=<token dari railway.app/account/tokens>
 ```
 
-> ⚠️ **JANGAN di-commit ke GitHub! Simpan di GitHub Secrets saja.**
+Dokumen ini menjelaskan proses deployment aplikasi ATHSNACK mulai dari arsitektur monolithic yang di-deploy menggunakan Railway hingga implementasi microservices menggunakan Docker Compose.
+
+ATHSNACK telah melalui beberapa tahapan pengembangan:
+
+| Version | Architecture  | Deployment Platform |
+| ------- | ------------- | ------------------- |
+| v1.0.0  | Monolith      | Local Development   |
+| v2.0.0  | Monolith      | Railway             |
+| v3.0.0  | Microservices | Docker Compose      |
 
 ---
 
-## 🚀 Deployment Steps Summary
+# 🏗️ Architecture Overview
 
-### Automatic Deployment (via GitHub Actions)
+## Monolith Architecture (v1.0.0 – v2.0.0)
 
-Setelah Rails configuration complete, automatic deployment:
-
-```
-1. Push to main branch
-   ↓
-2. GitHub Actions CI pipeline runs:
-   - Lint code
-   - Run tests
-   - Build Docker images
-   ↓
-3. If CI pass:
-   - Deploy backend ke Railway
-   - Deploy frontend ke Railway
-   ↓
-4. Health check
-   ↓
-5. Notification ke tim
+```text
+Frontend (React)
+        │
+        ▼
+Backend (FastAPI)
+        │
+        ▼
+PostgreSQL
 ```
 
-**Workflow file:** `.github/workflows/ci.yml`
+Seluruh fitur aplikasi berjalan dalam satu backend service yang terhubung ke satu database PostgreSQL.
 
-### Manual Deployment (if needed)
+---
+
+## Microservices Architecture (v3.0.0)
+
+```text
+                Browser
+                   │
+                   ▼
+              API Gateway
+                   │
+      ┌────────────┴────────────┐
+      ▼                         ▼
+ Auth Service            Item Service
+      │                         │
+      ▼                         ▼
+   auth_db                  item_db
+```
+
+Pada versi final, aplikasi dipisahkan menjadi beberapa service independen:
+
+* Auth Service
+* Item Service
+* API Gateway
+* Database per Service
+
+---
+
+# ☁️ Monolith Deployment (Railway)
+
+## Services
+
+| Service  | Platform           |
+| -------- | ------------------ |
+| Frontend | Railway            |
+| Backend  | Railway            |
+| Database | Railway PostgreSQL |
+
+---
+
+## Railway Setup
+
+### Prerequisites
+
+* Akun Railway
+* Repository GitHub
+* Dockerfile Backend
+* Dockerfile Frontend
+
+---
+
+## Backend Environment Variables
+
+```env
+DATABASE_URL=postgresql://...
+SECRET_KEY=your-secret-key
+CORS_ORIGINS=https://frontend-url
+ENVIRONMENT=production
+```
+
+---
+
+## Frontend Environment Variables
+
+```env
+VITE_API_URL=https://backend-url
+NODE_ENV=production
+```
+
+---
+
+## Deployment Steps
+
+### Backend
+
+Push source code:
 
 ```bash
-# Login ke Railway
-railway login
-
-# Klik service
-railway up
-
-# Rebuild image
-railway up --build
-```
-
----
-
-## 🔧 Troubleshooting
-
-### Problem 1: "502 Bad Gateway"
-
-**Symptoms:** Frontend returns 502 error
-
-**Check:**
-```
-1. Railway dashboard → Backend service
-2. Check Deployments tab:
-   - Status: Success atau Failed?
-   - Build logs ada error?
-3. Check Variables:
-   - DATABASE_URL correct?
-   - PORT set to 8000?
-4. Check health endpoint:
-   curl https://cc-kelompok-ignite-production.up.railway.app/health
-```
-
-**Solution:**
-```
-- Jika build failed: Check backend/Dockerfile syntax
-- Jika health endpoint 502: Database might be down
-- Restart service: Dashboard → More → Restart
-```
-
----
-
-### Problem 2: "CORS Error" di Browser Console
-
-**Symptoms:** 
-```
-Access to XMLHttpRequest at 'https://...' from origin 'https://...'
-has been blocked by CORS policy
-```
-
-**Check:**
-```
-1. Railway Backend → Variables
-2. Verify CORS_ORIGINS =correct frontend URL
-3. Exact match required: https://aware-warmth-production-ebd3.up.railway.app
-```
-
-**Solution:**
-```
-1. Update CORS_ORIGINS di Railway variables
-2. Wait ~2 minutes (Railway auto-redeploy)
-3. Hard refresh browser: Ctrl+Shift+R
-4. Check browser F12 → Network tab (see request headers)
-```
-
----
-
-### Problem 3: "Database Connection Refused"
-
-**Symptoms:**
-```
-ERROR: connect() failed (Errno 111)
-cannot connect to PostgreSQL
-```
-
-**Check:**
-```
-1. Railway dashboard → PostgreSQL service
-2. Status: Online atau Offline?
-3. DATABASE_URL format correct?
-```
-
-**Solution:**
-```
-- If status Offline: Restart PostgreSQL service
-- If format wrong: Copy DATABASE_URL dari Railway again
-- Test local: psql postgresql://user:pass@host:5432/railway
-```
-
----
-
-### Problem 4: "Frontend Blank Page"
-
-**Symptoms:**
-```
-Page loads pero nothing visible
-Console F12 shows: Failed to fetch / 404
-```
-
-**Check:**
-```
-1. VITE_API_URL di frontend/.env.production correct?
-2. Should be: https://cc-kelompok-ignite-production.up.railway.app
-3. Check backend health: https://.../ health (200 OK?)
-```
-
-**Solution:**
-```
-1. Update frontend/.env.production
-2. Run: npm run build
-3. git add . && git commit && git push
-4. Wait for CD pipeline (auto-deploy)
-5. Hard refresh: Ctrl+Shift+R
-```
-
----
-
-### Problem 5: "Logs showing 'ModuleNotFoundError'"
-
-**Symptoms:**
-```
-backend-xxx ModuleNotFoundError: No module named 'fastapi'
-```
-
-**Check:**
-```
-1. backend/requirements.txt ada semua dependency?
-2. Dockerfile COPY requirements.txt correct?
-3. RUN pip install -r requirements.txt di Dockerfile?
-```
-
-**Solution:**
-```
-1. Add missing module ke requirements.txt
-2. Commit & push
-3. Railway auto-rebuild
-```
-
----
-
-## 📊 Monitoring & Maintenance
-
-### Daily Checks
-
-```
-✅ Check Railway dashboard
-✅ Verify both services (backend + frontend) status = "Running"
-✅ Spot check: Open frontend → test login
-✅ Check PostgreSQL status
-✅ Review error logs (if any)
-```
-
-### Weekly Tasks
-
-```
-✅ Review deployment history
-✅ Check database size (approaching limit?)
-✅ Monitor response times
-✅ Review failed CI pipelines (if any)
-```
-
-### Monthly Tasks
-
-```
-✅ Database backup verification
-✅ Update dependencies (pip, npm)
-✅ Performance analysis
-✅ Security audit (secrets rotation)
-```
-
-### Backup Strategy
-
-**Automatic:**
-- Railway backs up PostgreSQL daily
-- Retention: Last 7 days
-
-**Manual Backup:**
-```bash
-# Export database
-pg_dump postgresql://user:pass@host:port/db > backup.sql
-
-# Keep in secure location (GitHub? Google Drive?)
-```
-
----
-
-## 🔄 Rollback Procedure
-
-Jika production version punya critical bug:
-
-### Quick Rollback (30 seconds)
-
-1. Go to Railway dashboard
-2. Service → Deployments
-3. Click previous successful deployment
-4. Click **Redeploy**
-
-Aplikasi instant rollback ke versi sebelumnya.
-
-### Code Rollback
-
-```bash
-# Jika mau rollback code juga
-git revert <commit-hash>
 git push origin main
-# CD pipeline auto-deploy versi baru (yang reverted)
+```
+
+Railway akan:
+
+* Build Docker Image
+* Deploy Backend
+* Connect ke PostgreSQL
+
+---
+
+### Frontend
+
+Push source code:
+
+```bash
+git push origin main
+```
+
+Railway akan:
+
+* Build React Application
+* Deploy Frontend
+
+---
+
+## Verification
+
+Health Check:
+
+```bash
+curl https://backend-url/health
+```
+
+Expected Response:
+
+```json
+{
+  "status":"healthy"
+}
 ```
 
 ---
 
-## 📈 Performance Tips
+# 🐳 Microservices Deployment (Current Architecture)
 
-### Database Query Optimization
-```
-✅ Use indexes untuk frequently queried columns
-✅ Avoid SELECT * (specify columns needed)
-✅ Use pagination untuk large datasets
-✅ Monitor slow queries (Railway logs)
+## Services
+
+| Service       | Port |
+| ------------- | ---- |
+| Gateway       | 80   |
+| Frontend      | 3000 |
+| Auth Service  | 8001 |
+| Item Service  | 8002 |
+| Auth Database | 5434 |
+| Item Database | 5435 |
+
+---
+
+# 📦 Prerequisites
+
+Pastikan telah menginstall:
+
+## Docker
+
+```bash
+docker --version
 ```
 
-### Frontend Optimization
-```
-✅ Build size monitoring (npm run build → check dist/ size)
-✅ Image optimization (compress sebelum upload)
-✅ Lazy loading untuk heavy components
-✅ Cache API responses di frontend (where applicable)
-```
+## Docker Compose
 
-### Backend Optimization
-```
-✅ Add caching layer (Redis, if needed)
-✅ Connection pooling di database
-✅ API rate limiting (prevent abuse)
-✅ Log levels: INFO in production (not DEBUG)
+```bash
+docker compose version
 ```
 
 ---
 
-## 🔐 Security Checklist
+# ⚙️ Build Services
 
-- ✅ HTTPS/SSL active (Railway otomatis)
-- ✅ Secrets dalam environment variables (bukan hardcoded)
-- ✅ JWT token expiry set (60 minutes)
-- ✅ CORS configured (specific origins, not *)
-- ✅ Database password strong (Railway generated)
-- ✅ Branch protection active (PR required)
-- ✅ GitHub Secrets encrypted
-- ✅ Admin credentials not default
+Build seluruh service:
+
+```bash
+docker compose build
+```
+
+---
+
+# ▶️ Start Services
+
+Menjalankan seluruh service:
+
+```bash
+docker compose up -d
+```
+
+---
+
+# 🔍 Verify Containers
+
+```bash
+docker compose ps
+```
+
+Expected:
+
+```text
+auth-db         healthy
+item-db         healthy
+auth-service    healthy
+item-service    healthy
+frontend        healthy
+gateway         healthy
+```
+
+---
+
+# 🔐 Environment Variables
+
+## Auth Service
+
+```env
+DATABASE_URL=postgresql://postgres:postgres@auth-db:5432/auth_db
+SECRET_KEY=dev-secret-key
+TOKEN_EXPIRE_MINUTES=60
+CORS_ORIGINS=http://localhost,http://localhost:5173
+```
+
+---
+
+## Item Service
+
+```env
+DATABASE_URL=postgresql://postgres:postgres@item-db:5432/item_db
+AUTH_SERVICE_URL=http://auth-service:8001
+CORS_ORIGINS=http://localhost,http://localhost:5173
+```
+
+---
+
+# ❤️ Health Check Verification
+
+## Gateway
+
+```bash
+curl http://localhost/health
+```
+
+---
+
+## Auth Service
+
+```bash
+curl http://localhost/auth/health
+```
+
+Expected:
+
+```json
+{
+  "service":"auth-service",
+  "status":"healthy"
+}
+```
+
+---
+
+## Item Service
+
+```bash
+curl http://localhost/items/health
+```
+
+Expected:
+
+```json
+{
+  "service":"item-service",
+  "status":"healthy"
+}
+```
+
+---
+
+# 🧪 Functional Verification
+
+## Register User
+
+```bash
+curl -X POST http://localhost/auth/register \
+-H "Content-Type: application/json" \
+-d "{\"email\":\"test@example.com\",\"password\":\"12345678\",\"name\":\"Test User\"}"
+```
+
+Expected:
+
+```json
+{
+  "id":1,
+  "email":"test@example.com"
+}
+```
+
+---
+
+## Login User
+
+```bash
+curl -X POST http://localhost/auth/login \
+-H "Content-Type: application/json" \
+-d "{\"email\":\"test@example.com\",\"password\":\"12345678\"}"
+```
+
+Expected:
+
+```json
+{
+  "access_token":"..."
+}
+```
+
+Simpan token untuk pengujian berikutnya.
+
+---
+
+## Verify Token
+
+```bash
+curl http://localhost/auth/verify \
+-H "Authorization: Bearer TOKEN"
+```
+
+Expected:
+
+```json
+{
+  "user_id":1,
+  "email":"test@example.com"
+}
+```
+
+---
+
+## Create Item
+
+```bash
+curl -X POST http://localhost/items \
+-H "Authorization: Bearer TOKEN" \
+-H "Content-Type: application/json" \
+-d "{\"name\":\"Laptop\",\"price\":15000000,\"quantity\":5}"
+```
+
+Expected:
+
+```json
+{
+  "id":1,
+  "name":"Laptop"
+}
+```
+
+---
+
+# 📊 Observability Verification
+
+## Metrics Endpoint
+
+### Auth Service
+
+```bash
+curl http://localhost/auth/metrics
+```
+
+### Item Service
+
+```bash
+curl http://localhost/items/metrics
+```
+
+Informasi yang tersedia:
+
+* Total Requests
+* Total Errors
+* Error Rate
+* Endpoint Statistics
+* Latency Statistics
+
+---
+
+## Structured Logging
+
+Melihat log Auth Service:
+
+```bash
+docker compose logs auth-service --tail=20
+```
+
+Melihat log Item Service:
+
+```bash
+docker compose logs item-service --tail=20
+```
+
+Log menampilkan:
+
+* Timestamp
+* HTTP Method
+* Endpoint
+* Status Code
+* Duration
+* Correlation ID
+
+---
+
+## Correlation ID Tracing
+
+Lakukan request:
+
+```bash
+curl http://localhost/items \
+-H "Authorization: Bearer TOKEN"
+```
+
+Kemudian cek log:
+
+```bash
+docker compose logs auth-service --tail=20
+```
+
+Cari field:
+
+```json
+{
+  "correlation_id":"xxxx-xxxx"
+}
+```
+
+Correlation ID digunakan untuk melakukan tracing request antar service.
+
+---
+
+# 🔄 Restart Procedure
+
+Restart seluruh service:
+
+```bash
+docker compose restart
+```
+
+---
+
+Restart Auth Service:
+
+```bash
+docker compose restart auth-service
+```
+
+---
+
+Restart Item Service:
+
+```bash
+docker compose restart item-service
+```
+
+---
+
+Restart Gateway:
+
+```bash
+docker compose restart gateway
+```
+
+---
+
+Verifikasi:
+
+```bash
+docker compose ps
+```
+
+Pastikan seluruh service kembali healthy.
+
+---
+
+# ⏹️ Shutdown Procedure
+
+Stop seluruh service:
+
+```bash
+docker compose down
+```
+
+---
+
+Stop dan hapus volume:
+
+```bash
+docker compose down -v
+```
+
+---
+
+# 🔧 Troubleshooting
+
+## Auth Service Unhealthy
+
+Pemeriksaan:
+
+```bash
+docker compose logs auth-service
+```
+
+Solusi:
+
+```bash
+docker compose restart auth-service
+```
+
+---
+
+## Item Service Unhealthy
+
+Pemeriksaan:
+
+```bash
+docker compose logs item-service
+```
+
+Solusi:
+
+```bash
+docker compose restart item-service
+```
+
+---
+
+## Database Connection Error
+
+Pemeriksaan:
+
+```bash
+docker compose logs auth-db
+
+docker compose logs item-db
+```
+
+---
+
+## Invalid or Expired Token
+
+Gejala:
+
+```json
+{
+  "detail":"Invalid or expired token"
+}
+```
+
+Solusi:
+
+* Login ulang
+* Gunakan token baru
+* Pastikan Auth Service aktif
+
+---
+
+## Port Already Allocated
+
+Contoh:
+
+```text
+Bind for 0.0.0.0:5434 failed
+```
+
+Pemeriksaan:
+
+```bash
+docker ps
+```
+
+Solusi:
+
+```bash
+docker stop <container-id>
+```
+
+---
+
+# 📈 Deployment Evolution Summary
+
+| Version | Deployment Model             |
+| ------- | ---------------------------- |
+| v1.0.0  | Monolith                     |
+| v2.0.0  | Railway Deployment           |
+| v3.0.0  | Docker Compose Microservices |
+
+---
+
+# ✅ Deployment Status
+
+ATHSNACK berhasil di-deploy menggunakan dua pendekatan berbeda selama proses pengembangan:
+
+### Monolith Deployment
+
+* Railway
+* PostgreSQL
+* Frontend React
+* Backend FastAPI
+
+### Microservices Deployment
+
+* Docker Compose
+* Auth Service
+* Item Service
+* API Gateway
+* Database per Service
+
+Fitur yang telah berhasil diimplementasikan:
+
+✅ Containerization
+
+✅ Railway Deployment
+
+✅ Docker Compose Deployment
+
+✅ API Gateway
+
+✅ JWT Authentication
+
+✅ Reliability Engineering
+
+✅ Structured Logging
+
+✅ Correlation ID Tracing
+
+✅ Metrics Monitoring
+
+✅ Health Check Monitoring
+
+✅ Security Hardening
+
+Do
