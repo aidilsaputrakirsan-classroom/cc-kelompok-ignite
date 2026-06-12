@@ -1,10 +1,6 @@
 import { useState, useEffect, useCallback } from "react"
 import {
   fetchGatewayHealth,
-  fetchAuthHealth,
-  fetchAuthMetrics,
-  fetchProductHealth,
-  fetchProductMetrics,
 } from "../services/api"
 import { toast } from "react-toastify"
 
@@ -23,8 +19,6 @@ function formatUptime(seconds) {
 
 export default function AdminSystemStatus() {
   const [gatewayState, setGatewayState] = useState({ status: "loading", data: null })
-  const [authState, setAuthState] = useState({ status: "loading", data: null, metrics: null })
-  const [productState, setProductState] = useState({ status: "loading", data: null, metrics: null })
   
   const [lastChecked, setLastChecked] = useState("-")
   const [secondsToRefresh, setSecondsToRefresh] = useState(10)
@@ -39,55 +33,13 @@ export default function AdminSystemStatus() {
       .then((data) => ({ status: data?.status === "healthy" ? "healthy" : "unhealthy", data }))
       .catch(() => ({ status: "unreachable", data: null }))
 
-    // 2. Auth Service Health & Metrics
-    const authHealthPromise = fetchAuthHealth()
-      .then((data) => ({ status: data?.status === "healthy" ? "healthy" : "unhealthy", data }))
-      .catch(() => ({ status: "unreachable", data: null }))
+    // Wait for request to finish
+    const gatewayRes = await gatewayPromise
 
-    const authMetricsPromise = fetchAuthMetrics().catch(() => null)
-
-    // 3. Item Service Health & Metrics
-    const productHealthPromise = fetchProductHealth()
-      .then((data) => {
-        // Item service health check returns: healthy, degraded, unhealthy
-        const status = data?.status || "healthy"
-        return { status, data }
-      })
-      .catch(() => ({ status: "unreachable", data: null }))
-
-    const productMetricsPromise = fetchProductMetrics().catch(() => null)
-
-    // Wait for all requests to finish
-    const [
-      gatewayRes,
-      authHealthRes,
-      authMetricsRes,
-      productHealthRes,
-      productMetricsRes,
-    ] = await Promise.all([
-      gatewayPromise,
-      authHealthPromise,
-      authMetricsPromise,
-      productHealthPromise,
-      productMetricsPromise,
-    ])
-
-    // Update States
+    // Update State
     setGatewayState({
       status: gatewayRes.status,
       data: gatewayRes.data,
-    })
-
-    setAuthState({
-      status: authHealthRes.status,
-      data: authHealthRes.data,
-      metrics: authMetricsRes,
-    })
-
-    setProductState({
-      status: productHealthRes.status,
-      data: productHealthRes.data,
-      metrics: productMetricsRes,
     })
 
     setLastChecked(new Date().toLocaleTimeString("id-ID"))
@@ -97,12 +49,13 @@ export default function AdminSystemStatus() {
 
   // Auto Refresh & Countdown Timer
   useEffect(() => {
+    // Initial fetch
     fetchStatus()
 
     const timer = setInterval(() => {
       setSecondsToRefresh((prev) => {
         if (prev <= 1) {
-          fetchStatus()
+          fetchStatus() // Trigger refresh
           return 10
         }
         return prev - 1
@@ -113,7 +66,7 @@ export default function AdminSystemStatus() {
   }, [fetchStatus])
 
   // Count states for summary cards
-  const services = [gatewayState, authState, productState]
+  const services = [gatewayState]
   const counts = {
     healthy: services.filter((s) => s.status === "healthy").length,
     degraded: services.filter((s) => s.status === "degraded").length,
@@ -250,177 +203,6 @@ export default function AdminSystemStatus() {
           </div>
         </article>
 
-        {/* === CARD 2: AUTH SERVICE === */}
-        <article style={s.serviceCard}>
-          <div style={s.cardHeader}>
-            <h2 style={s.cardTitle}>Auth Service</h2>
-            <span
-              style={{
-                ...s.badge,
-                backgroundColor: getBadgeStyles(authState.status).bg,
-                color: getBadgeStyles(authState.status).text,
-              }}
-            >
-              {getBadgeStyles(authState.status).label}
-            </span>
-          </div>
-
-          <div style={s.cardBody}>
-            <div style={s.section}>
-              <h3 style={s.sectionTitle}>Detail Layanan</h3>
-              <div style={s.detailsList}>
-                <div style={s.detailRow}>
-                  <span style={s.detailLabel}>Nama Service</span>
-                  <span style={s.detailValue}>{authState.data?.service || "auth-service"}</span>
-                </div>
-                <div style={s.detailRow}>
-                  <span style={s.detailLabel}>Bahasa / Framework</span>
-                  <span style={s.detailValue}>Python / FastAPI</span>
-                </div>
-                <div style={s.detailRow}>
-                  <span style={s.detailLabel}>Status Database</span>
-                  <span style={s.detailValue}>
-                    {authState.status === "unreachable" ? "⚫ N/A" : "🟢 Terhubung (auth_db)"}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div style={s.section}>
-              <h3 style={s.sectionTitle}>Metrik Layanan</h3>
-              {authState.metrics ? (
-                <div style={s.metricsGrid}>
-                  <div style={s.metricCard}>
-                    <span style={s.metricVal}>{formatUptime(authState.metrics.uptime_seconds)}</span>
-                    <span style={s.metricLabel}>Uptime</span>
-                  </div>
-                  <div style={s.metricCard}>
-                    <span style={s.metricVal}>{authState.metrics.total_requests ?? 0}</span>
-                    <span style={s.metricLabel}>Total Requests</span>
-                  </div>
-                  <div style={s.metricCard}>
-                    <span style={s.metricVal}>{authState.metrics.total_errors ?? 0}</span>
-                    <span style={s.metricLabel}>Total Errors</span>
-                  </div>
-                  <div style={s.metricCard}>
-                    <span style={s.metricVal}>{authState.metrics.error_rate_percent ?? 0}%</span>
-                    <span style={s.metricLabel}>Error Rate</span>
-                  </div>
-                  <div style={s.metricCard}>
-                    <span style={s.metricVal}>{authState.metrics.latency?.avg_ms ?? 0} ms</span>
-                    <span style={s.metricLabel}>Avg Latency</span>
-                  </div>
-                  <div style={s.metricCard}>
-                    <span style={s.metricVal}>{authState.metrics.latency?.p95_ms ?? 0} ms</span>
-                    <span style={s.metricLabel}>P95 Latency</span>
-                  </div>
-                </div>
-              ) : (
-                <div style={s.noMetricsBox}>
-                  <span style={s.infoIcon}>⚠️</span>
-                  <p style={s.noMetricsText}>
-                    {authState.status === "unreachable" 
-                      ? "Metrik tidak dapat diambil karena layanan tidak dapat dihubungi."
-                      : "Metrik tidak tersedia atau gagal dimuat dari service."}
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-        </article>
-
-        {/* === CARD 3: ITEM SERVICE === */}
-        <article style={s.serviceCard}>
-          <div style={s.cardHeader}>
-            <h2 style={s.cardTitle}>Item Service</h2>
-            <span
-              style={{
-                ...s.badge,
-                backgroundColor: getBadgeStyles(productState.status).bg,
-                color: getBadgeStyles(productState.status).text,
-              }}
-            >
-              {getBadgeStyles(productState.status).label}
-            </span>
-          </div>
-
-          <div style={s.cardBody}>
-            <div style={s.section}>
-              <h3 style={s.sectionTitle}>Detail Layanan & Dependensi</h3>
-              <div style={s.detailsList}>
-                <div style={s.detailRow}>
-                  <span style={s.detailLabel}>Nama Service</span>
-                  <span style={s.detailValue}>{productState.data?.service || "item-service"}</span>
-                </div>
-                <div style={s.detailRow}>
-                  <span style={s.detailLabel}>Versi Layanan</span>
-                  <span style={s.detailValue}>{productState.data?.version || "2.1.0"}</span>
-                </div>
-                <div style={s.detailRow}>
-                  <span style={s.detailLabel}>Database (item_db)</span>
-                  <span style={{
-                    ...s.detailValue,
-                    color: productState.data?.dependencies?.database?.status === "connected" ? "#2E7D32" : "#B71C1C",
-                    fontWeight: 700
-                  }}>
-                    {productState.data?.dependencies?.database?.status === "connected" ? "🟢 Connected" : "🔴 Disconnected"}
-                  </span>
-                </div>
-                <div style={s.detailRow}>
-                  <span style={s.detailLabel}>Auth Service Dep.</span>
-                  <span style={{
-                    ...s.detailValue,
-                    color: productState.data?.dependencies?.["auth-service"]?.status === "available" ? "#2E7D32" : "#B71C1C",
-                    fontWeight: 700
-                  }}>
-                    {productState.data?.dependencies?.["auth-service"]?.status === "available" ? "🟢 Available" : "🔴 Unavailable"}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div style={s.section}>
-              <h3 style={s.sectionTitle}>Metrik Layanan</h3>
-              {productState.metrics ? (
-                <div style={s.metricsGrid}>
-                  <div style={s.metricCard}>
-                    <span style={s.metricVal}>{formatUptime(productState.metrics.uptime_seconds)}</span>
-                    <span style={s.metricLabel}>Uptime</span>
-                  </div>
-                  <div style={s.metricCard}>
-                    <span style={s.metricVal}>{productState.metrics.total_requests ?? 0}</span>
-                    <span style={s.metricLabel}>Total Requests</span>
-                  </div>
-                  <div style={s.metricCard}>
-                    <span style={s.metricVal}>{productState.metrics.total_errors ?? 0}</span>
-                    <span style={s.metricLabel}>Total Errors</span>
-                  </div>
-                  <div style={s.metricCard}>
-                    <span style={s.metricVal}>{productState.metrics.error_rate_percent ?? 0}%</span>
-                    <span style={s.metricLabel}>Error Rate</span>
-                  </div>
-                  <div style={s.metricCard}>
-                    <span style={s.metricVal}>{productState.metrics.latency?.avg_ms ?? 0} ms</span>
-                    <span style={s.metricLabel}>Avg Latency</span>
-                  </div>
-                  <div style={s.metricCard}>
-                    <span style={s.metricVal}>{productState.metrics.latency?.p95_ms ?? 0} ms</span>
-                    <span style={s.metricLabel}>P95 Latency</span>
-                  </div>
-                </div>
-              ) : (
-                <div style={s.noMetricsBox}>
-                  <span style={s.infoIcon}>⚠️</span>
-                  <p style={s.noMetricsText}>
-                    {productState.status === "unreachable" 
-                      ? "Metrik tidak dapat diambil karena layanan tidak dapat dihubungi."
-                      : "Metrik tidak tersedia atau gagal dimuat dari service."}
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-        </article>
 
       </section>
     </div>
