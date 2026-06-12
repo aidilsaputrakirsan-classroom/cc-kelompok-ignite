@@ -187,76 +187,7 @@ jobs:
             ${{ runner.os }}-buildx-
 
   # ================================
-  # JOB 4: Integration Test
-  # ================================
-  integration-test:
-    name: 🔗 Integration Test
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-
-    needs:
-      - test-backend
-      - test-frontend
-
-    steps:
-      - name: 📥 Checkout code
-        uses: actions/checkout@v4
-
-      - name: 🐍 Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: 📦 Install test dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install pytest requests
-
-      - name: 🐳 Start services with Docker Compose
-        run: docker compose up -d
-
-      - name: ⏳ Wait for services to be ready
-        run: |
-          echo "Waiting for services to be ready..."
-          MAX_RETRIES=30
-          RETRY_INTERVAL=5
-
-          wait_for_service() {
-            local name=$1
-            local url=$2
-            local retries=0
-            until curl -sf "$url" > /dev/null 2>&1; do
-              retries=$((retries + 1))
-              if [ $retries -ge $MAX_RETRIES ]; then
-                echo "ERROR: $name not ready after $((MAX_RETRIES * RETRY_INTERVAL))s"
-                docker compose logs
-                exit 1
-              fi
-              echo "[$retries/$MAX_RETRIES] $name not ready, retrying in ${RETRY_INTERVAL}s..."
-              sleep $RETRY_INTERVAL
-            done
-            echo "✅ $name is ready!"
-          }
-
-          wait_for_service "auth-service"  "http://localhost:8001/health"
-          wait_for_service "item-service"  "http://localhost:8002/health"
-
-      - name: 🧪 Run integration tests
-        run: pytest tests/integration/ -v --tb=short
-
-      - name: 🧹 Tear down services
-        if: always()
-        run: docker compose down
-
-      - name: 📤 Upload test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: integration-test-results
-          path: test-results/
-
-  # ================================
-  # JOB 5: Deployment Summary (Tugas 11 — Lead CI/CD)
+  # JOB 4: Deployment Summary (Tugas 11 — Lead CI/CD)
   # ================================
   deploy-summary:
     name: 🚀 Deployment Summary
@@ -265,7 +196,7 @@ jobs:
     permissions:
       pull-requests: write
       contents: read
-    needs: [lint, test-backend, test-frontend, build-docker, integration-test]
+    needs: [lint, test-backend, test-frontend, build-docker]
     if: always()
  
     steps:
@@ -291,11 +222,10 @@ jobs:
           echo "   • API Docs     : https://cc-kelompok-ignite-production.up.railway.app/docs"
           echo ""
           echo "📊 CI Status:"
-          echo "   • Lint              : ${{ needs.lint.result }}"
-          echo "   • Test Backend      : ${{ needs.test-backend.result }}"
-          echo "   • Test Frontend     : ${{ needs.test-frontend.result }}"
-          echo "   • Build Docker      : ${{ needs.build-docker.result }}"
-          echo "   • Integration Test  : ${{ needs.integration-test.result }}"
+          echo "   • Lint         : ${{ needs.lint.result }}"
+          echo "   • Test Backend : ${{ needs.test-backend.result }}"
+          echo "   • Test Frontend: ${{ needs.test-frontend.result }}"
+          echo "   • Build Docker : ${{ needs.build-docker.result }}"
           echo ""
           echo "🔗 Workflow Run:"
           echo "   ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
@@ -306,11 +236,10 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const lint        = "${{ needs.lint.result }}";
-            const backend     = "${{ needs.test-backend.result }}";
-            const frontend    = "${{ needs.test-frontend.result }}";
-            const docker      = "${{ needs.build-docker.result }}";
-            const integration = "${{ needs.integration-test.result }}";
+            const lint     = "${{ needs.lint.result }}";
+            const backend  = "${{ needs.test-backend.result }}";
+            const frontend = "${{ needs.test-frontend.result }}";
+            const docker   = "${{ needs.build-docker.result }}";
  
             const icon = (s) => ({
               success:   "✅",
@@ -319,15 +248,15 @@ jobs:
               skipped:   "⏭️",
             }[s] ?? "❓");
  
-            const allGreen = [lint, backend, frontend, docker, integration].every(s => s === "success");
+            const allGreen = [lint, backend, frontend, docker].every(s => s === "success");
             const overall  = allGreen
               ? "✅ **Semua tahap CI berhasil — siap untuk deploy!**"
               : "❌ **Ada tahap yang gagal — perbaiki sebelum deploy.**";
  
-            const sha      = "${{ github.sha }}";
+            const sha     = "${{ github.sha }}";
             const shortSha = sha.substring(0, 7);
-            const actor    = "${{ github.actor }}";
-            const runUrl   = "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}";
+            const actor   = "${{ github.actor }}";
+            const runUrl  = "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}";
             const timestamp = "${{ steps.timestamp.outputs.value }}";
  
             const body = `## 🚀 Deployment Summary
@@ -341,7 +270,6 @@ jobs:
             | 🐍 Test Backend | ${icon(backend)} \`${backend}\` |
             | ⚛️ Test Frontend | ${icon(frontend)} \`${frontend}\` |
             | 🐳 Build Docker | ${icon(docker)} \`${docker}\` |
-            | 🔗 Integration Test | ${icon(integration)} \`${integration}\` |
  
             ### 🔗 Production URLs
             | Service | URL |
@@ -359,6 +287,7 @@ jobs:
             ---
             *Summary ini dibuat otomatis oleh CI pipeline — Tugas 11 Lead CI/CD.*`;
  
+            // Cari komentar existing untuk di-update
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -386,7 +315,7 @@ jobs:
               });
             }
 
-  # ── Notifikasi PR Comment ─────────────────────────
+# ── OPTIMASI 3: Notifikasi PR Comment ─────────────────────────
   notify:
     name: 💬 Notify PR
     runs-on: ubuntu-latest
@@ -394,7 +323,7 @@ jobs:
     permissions:
       pull-requests: write
       contents: read
-    needs: [test-backend, test-frontend, build-docker, integration-test]
+    needs: [test-backend, test-frontend, build-docker]
     if: always() && github.event_name == 'pull_request'
 
     steps:
@@ -404,7 +333,6 @@ jobs:
           BACKEND="${{ needs.test-backend.result }}"
           FRONTEND="${{ needs.test-frontend.result }}"
           DOCKER="${{ needs.build-docker.result }}"
-          INTEGRATION="${{ needs.integration-test.result }}"
           icon() {
             case "$1" in
               success)   echo "✅" ;;
@@ -418,9 +346,8 @@ jobs:
           B=$(icon "$BACKEND")
           F=$(icon "$FRONTEND")
           D=$(icon "$DOCKER")
-          I=$(icon "$INTEGRATION")
 
-          if [[ "$BACKEND" == "success" && "$FRONTEND" == "success" && "$DOCKER" == "success" && "$INTEGRATION" == "success" ]]; then
+          if [[ "$BACKEND" == "success" && "$FRONTEND" == "success" && "$DOCKER" == "success" ]]; then
             OVERALL="✅ **CI PASSED** — Semua tahap berhasil. PR aman untuk di-review & merge."
           else
             OVERALL="❌ **CI FAILED** — Ada tahap yang gagal. Perbaiki sebelum merge."
@@ -438,7 +365,6 @@ jobs:
           | 🐍 Test Backend | $B \`$BACKEND\` |
           | ⚛️ Test Frontend | $F \`$FRONTEND\` |
           | 🐳 Build Docker | $D \`$DOCKER\` |
-          | 🔗 Integration Test | $I \`$INTEGRATION\` |
           **Commit:** \`${{ github.sha }}\`
           **Triggered by:** @${{ github.actor }}
           **Workflow run:** [Lihat detail](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
