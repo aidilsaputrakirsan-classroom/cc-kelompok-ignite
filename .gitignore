@@ -21,6 +21,11 @@ backend/test.db
 *.db
 *.sqlite3
 
+# Uploads (Persistent)
+uploads/
+services/item-service/uploads/
+backend/uploads/
+
 # Pytest
 .pytest_cache/
 .coverage

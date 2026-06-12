@@ -47,11 +47,14 @@ COPY --from=builder /opt/venv /opt/venv
 # Set venv path
 ENV PATH="/opt/venv/bin:$PATH"
 
+# Create non-root user
+RUN useradd -m appuser || true
+
 # Copy application code only
 COPY . .
 
-# Create non-root user
-RUN useradd -m appuser && chown -R appuser /app
+# Buat direktori uploads dan atur izin akses
+RUN mkdir -p /app/uploads && chown -R appuser:appuser /app && chmod -R 755 /app/uploads
 
 # Use non-root user
 USER appuser
