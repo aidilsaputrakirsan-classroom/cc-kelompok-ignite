@@ -89,10 +89,7 @@ export default function CheckoutPage({ user, onLogout }) {
       return
     }
 
-    const toastId = toast.info("Memproses pesanan...", {
-      autoClose: false,
-      closeButton: false,
-    })
+    const toastId = toast.loading("Memproses pesanan...")
     setIsSubmitting(true)
 
     try {
@@ -104,32 +101,23 @@ export default function CheckoutPage({ user, onLogout }) {
         })),
       }
 
-      toast.loading("Memproses pesanan...", {
-        id: toastId,
-        autoClose: false,
-      })
-
       const result = await createOrder(orderData)
 
-      toast.update(toastId, {
-        render: "Pesanan berhasil dibuat! Mengarahkan ke halaman pesanan...",
-        type: "success",
-        autoClose: 3000,
-        closeButton: true,
+      toast.dismiss(toastId)
+      toast.success("Pesanan berhasil dibuat! Mengarahkan ke halaman pesanan...", {
+        autoClose: 2000,
       })
 
       setTimeout(() => {
         navigate("/orders", {
           state: { orderId: result?.id },
         })
-      }, 2500)
+      }, 2000)
     } catch (err) {
       console.error(err)
-      toast.update(toastId, {
-        render: err?.message || err?.detail || "Gagal membuat pesanan. Silakan coba lagi.",
-        type: "error",
-        autoClose: 4000,
-        closeButton: true,
+      toast.dismiss(toastId)
+      toast.error(err?.message || err?.detail || "Gagal membuat pesanan. Silakan coba lagi.", {
+        autoClose: 3000,
       })
     } finally {
       setIsSubmitting(false)
