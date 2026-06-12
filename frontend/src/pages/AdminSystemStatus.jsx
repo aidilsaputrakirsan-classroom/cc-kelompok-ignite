@@ -46,10 +46,10 @@ export default function AdminSystemStatus() {
 
     const authMetricsPromise = fetchAuthMetrics().catch(() => null)
 
-    // 3. Product Service Health & Metrics
+    // 3. Item Service Health & Metrics
     const productHealthPromise = fetchProductHealth()
       .then((data) => {
-        // Product service health check returns: healthy, degraded, unhealthy
+        // Item service health check returns: healthy, degraded, unhealthy
         const status = data?.status || "healthy"
         return { status, data }
       })
@@ -329,10 +329,10 @@ export default function AdminSystemStatus() {
           </div>
         </article>
 
-        {/* === CARD 3: PRODUCT SERVICE === */}
+        {/* === CARD 3: ITEM SERVICE === */}
         <article style={s.serviceCard}>
           <div style={s.cardHeader}>
-            <h2 style={s.cardTitle}>Product Service</h2>
+            <h2 style={s.cardTitle}>Item Service</h2>
             <span
               style={{
                 ...s.badge,
