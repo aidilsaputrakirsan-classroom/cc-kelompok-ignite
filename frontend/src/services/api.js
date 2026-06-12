@@ -461,3 +461,30 @@ export async function uploadImage(file) {
 
     return handleResponse(response)
 }
+
+// ==================== SYSTEM STATUS API ====================
+
+export async function fetchGatewayHealth() {
+    const response = await fetch(`${API_URL}/health`)
+    return handleResponse(response)
+}
+
+export async function fetchAuthHealth() {
+    const response = await fetch(`${API_URL}/auth/health`)
+    return handleResponse(response)
+}
+
+export async function fetchAuthMetrics() {
+    const response = await fetch(`${API_URL}/auth/metrics`)
+    return handleResponse(response)
+}
+
+export async function fetchProductHealth() {
+    const response = await fetch(`${API_URL}/items/health`)
+    return handleResponse(response)
+}
+
+export async function fetchProductMetrics() {
+    const response = await fetch(`${API_URL}/items/metrics`)
+    return handleResponse(response)
+}

@@ -7,9 +7,11 @@ import AdminOrders from "./AdminOrders"
 import AdminPayments from "./AdminPayments"
 import AdminCustomers from "./AdminCustomers"
 import AdminTestimonials from "./AdminTestimonials"
+import AdminSystemStatus from "./AdminSystemStatus"
 import LogoutConfirmModal from "../components/LogoutConfirmModal"
 
 const menuItems = [
+  { label: "System Status", key: "system-status" },
   { label: "Dashboard", key: "dashboard" },
   { label: "Produk", key: "products" },
   { label: "Pesanan", key: "orders" },
@@ -270,6 +272,7 @@ export default function AdminDashboard({ user, onLogout }) {
         </>
         )}
 
+        {activeMenu === "system-status" && <AdminSystemStatus />}
         {activeMenu === "products" && <AdminProducts />}
         {activeMenu === "orders" && <AdminOrders />}
         {activeMenu === "payments" && <AdminPayments />}
@@ -277,6 +280,7 @@ export default function AdminDashboard({ user, onLogout }) {
         {activeMenu === "testimonials" && <AdminTestimonials />}
 
         {activeMenu !== "dashboard" &&
+          activeMenu !== "system-status" &&
           activeMenu !== "products" &&
           activeMenu !== "orders" &&
           activeMenu !== "payments" &&
