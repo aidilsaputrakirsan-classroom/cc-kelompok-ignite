@@ -22,7 +22,9 @@ from schemas import (
     ItemStatsResponse,
 )
 from auth_client import verify_token_with_auth_service, auth_circuit
-from database import get_db
+from database import get_db, SessionLocal
+from sqlalchemy.orm import Session
+from models import Product
 from sqlalchemy import text
 from logging_config import setup_logging
 from logging_middleware import RequestLoggingMiddleware
@@ -163,41 +165,32 @@ async def get_metrics():
         **metrics.get_metrics(),
     }
 
-# ==================== FAKE DATABASE ====================
-
-fake_items_db = []
-item_id_counter = 1
-
-
-# ==================== CREATE ITEM ====================
-
-
 @app.post("/items", response_model=ProductResponse, status_code=201)
 def create_item(
-    item: ProductCreate,
+    item_data: ProductCreate,
+    db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
-    global item_id_counter
-
+    """
+    Simpan item baru ke database PostgreSQL.
+    """
     now = datetime.utcnow()
 
-    new_item = {
-        "id": item_id_counter,
-        "name": item.name,
-        "description": item.description,
-        "category": item.category,
-        "slug": item.slug,
-        "price": item.price,
-        "stock": item.stock,
-        "image_url": item.image_url,
-        "is_active": item.is_active,
-        "owner_id": current_user["user_id"],
-        "created_at": now,
-        "updated_at": now,
-    }
+    new_item = Product(
+        name=item_data.name,
+        description=item_data.description,
+        category=item_data.category,
+        slug=item_data.slug,
+        price=item_data.price,
+        stock=item_data.stock,
+        image_url=item_data.image_url,
+        is_active=item_data.is_active,
+        owner_id=current_user["user_id"],
+    )
 
-    fake_items_db.append(new_item)
-    item_id_counter += 1
+    db.add(new_item)
+    db.commit()
+    db.refresh(new_item)
 
     return new_item
 
@@ -210,17 +203,19 @@ def get_items(
     search: str = Query(default=None),
     skip: int = Query(default=0, ge=0),
     limit: int = Query(default=20, ge=1, le=100),
+    db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
-    filtered = [
-        item for item in fake_items_db if item["owner_id"] == current_user["user_id"]
-    ]
+    """
+    Ambil daftar item milik user dari database.
+    """
+    query = db.query(Product).filter(Product.owner_id == current_user["user_id"])
 
     if search:
-        filtered = [item for item in filtered if search.lower() in item["name"].lower()]
+        query = query.filter(Product.name.ilike(f"%{search}%"))
 
-    total = len(filtered)
-    items = filtered[skip : skip + limit]
+    total = query.count()
+    items = query.offset(skip).limit(limit).all()
 
     return {
         "total": total,
@@ -233,23 +228,14 @@ def get_items(
 
 @app.get("/items/stats", response_model=ItemStatsResponse)
 def get_items_stats(
+    db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
     """
-    Endpoint untuk mendapatkan statistik inventory pemilik.
-
-    Returns:
-    - total_items: Jumlah total item
-    - total_value: Total nilai inventory (price × stock)
-    - most_expensive: Item dengan harga tertinggi
-    - cheapest: Item dengan harga termurah
+    Endpoint untuk mendapatkan statistik inventory pemilik dari database.
     """
-    # Filter items milik user
-    user_items = [
-        item for item in fake_items_db if item["owner_id"] == current_user["user_id"]
-    ]
+    user_items = db.query(Product).filter(Product.owner_id == current_user["user_id"]).all()
 
-    # Jika tidak ada items
     if not user_items:
         return {
             "total_items": 0,
@@ -258,32 +244,28 @@ def get_items_stats(
             "cheapest": None,
         }
 
-    # Hitung total items dan total value
     total_items = len(user_items)
-    total_value = sum(item["price"] * item["stock"] for item in user_items)
+    total_value = sum(item.price * item.stock for item in user_items)
 
-    # Cari item termahal
-    most_expensive = max(user_items, key=lambda x: x["price"])
-
-    # Cari item termurah
-    cheapest = min(user_items, key=lambda x: x["price"])
+    most_expensive = max(user_items, key=lambda x: x.price)
+    cheapest = min(user_items, key=lambda x: x.price)
 
     return {
         "total_items": total_items,
         "total_value": total_value,
         "most_expensive": {
-            "id": most_expensive["id"],
-            "name": most_expensive["name"],
-            "price": most_expensive["price"],
-            "stock": most_expensive["stock"],
-            "category": most_expensive["category"],
+            "id": most_expensive.id,
+            "name": most_expensive.name,
+            "price": most_expensive.price,
+            "stock": most_expensive.stock,
+            "category": most_expensive.category,
         },
         "cheapest": {
-            "id": cheapest["id"],
-            "name": cheapest["name"],
-            "price": cheapest["price"],
-            "stock": cheapest["stock"],
-            "category": cheapest["category"],
+            "id": cheapest.id,
+            "name": cheapest.name,
+            "price": cheapest.price,
+            "stock": cheapest.stock,
+            "category": cheapest.category,
         },
     }
 
@@ -294,13 +276,21 @@ def get_items_stats(
 @app.get("/items/{item_id}", response_model=ProductResponse)
 def get_item(
     item_id: int,
+    db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
-    for item in fake_items_db:
-        if item["id"] == item_id and item["owner_id"] == current_user["user_id"]:
-            return item
+    """
+    Ambil satu item spesifik dari database.
+    """
+    item = db.query(Product).filter(
+        Product.id == item_id, 
+        Product.owner_id == current_user["user_id"]
+    ).first()
 
-    raise HTTPException(status_code=404, detail="Item not found")
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+
+    return item
 
 
 # ==================== UPDATE ITEM ====================
@@ -310,18 +300,28 @@ def get_item(
 def update_item(
     item_id: int,
     updated_data: ProductUpdate,
+    db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
-    for item in fake_items_db:
-        if item["id"] == item_id and item["owner_id"] == current_user["user_id"]:
+    """
+    Update item di database.
+    """
+    item = db.query(Product).filter(
+        Product.id == item_id, 
+        Product.owner_id == current_user["user_id"]
+    ).first()
 
-            update_fields = updated_data.model_dump(exclude_unset=True)
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
 
-            item.update(update_fields)
+    update_fields = updated_data.model_dump(exclude_unset=True)
+    for key, value in update_fields.items():
+        setattr(item, key, value)
 
-            return item
+    db.commit()
+    db.refresh(item)
 
-    raise HTTPException(status_code=404, detail="Item not found")
+    return item
 
 
 # ==================== DELETE ITEM ====================
@@ -330,26 +330,21 @@ def update_item(
 @app.delete("/items/{item_id}", status_code=204)
 def delete_item(
     item_id: int,
+    db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
-    global fake_items_db
+    """
+    Hapus item dari database.
+    """
+    item = db.query(Product).filter(
+        Product.id == item_id, 
+        Product.owner_id == current_user["user_id"]
+    ).first()
 
-    existing_item = next(
-        (
-            item
-            for item in fake_items_db
-            if (item["id"] == item_id and item["owner_id"] == current_user["user_id"])
-        ),
-        None,
-    )
-
-    if not existing_item:
+    if not item:
         raise HTTPException(status_code=404, detail="Item not found")
 
-    fake_items_db = [
-        item
-        for item in fake_items_db
-        if not (item["id"] == item_id and item["owner_id"] == current_user["user_id"])
-    ]
+    db.delete(item)
+    db.commit()
 
     return None
