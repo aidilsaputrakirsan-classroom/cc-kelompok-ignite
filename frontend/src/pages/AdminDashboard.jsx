@@ -11,6 +11,7 @@ import AdminSystemStatus from "./AdminSystemStatus"
 import LogoutConfirmModal from "../components/LogoutConfirmModal"
 
 const menuItems = [
+  { label: "System Status", key: "system-status" },
   { label: "Dashboard", key: "dashboard" },
   { label: "Produk", key: "products" },
   { label: "Pesanan", key: "orders" },
