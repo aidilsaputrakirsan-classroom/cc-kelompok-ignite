@@ -26,7 +26,7 @@ export default function AboutPage({ user, onLogout }) {
                 dan kemasan praktis untuk perjalanan dan oleh-oleh keluarga.
               </p>
               <p style={styles.aboutText}>
-                Nikmati berbagai pilihan snack lokal yang diolah dengan resep autentik, langsung dari pengrajin terpercaya.
+                Nikmati berbagai pilihan snack lokal yang diolah dengan resep authentik, langsung dari pengrajin terpercaya.
               </p>
             </div>
             <img src="/About-1.png" alt="Tentang ATHSNAC" style={styles.aboutImage} />
